@@ -6,12 +6,25 @@ public class Offering
 {
     private const int MAX_TITLE_LENGTH = 50;
 
-    private Offering(Guid id, decimal price, string title, string description, DateTime createDate, bool isActive)
+    private Offering()
+    {
+    }
+
+    private Offering(
+        Guid id,
+        decimal price,
+        string title,
+        string description,
+        TimeSpan duration,
+        DateTime createDate,
+        bool isActive
+    )
     {
         Id = id;
         Price = price;
         Title = title;
         Description = description;
+        Duration = duration;
         CreateDate = createDate;
         IsActive = isActive;
     }
@@ -20,18 +33,19 @@ public class Offering
     public decimal Price { get; private set; }
     public string Title { get; private set; }
     public string Description { get; private set; }
-    public DateTime CreateDate { get; }
+    public TimeSpan Duration { get; private set; }
+    public DateTime CreateDate { get; private set; }
     public bool IsActive { get; private set; }
+    public List<Appointment> Appointments { get; } = new();
 
-
-    public static Offering Create(decimal price, string title, string description)
+    public static Offering Create(decimal price, string title, string description, TimeSpan duration)
     {
         if (title.Length > MAX_TITLE_LENGTH)
             throw new BusinessException("Название слишком длинное.");
 
-        return new Offering(Guid.NewGuid(), price, title, description, DateTime.UtcNow, true);
+        return new Offering(Guid.NewGuid(), price, title, description, duration, DateTime.UtcNow, true);
     }
-
+    
     public void ChangeTitle(string newTitle)
     {
         if (newTitle.Length > MAX_TITLE_LENGTH)

@@ -1,9 +1,15 @@
-﻿using Domain.Exceptions;
+﻿using System.Text.Json.Serialization;
+using Domain.Exceptions;
 
 namespace Domain.ValueObjects;
 
 public record TimeInterval
 {
+    private TimeInterval()
+    {
+    }
+
+    [JsonConstructor]
     private TimeInterval(TimeOnly start, TimeOnly end)
     {
         Start = start;
@@ -23,4 +29,5 @@ public record TimeInterval
 
     public bool IsOverlapping(TimeInterval other) => Start < other.End && End > other.Start;
     public bool IsInside(TimeInterval other) => Start >= other.Start && End <= other.End;
+    public TimeSpan Duration() => End - Start;
 }

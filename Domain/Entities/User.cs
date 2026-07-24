@@ -4,6 +4,10 @@ namespace Domain.Entities;
 
 public class User
 {
+    private User()
+    {
+    }
+
     private User(
         Guid id,
         long maxId,
@@ -28,14 +32,16 @@ public class User
     }
 
     public Guid Id { get; }
-    public long MaxId { get; }
+    public long MaxId { get; private set; }
     public string FirstName { get; private set; }
     public string? LastName { get; private set; }
     public string? Username { get; private set; }
     public string Phone { get; private set; }
-    public bool IsBot { get; }
-    public DateTime CreatedAt { get; }
-    public UserRole Role { get; }
+    public bool IsBot { get; private set; }
+    public DateTime CreatedAt { get; private set; }
+    public UserRole Role { get; private set; }
+
+    public List<Appointment> Appointments { get; }
 
     public static User Create(
         long maxId,

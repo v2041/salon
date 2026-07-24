@@ -6,28 +6,42 @@ namespace Domain.Entities;
 
 public class Appointment
 {
-    private Appointment(Guid id, Guid userId, DateOnly date, TimeInterval interval, AppointmentStatus status)
+    private Appointment()
+    {
+    }
+
+    private Appointment(
+        Guid id,
+        Guid userId,
+        DateOnly date,
+        TimeInterval interval,
+        decimal price,
+        AppointmentStatus status
+    )
     {
         Id = id;
         UserId = userId;
         Date = date;
         Interval = interval;
+        Price = price;
         Status = status;
     }
 
     public Guid Id { get; }
     public Guid UserId { get; }
-    public DateOnly Date { get; }
+    public DateOnly Date { get;  private set;}
     public TimeInterval Interval { get; private set; }
+    public decimal Price { get; private set; }
     public AppointmentStatus Status { get; private set; }
-
-    private readonly List<AppointmentOffering> _appointmentOfferings = [];
-    public IReadOnlyCollection<AppointmentOffering> AppointmentOfferings => _appointmentOfferings;
+    public User User { get; }
+    private readonly List<Offering> _offerings = [];
+    public IReadOnlyCollection<Offering> Offerings => _offerings;
 
     public static Appointment Create(
         Guid userId,
         DateOnly date,
         TimeInterval interval,
+        decimal price,
         TimeInterval workInterval,
         IEnumerable<TimeInterval> busyIntervals
     )
@@ -39,48 +53,57 @@ public class Appointment
             userId,
             date,
             interval,
+            price,
             AppointmentStatus.Pending
         );
     }
-
-    public void AddOffering(
-        Guid offeringId,
-        decimal price,
-        TimeSpan duration,
-        TimeInterval workInterval,
-        IEnumerable<TimeInterval> busyIntervals)
+    public void AddOffering(Offering offering)
     {
-        if (Status != AppointmentStatus.Pending && Status != AppointmentStatus.Confirmed)
-            throw new BusinessException("Действие недоступно для текущего статуса записи");
-        if (_appointmentOfferings.Any(o => o.OfferingId == offeringId))
-            throw new BusinessException("Услуга уже добавлена");
-        var newInterval = TimeInterval.Create(Interval.Start, Interval.End.Add(duration));
-        if (!newInterval.IsInside(workInterval) || busyIntervals.Any(b => b.IsOverlapping(newInterval)))
-            throw new BusinessException("Время недоступно");
-
-        _appointmentOfferings.Add(AppointmentOffering.Create(Id, offeringId, price));
-        Interval = newInterval;
+        _offerings.Add(offering); // ✅ Работает через приватную коллекцию
     }
-
-    public void RemoveOffering(Guid offeringId, TimeSpan duration)
+    // public void AddOffering(
+    //     Offering offering,
+    //     TimeInterval workInterval,
+    //     IEnumerable<TimeInterval> busyIntervals)
+    // {
+    //     if (Status != AppointmentStatus.Pending && Status != AppointmentStatus.Confirmed)
+    //         throw new BusinessException("Действие недоступно для текущего статуса записи");
+    //     if (_offerings.Any(o => o.Id == offering.Id))
+    //         throw new BusinessException("Услуга уже добавлена");
+    //     var newInterval = TimeInterval.Create(Interval.Start, Interval.End.Add(offering.Duration));
+    //     if (!newInterval.IsInside(workInterval) || busyIntervals.Any(b => b.IsOverlapping(newInterval)))
+    //         throw new BusinessException("Время недоступно");
+    //
+    //     _offerings.Add(offering);
+    //     Interval = newInterval;
+    // }
+    //
+    // public void RemoveOffering(Guid offeringId, TimeSpan duration)
+    // {
+    //     if (Status != AppointmentStatus.Pending && Status != AppointmentStatus.Confirmed)
+    //         throw new BusinessException("Действие недоступно для текущего статуса записи");
+    //
+    //     if (_offerings.Count == 1)
+    //         throw new BusinessException("Нельзя удалить последнюю услугу");
+    //
+    //     var appointmentOffering = _offerings.FirstOrDefault(o => o.Id == offeringId);
+    //
+    //     if (appointmentOffering != null)
+    //     {
+    //         _offerings.Remove(appointmentOffering);
+    //         Interval = TimeInterval.Create(Interval.Start, Interval.End.Add(-duration));
+    //     }
+    //     else
+    //         throw new BusinessException("Услуга не найдена");
+    // }
+    public void ChangePrice(decimal price)
     {
-        if (Status != AppointmentStatus.Pending && Status != AppointmentStatus.Confirmed)
-            throw new BusinessException("Действие недоступно для текущего статуса записи");
-
-        if (_appointmentOfferings.Count == 1)
-            throw new BusinessException("Нельзя удалить последнюю услугу");
-
-        var appointmentOffering = _appointmentOfferings.FirstOrDefault(o => o.OfferingId == offeringId);
-
-        if (appointmentOffering != null)
+        if (price <= 0)
         {
-            _appointmentOfferings.Remove(appointmentOffering);
-            Interval = TimeInterval.Create(Interval.Start, Interval.End.Add(-duration));
+            throw new BusinessException("Цена должна быть больше 0");
         }
-        else
-            throw new BusinessException("Услуга не найдена");
+        Price = price;
     }
-
     public void Cancel()
     {
         if (Status != AppointmentStatus.Pending && Status != AppointmentStatus.Confirmed)
