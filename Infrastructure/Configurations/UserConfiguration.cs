@@ -10,24 +10,23 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
     public void Configure(EntityTypeBuilder<User> builder)
     {
         builder.HasKey(x => x.Id);
+
         builder.HasData(
             User.Create(
-                1234,
                 "Admin",
-                "null",
+                "Test",
                 "admin",
                 "+79991234567",
-                false
+                DateTime.Now
             )
         );
         builder.HasData(
             User.Create(
-                12345,
                 "Client",
                 "Test",
                 "default",
                 "+79341234567",
-                false
+                DateTime.Now
             )
         );
     }
