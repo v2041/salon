@@ -2,4 +2,9 @@
 
 namespace Features.Schedules.CreateSchedule;
 
-public record CreateScheduleResponse(Guid Id, DateOnly Date, TimeInterval WorkInterval, TimeInterval? BreakInterval);
+public record CreateScheduleResponse(
+    Guid Id,
+    DateOnly Date,
+    TimeInterval WorkInterval,
+    TimeInterval? BreakInterval
+);

@@ -6,6 +6,8 @@ public class Validator : AbstractValidator<CreateOfferingRequest>
 {
     public Validator()
     {
+        RuleLevelCascadeMode = CascadeMode.Stop;
+            
         RuleFor(x => x.Title)
             .NotEmpty()
             .WithMessage("Требуется название.");
@@ -14,10 +16,9 @@ public class Validator : AbstractValidator<CreateOfferingRequest>
             .NotEmpty()
             .WithMessage("Требуется описание.");
 
-        RuleFor(x => x.Price)
+        RuleFor(x => x.Duration)
             .NotEmpty()
-            .WithMessage("Требуется цена.")
-            .GreaterThan(0)
-            .WithMessage("Цена должна быть больше 0.");
+            .WithMessage("Требуется длительность.")
+            .GreaterThan(TimeSpan.Zero);
     }
 }

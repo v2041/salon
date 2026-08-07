@@ -1,10 +1,10 @@
-﻿using Features.Offerings.GetOffering;
-using FluentValidation;
+﻿using FluentValidation;
 using Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Features.Offerings.DeleteOffering;
 
-public class Endpoint
+public static class Endpoint
 {
     public static async Task<IResult> DeleteOfferingAsync(
         [AsParameters] DeleteOfferingRequest request,
@@ -24,10 +24,10 @@ public class Endpoint
                 );
             return Results.ValidationProblem(errors);
         }
-
-        var offering = await db.Offerings.FindAsync(request.Id, token);
+        var offering = await db.Offerings.FirstOrDefaultAsync(o => o.Id == request.Id, token);
+        if (offering == null) return Results.NotFound();
         offering.Remove();
         await db.SaveChangesAsync(token);
-        return Results.Ok(Results.NoContent());
+        return Results.NoContent();
     }
 }

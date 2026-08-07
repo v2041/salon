@@ -41,8 +41,6 @@ public class User
     public DateTime CreatedAt { get; private set; }
     public UserRole Role { get; private set; }
 
-    public List<Appointment> Appointments { get; }
-
     public static User Create(
         long maxId,
         string firstName,

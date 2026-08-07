@@ -22,32 +22,13 @@ namespace Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("AppointmentOffering", b =>
-                {
-                    b.Property<Guid>("AppointmentsId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("OfferingsId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("AppointmentsId", "OfferingsId");
-
-                    b.HasIndex("OfferingsId");
-
-                    b.ToTable("AppointmentOffering");
-                });
-
             modelBuilder.Entity("Domain.Entities.Appointment", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("numeric");
+                    b.Property<Guid>("ScheduleId")
+                        .HasColumnType("uuid");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -57,9 +38,24 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ScheduleId");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("Appointments");
+                });
+
+            modelBuilder.Entity("Domain.Entities.AppointmentOffering", b =>
+                {
+                    b.Property<Guid>("AppointmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("OfferingId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("AppointmentId", "OfferingId");
+
+                    b.ToTable("AppointmentOffering", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Offering", b =>
@@ -67,9 +63,6 @@ namespace Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -80,9 +73,6 @@ namespace Infrastructure.Migrations
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("numeric");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -152,8 +142,8 @@ namespace Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("db7ccc0c-43a4-4d39-98f2-aa28cf7dba67"),
-                            CreatedAt = new DateTime(2026, 7, 24, 13, 53, 49, 619, DateTimeKind.Utc).AddTicks(5994),
+                            Id = new Guid("f461888c-0c46-4e88-8a4d-42e3d35e17af"),
+                            CreatedAt = new DateTime(2026, 7, 31, 13, 40, 52, 739, DateTimeKind.Utc).AddTicks(7549),
                             FirstName = "Admin",
                             IsBot = false,
                             LastName = "null",
@@ -164,8 +154,8 @@ namespace Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("38068636-c08b-4b10-bb3f-299fa139649a"),
-                            CreatedAt = new DateTime(2026, 7, 24, 13, 53, 49, 620, DateTimeKind.Utc).AddTicks(1725),
+                            Id = new Guid("51a60474-8b19-4b85-8251-7ff52013e47e"),
+                            CreatedAt = new DateTime(2026, 7, 31, 13, 40, 52, 740, DateTimeKind.Utc).AddTicks(3865),
                             FirstName = "Client",
                             IsBot = false,
                             LastName = "Test",
@@ -176,25 +166,16 @@ namespace Infrastructure.Migrations
                         });
                 });
 
-            modelBuilder.Entity("AppointmentOffering", b =>
-                {
-                    b.HasOne("Domain.Entities.Appointment", null)
-                        .WithMany()
-                        .HasForeignKey("AppointmentsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Domain.Entities.Offering", null)
-                        .WithMany()
-                        .HasForeignKey("OfferingsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Domain.Entities.Appointment", b =>
                 {
-                    b.HasOne("Domain.Entities.User", "User")
+                    b.HasOne("Domain.Entities.Schedule", "Schedule")
                         .WithMany("Appointments")
+                        .HasForeignKey("ScheduleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.User", null)
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -223,7 +204,71 @@ namespace Infrastructure.Migrations
                     b.Navigation("Interval")
                         .IsRequired();
 
-                    b.Navigation("User");
+                    b.Navigation("Schedule");
+                });
+
+            modelBuilder.Entity("Domain.Entities.AppointmentOffering", b =>
+                {
+                    b.HasOne("Domain.Entities.Appointment", null)
+                        .WithMany("Offerings")
+                        .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Domain.ValueObjects.Money", "Price", b1 =>
+                        {
+                            b1.Property<Guid>("AppointmentOfferingAppointmentId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<Guid>("AppointmentOfferingOfferingId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.Property<decimal>("Value")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)")
+                                .HasColumnName("Price");
+
+                            b1.HasKey("AppointmentOfferingAppointmentId", "AppointmentOfferingOfferingId");
+
+                            b1.ToTable("AppointmentOffering");
+
+                            b1.WithOwner()
+                                .HasForeignKey("AppointmentOfferingAppointmentId", "AppointmentOfferingOfferingId");
+                        });
+
+                    b.Navigation("Price")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Domain.Entities.Offering", b =>
+                {
+                    b.OwnsOne("Domain.ValueObjects.Money", "Price", b1 =>
+                        {
+                            b1.Property<Guid>("OfferingId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.Property<decimal>("Value")
+                                .HasColumnType("numeric")
+                                .HasColumnName("Price");
+
+                            b1.HasKey("OfferingId");
+
+                            b1.ToTable("Offerings");
+
+                            b1.WithOwner()
+                                .HasForeignKey("OfferingId");
+                        });
+
+                    b.Navigation("Price")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Domain.Entities.Schedule", b =>
@@ -276,7 +321,12 @@ namespace Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Domain.Entities.User", b =>
+            modelBuilder.Entity("Domain.Entities.Appointment", b =>
+                {
+                    b.Navigation("Offerings");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Schedule", b =>
                 {
                     b.Navigation("Appointments");
                 });

@@ -9,6 +9,9 @@ public class OfferingConfiguration : IEntityTypeConfiguration<Offering>
     public void Configure(EntityTypeBuilder<Offering> builder)
     {
         builder.HasKey(x => x.Id);
-        builder.HasMany(o => o.Appointments);
+        builder.OwnsOne(o => o.Price, priceBuilder =>
+        {
+            priceBuilder.Property(m => m.Value).HasColumnName("Price");
+        });
     }
 }

@@ -1,3 +1,5 @@
-﻿namespace Features.Offerings.GetAllOfferings;
+﻿using Domain.ValueObjects;
 
-public record GetAllOfferingsResponse(Guid Id, string Title, string Description, decimal Price, TimeSpan Duration);
+namespace Features.Offerings.GetAllOfferings;
+
+public record GetAllOfferingsResponse(Guid Id, string Title, string Description, Money Price, TimeSpan Duration);

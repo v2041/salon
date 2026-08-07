@@ -14,37 +14,23 @@ public class SalonDbContext(DbContextOptions<SalonDbContext> options)
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Schedule>()
-            .HasIndex(s => s.Date)
-            .IsUnique();
-        modelBuilder.Entity<Appointment>()
-            .OwnsOne(a => a.Interval,
-                interval =>
-                {
-                    interval.Property(p => p.Start).HasColumnName("StartTime");
-                    interval.Property(p => p.End).HasColumnName("EndTime");
-                }
-            );
-        modelBuilder.Entity<Schedule>()
-            .OwnsOne(a => a.WorkInterval,
-                interval =>
-                {
-                    interval.Property(p => p.Start).HasColumnName("WorkStartTime");
-                    interval.Property(p => p.End).HasColumnName("WorkEndTime");
-                }
-            );
-        modelBuilder.Entity<Schedule>()
-            .OwnsOne(a => a.BreakInterval,
-                interval =>
-                {
-                    interval.Property(p => p.Start).HasColumnName("BreakStartTime");
-                    interval.Property(p => p.End).HasColumnName("BreakEndTime");
-                }
-            );
         modelBuilder.ApplyConfiguration(new AppointmentConfiguration());
+        modelBuilder.ApplyConfiguration(new AppointmentOfferingConfiguration());
         modelBuilder.ApplyConfiguration(new OfferingConfiguration());
         modelBuilder.ApplyConfiguration(new ScheduleConfiguration());
         modelBuilder.ApplyConfiguration(new UserConfiguration());
-        //base.OnModelCreating(modelBuilder);
+    }
+
+    public override Task<int> SaveChangesAsync(CancellationToken token = default)
+    {
+        var entries = ChangeTracker
+            .Entries<Appointment>()
+            .Where(e => e.State == EntityState.Modified);
+
+        // foreach (var entry in entries)
+        // {
+        //     entry.Property("Version").CurrentValue = Guid.NewGuid();
+        // }
+        return base.SaveChangesAsync(token);
     }
 }

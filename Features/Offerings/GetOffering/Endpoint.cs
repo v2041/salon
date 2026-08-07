@@ -1,11 +1,10 @@
-﻿using Features.Appointments.CancelAppointment;
-using FluentValidation;
+﻿using FluentValidation;
 using Infrastructure.Data;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Features.Offerings.GetOffering;
 
-public class Endpoint
+public static class Endpoint
 {
     public static async Task<IResult> GetOfferingAsync(
         [AsParameters] GetOfferingRequest request,
@@ -25,16 +24,18 @@ public class Endpoint
                 );
             return Results.ValidationProblem(errors);
         }
-
-        var offering = await db.Offerings.FindAsync(request.Id, token);
-
-        var response = new GetOfferingResponse(
-            offering.Id,
-            offering.Title,
-            offering.Description,
-            offering.Price,
-            offering.Duration
-        );
-        return Results.Ok(response);
+        
+        var response = await db.Offerings
+            .AsNoTracking()
+            .Where(o => o.Id == request.Id)
+            .Select(o => new GetOfferingResponse(
+                o.Id,
+                o.Title,
+                o.Description,
+                o.Price,
+                o.Duration
+            ))
+            .FirstOrDefaultAsync(token);
+        return response == null ? Results.NotFound() : Results.Ok(response);
     }
 }

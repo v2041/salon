@@ -1,4 +1,6 @@
-﻿using Domain.Exceptions;
+﻿using Domain.Enums;
+using Domain.Exceptions;
+using Domain.Services;
 using Domain.ValueObjects;
 
 namespace Domain.Entities;
@@ -11,7 +13,7 @@ public class Schedule
 
     private Schedule(
         Guid id,
-        bool  isWorking,
+        bool isWorking,
         DateOnly date,
         TimeInterval workInterval,
         TimeInterval? breakInterval
@@ -30,6 +32,11 @@ public class Schedule
     public TimeInterval WorkInterval { get; private set; }
     public TimeInterval? BreakInterval { get; private set; }
 
+    public IReadOnlyCollection<Appointment> Appointments
+        => _appointments;
+
+    private readonly List<Appointment> _appointments = [];
+
     public static Schedule Create(
         DateOnly date,
         bool isWorking,
@@ -37,17 +44,19 @@ public class Schedule
         TimeInterval? breakInterval
     )
     {
-        if (date < DateOnly.FromDateTime(DateTime.UtcNow) ||
-            (date == DateOnly.FromDateTime(DateTime.UtcNow) &&
-             workInterval.Start < TimeOnly.FromDateTime(DateTime.UtcNow)))
+        if (date < DateOnly.FromDateTime(DateTime.Now) ||
+            (date == DateOnly.FromDateTime(DateTime.Now) &&
+             workInterval.Start < TimeOnly.FromDateTime(DateTime.Now)))
         {
-            throw new BusinessException("Нельзя назначить рабочий день в прошлом");
+            throw new BusinessException("Нельзя назначить рабочий день в прошлом.");
         }
 
         if (breakInterval != null && !breakInterval.IsInside(workInterval))
-            throw new BusinessException("Заданное время перерыва не входит в рабочее время");
-        if (workInterval.Duration() < TimeSpan.FromHours(1))
-            throw new BusinessException("Время работы должно быть не меньше одного часа");
+            throw new BusinessException("Заданное время перерыва не входит в рабочее время.");
+        if (breakInterval?.Start == workInterval.Start || breakInterval?.End == workInterval.End)
+            throw new BusinessException("Время перерыва не должно граничить с временем начала или конца работы.");
+        if (workInterval.Duration < TimeSpan.FromHours(2))
+            throw new BusinessException("Время работы должно быть не меньше двух часов.");
         return new Schedule(
             Guid.NewGuid(),
             isWorking,
@@ -57,21 +66,52 @@ public class Schedule
         );
     }
 
-    public void ChangeBreakInterval(TimeInterval? newBreakInterval, IEnumerable<TimeInterval> appointmentIntervals)
+    public Appointment AddAppointment(Guid userId, TimeOnly startTime, List<AppointmentOfferingData> appointmentOfferingData)
+    {
+        var interval = TimelineBuilder.BuildInterval(startTime, appointmentOfferingData);
+        if (DateTime.Now > Date.ToDateTime(interval.Start))
+            throw new BusinessException("Нельзя создать запись в прошлом.");
+        if (!interval.IsInside(WorkInterval))
+            throw new BusinessException("Не рабочее время недоступно для записи.");
+        if (BreakInterval != null && interval.IsOverlapping(BreakInterval))
+            throw new BusinessException("Запись не должна занимать время перерыва.");
+        if (_appointments.Any(a =>
+                a.Interval.IsOverlapping(interval) &&
+                a.Status is AppointmentStatus.Confirmed or AppointmentStatus.Pending))
+            throw new BusinessException("Запись не должна занимать время других записей.");
+        var appointment = Appointment.Create(this, userId, appointmentOfferingData, interval);
+        _appointments.Add(appointment);
+        return appointment;
+    }
+
+    public void ChangeBreakInterval(TimeInterval? newBreakInterval)
     {
         if (newBreakInterval is not null && !newBreakInterval.IsInside(WorkInterval))
-            throw new BusinessException("Заданное время перерыва не входит в рабочее время");
-        if (newBreakInterval is not null && appointmentIntervals.Any(a => a.IsOverlapping(newBreakInterval)))
-            throw new BusinessException("Заданное время перерыва пересекается с назначенными записями");
+            throw new BusinessException("Заданное время перерыва не входит в рабочее время.");
+        if (newBreakInterval?.Start == WorkInterval.Start || newBreakInterval?.End == WorkInterval.End)
+            throw new BusinessException("Время перерыва не должно граничить с временем начала или конца работы.");
+        if (newBreakInterval is not null && _appointments.Any(a =>
+                a.Interval.IsOverlapping(newBreakInterval) &&
+                a.Status is AppointmentStatus.Confirmed or AppointmentStatus.Pending))
+            throw new BusinessException("Заданное время перерыва пересекается с назначенными записями.");
         BreakInterval = newBreakInterval;
     }
 
-    public void ChangeWorkInterval(TimeInterval newWorkInterval, IEnumerable<TimeInterval> appointmentIntervals)
+    public void ChangeWorkInterval(TimeInterval newWorkInterval)
     {
         if (BreakInterval is not null && !BreakInterval.IsInside(newWorkInterval))
-            throw new BusinessException("Заданное время перерыва не входит в рабочее время");
-        if (appointmentIntervals.Any(a => !a.IsInside(newWorkInterval)))
-            throw new BusinessException("Назначенные записи не входят в заданное рабочее время");
+            throw new BusinessException("Заданное время перерыва не входит в рабочее время.");
+        if (_appointments.Any(a =>
+                !a.Interval.IsInside(newWorkInterval) &&
+                a.Status is AppointmentStatus.Confirmed or AppointmentStatus.Pending))
+            throw new BusinessException("Назначенные записи не входят в заданное рабочее время.");
         WorkInterval = newWorkInterval;
+    }
+
+    public void ChangeIsWorking(bool isWorking)
+    {
+        if (_appointments.Any(a => a.Status is AppointmentStatus.Pending or AppointmentStatus.Confirmed))
+            throw new BusinessException("Нельзя завершить рабочий день с назначенными записями.");
+        IsWorking = isWorking;
     }
 }

@@ -1,3 +1,11 @@
-﻿namespace Features.Offerings.CreateOffering;
+﻿using Domain.ValueObjects;
 
-public record CreateOfferingResponse(Guid Id, string Title, string Description, decimal Price, TimeSpan Duration);
+namespace Features.Offerings.CreateOffering;
+
+public record CreateOfferingResponse(
+    Guid Id,
+    string Title,
+    string Description,
+    Money Price,
+    TimeSpan Duration
+);

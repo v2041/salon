@@ -1,9 +1,10 @@
-﻿using Infrastructure.Data;
+﻿using Domain.ValueObjects;
+using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace Features.Offerings.GetAllOfferings;
 
-public class Endpoint
+public static class Endpoint
 {
     public static async Task<IResult> GetAllOfferingsAsync(
         SalonDbContext db,
@@ -11,6 +12,7 @@ public class Endpoint
     )
     {
         var response = await db.Offerings
+            .AsNoTracking()
             .Where(o => o.IsActive)
             .Select(o => new GetAllOfferingsResponse(
                 o.Id,

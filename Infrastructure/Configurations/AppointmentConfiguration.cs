@@ -9,9 +9,22 @@ public class AppointmentConfiguration : IEntityTypeConfiguration<Appointment>
     public void Configure(EntityTypeBuilder<Appointment> builder)
     {
         builder.HasKey(a => a.Id);
-        builder.HasMany(a => a.Offerings);
-        builder.HasOne(a => a.User)
-            .WithMany(u => u.Appointments)
+        builder.Property(a => a.Id).ValueGeneratedNever();
+        builder.HasOne<User>()
+            .WithMany()
             .HasForeignKey(a => a.UserId);
+        builder.HasOne(a => a.Schedule)
+            .WithMany(s => s.Appointments)
+            .HasForeignKey(a => a.ScheduleId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasMany(a => a.Offerings)
+            .WithOne();
+        builder.OwnsOne(a => a.Interval,
+            interval =>
+            {
+                interval.Property(p => p.Start).HasColumnName("StartTime");
+                interval.Property(p => p.End).HasColumnName("EndTime");
+            }
+        );
     }
 }

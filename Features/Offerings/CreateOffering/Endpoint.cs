@@ -1,12 +1,13 @@
 ﻿using Domain.Entities;
-using Domain.Exceptions;
+using Domain.ValueObjects;
 using FluentValidation;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Features.Offerings.CreateOffering;
 
-public class Endpoint
+public static class Endpoint
 {
     public static async Task<IResult> CreateOfferingAsync(
         [FromBody] CreateOfferingRequest request,
@@ -27,7 +28,11 @@ public class Endpoint
             return Results.ValidationProblem(errors);
         }
 
-        var offering = Offering.Create(request.Price, request.Title, request.Description, request.Duration);
+        if (await db.Offerings.AnyAsync(o => EF.Functions.ILike(o.Title, request.Title), token))
+            return Results.Conflict();
+
+        var offering = Offering.Create(Money.FromDecimal(request.Price), request.Title, request.Description,
+            request.Duration);
         db.Offerings.Add(offering);
         await db.SaveChangesAsync(token);
         var response = new CreateOfferingResponse(offering.Id, offering.Title, offering.Description, offering.Price,

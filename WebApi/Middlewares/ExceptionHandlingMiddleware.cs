@@ -17,6 +17,7 @@ public class ExceptionHandlingMiddleware(ILogger<ExceptionHandlingMiddleware> lo
             var (status, title) = exception switch
             {
                 BusinessException => (StatusCodes.Status400BadRequest, "Ошибка бизнес-логики"),
+                NotFoundException => (StatusCodes.Status404NotFound, "Данные не найдены"),
                 JsonException => (StatusCodes.Status400BadRequest, "Ошибка формата данных"),
                 BadHttpRequestException => (StatusCodes.Status400BadRequest, "Некорректный запрос"),
                 _ => (StatusCodes.Status500InternalServerError, "Ошибка сервера")
@@ -29,6 +30,7 @@ public class ExceptionHandlingMiddleware(ILogger<ExceptionHandlingMiddleware> lo
             {
                 logger.LogInformation("Ошибка запроса: {Message}", exception.Message);
             }
+
             var problem = new ProblemDetails
             {
                 Title = title,
@@ -37,7 +39,7 @@ public class ExceptionHandlingMiddleware(ILogger<ExceptionHandlingMiddleware> lo
                 Instance = context.Request.Path
             };
             context.Response.StatusCode = status;
-            context.Response.ContentType = "application/problem+json"; 
+            context.Response.ContentType = "application/problem+json";
             await context.Response.WriteAsJsonAsync(problem, context.RequestAborted);
         }
     }

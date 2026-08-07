@@ -21,13 +21,12 @@ public record TimeInterval
 
     public static TimeInterval Create(TimeOnly start, TimeOnly end)
     {
-        if (start >= end)
-            throw new BusinessException("Начало должно быть меньше конца");
-
-        return new TimeInterval(start, end);
+        return start >= end
+            ? throw new BusinessException("Начало должно быть меньше конца")
+            : new TimeInterval(start, end);
     }
 
     public bool IsOverlapping(TimeInterval other) => Start < other.End && End > other.Start;
     public bool IsInside(TimeInterval other) => Start >= other.Start && End <= other.End;
-    public TimeSpan Duration() => End - Start;
+    public TimeSpan Duration => End - Start;
 }

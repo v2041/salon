@@ -2,4 +2,8 @@
 
 namespace Features.Schedules.CreateSchedule;
 
-public record CreateScheduleRequest(DateOnly Date, TimeInterval WorkInterval, TimeInterval? BreakInterval);
+public record CreateScheduleRequest(
+    DateOnly Date,
+    TimeInterval WorkInterval,
+    TimeInterval? BreakInterval
+);

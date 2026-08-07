@@ -1,3 +1,11 @@
-﻿namespace Features.Offerings.GetOffering;
+﻿using Domain.ValueObjects;
 
-public record GetOfferingResponse(Guid Id, string Title, string Description, decimal Price, TimeSpan Duration);
+namespace Features.Offerings.GetOffering;
+
+public record GetOfferingResponse(
+    Guid Id,
+    string Title,
+    string Description,
+    Money Price,
+    TimeSpan Duration
+    );

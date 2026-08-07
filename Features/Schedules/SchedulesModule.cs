@@ -7,8 +7,10 @@ public static class SchedulesModule
         var group = app.MapGroup("/api/schedules")
             .WithTags("Schedules");
         // group.MapGet("/{id}", GetOffering.Endpoint.GetOfferingAsync);
+        group.MapGet("/free-time", GetFreeTime.Endpoint.GetFreeTimeAsync);
+        group.MapGet("/available-dates", GetAvailableDates.Endpoint.GetAvailableDatesAsync);
         group.MapGet("/", GetAllSchedules.Endpoint.GetAllSchedulesAsync);
         group.MapPost("/", CreateSchedule.Endpoint.CreateScheduleAsync);
-        group.MapDelete("/{id}", DeleteSchedule.Endpoint.DeleteScheduleAsync);
+        group.MapPut("/", ChangeSchedule.Endpoint.ChangeScheduleAsync);
     }
 }

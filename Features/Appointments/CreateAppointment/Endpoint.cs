@@ -1,6 +1,5 @@
-﻿using Domain.Entities;
-using Domain.Enums;
-using Domain.Exceptions;
+﻿using Domain.Exceptions;
+using Domain.Services;
 using Domain.ValueObjects;
 using FluentValidation;
 using Infrastructure.Data;
@@ -9,13 +8,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Features.Appointments.CreateAppointment;
 
-public class Endpoint
+public static class Endpoint
 {
     public static async Task<IResult> CreateAppointmentAsync(
         [FromBody] CreateAppointmentRequest request,
         IValidator<CreateAppointmentRequest> validator,
         SalonDbContext db,
-        CancellationToken token)
+        CancellationToken token
+    )
     {
         var validationResult = await validator.ValidateAsync(request, token);
         if (!validationResult.IsValid)
@@ -29,51 +29,37 @@ public class Endpoint
             return Results.ValidationProblem(errors);
         }
 
+        if (!await db.Users.AnyAsync(u => u.Id == request.UserId, token))
+            throw new NotFoundException("Пользователь не найден");
+
+        var schedule = await db.Schedules
+            .Include(s => s.Appointments)
+            .FirstOrDefaultAsync(s => s.Date == request.Date, token);
+        if (schedule == null)
+            throw new NotFoundException("Рабочий день не найден");
+
         var offerings = await db.Offerings
-            .Where(o => request.OfferingIds!.Contains(o.Id))
+            .AsNoTracking()
+            .Where(o => request.OfferingIds.Contains(o.Id))
             .ToListAsync(token);
-        var duration = TimeSpan.Zero;
-        foreach (var offering in offerings)
-        {
-            duration += offering.Duration;
-        }
+        if (offerings.Count != request.OfferingIds.Count)
+            throw new NotFoundException("Одна или несколько услуг не найдены");
 
+        var appointmentOfferingDataList = offerings
+            .Select(o => new AppointmentOfferingData(o.Id, o.Price, o.Duration))
+            .ToList();
+        
+        var appointment = schedule.AddAppointment(request.UserId, request.Time, appointmentOfferingDataList);
 
-        var schedule = await db.Schedules.FirstAsync(s => s.Date == request.Date && s.IsWorking == true, token);
-        var appointments = await db.Appointments.Where(a => a.Date == request.Date).ToListAsync(token);
-
-        var userId = request.UserId;
-        var date = request.Date;
-        var interval = TimeInterval.Create(request.Time, request.Time.Add(duration));
-        var price = offerings.Sum(o => o.Price);
-        var workInterval = schedule.WorkInterval;
-        var busyIntervals = new List<TimeInterval>();
-        busyIntervals.Add(schedule.BreakInterval);
-        busyIntervals.AddRange(appointments
-            .Where(a => a.Status == AppointmentStatus.Confirmed || a.Status == AppointmentStatus.Pending)
-            .Select(a => a.Interval));
-        var appointment = Appointment.Create(
-            userId,
-            date,
-            interval,
-            price,
-            workInterval,
-            busyIntervals
-        );
-        foreach (var offering in offerings)
-        {
-            appointment.AddOffering(offering);
-        }
-
-        db.Appointments.Add(appointment);
         await db.SaveChangesAsync(token);
 
         var response = new CreateAppointmentResponse(
             appointment.Id,
-            appointment.Date,
+            appointment.Schedule.Date,
             appointment.Interval,
-            appointment.Price,
-            appointment.Status);
+            appointment.Status,
+            appointment.Price
+        );
         return Results.Created($"api/appointments/{appointment.Id}", response);
     }
 }

@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Features.Schedules.GetAllSchedules;
 
-public class Endpoint
+public static class Endpoint
 {
     public static async Task<IResult> GetAllSchedulesAsync(
         SalonDbContext db,
@@ -11,7 +11,7 @@ public class Endpoint
     )
     {
         var schedules = await db.Schedules
-            .Where(s => s.Date >= DateOnly.FromDateTime(DateTime.UtcNow))
+            .Where(s => s.Date >= DateOnly.FromDateTime(DateTime.Now))
             .ToListAsync(token);
 
         var responses = schedules.Select(s =>
