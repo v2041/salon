@@ -15,18 +15,16 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             User.Create(
                 "Admin",
                 "Test",
-                "admin",
                 "+79991234567",
-                DateTime.Now
+                DateTime.UtcNow
             )
         );
         builder.HasData(
             User.Create(
                 "Client",
                 "Test",
-                "default",
                 "+79341234567",
-                DateTime.Now
+                DateTime.UtcNow
             )
         );
     }

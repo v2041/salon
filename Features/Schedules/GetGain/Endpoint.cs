@@ -1,4 +1,5 @@
-﻿using Domain.ValueObjects;
+﻿using Domain.Enums;
+using Domain.ValueObjects;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,11 +15,12 @@ public static class Endpoint
     {
         var response = new GetGainResponse(Money.FromDecimal(
             await db.Schedules
-                .Include(s => s.Appointments)
                 .AsNoTracking()
                 .Where(s => s.Date >= request.From && s.Date <= request.To)
                 .SelectMany(s => s.Appointments)
-                .SumAsync(a => a.Price.Value, token)
+                .Where(a => a.Status == AppointmentStatus.Completed)
+                .SelectMany(a => a.Offerings)
+                .SumAsync(ao => ao.Price.Value, token)
         ));
         return Results.Ok(response);
     }

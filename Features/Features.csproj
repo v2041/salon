@@ -16,8 +16,4 @@
       <PackageReference Include="FluentValidation" Version="12.1.1" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Users\Authorize\" />
-    </ItemGroup>
-
 </Project>

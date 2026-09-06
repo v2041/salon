@@ -25,7 +25,7 @@ public class ScheduleService(IServiceScopeFactory scopeFactory, ILogger<Schedule
                     .ToListAsync(token);
 
                 List<Schedule> newSchedules = [];
-                for (var i = 0; i < 14; i++)
+                for (var i = 1; i < 14; i++)
                 {
                     var date = today.AddDays(i);
                     if (schedules.Any(s => s.Date == date)) continue;

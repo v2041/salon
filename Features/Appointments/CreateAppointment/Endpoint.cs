@@ -42,6 +42,7 @@ public static class Endpoint
             .AsNoTracking()
             .Where(o => request.OfferingIds.Contains(o.Id))
             .ToListAsync(token);
+        
         if (offerings.Count != request.OfferingIds.Count)
             throw new NotFoundException("Одна или несколько услуг не найдены");
 

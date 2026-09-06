@@ -35,6 +35,7 @@ public static class Endpoint
             .ToListAsync(token);
         if (durations.Count != request.OfferingIds.Count) return Results.NotFound();
         var duration = durations.Aggregate(TimeSpan.Zero, (current, s) => current + s);
+
         var schedules = await db.Schedules
             .Include(s => s.Appointments)
             .AsNoTracking()
@@ -46,7 +47,6 @@ public static class Endpoint
             .Select(s => s.Date)
             .ToList()
         );
-
 
         return Results.Ok(response);
     }

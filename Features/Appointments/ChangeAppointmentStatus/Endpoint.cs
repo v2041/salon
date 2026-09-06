@@ -36,7 +36,6 @@ public static class Endpoint
             default:
                 throw new NotFoundException("Статус не найден");
         }
-
         await db.SaveChangesAsync(token);
         return Results.NoContent();
     }

@@ -33,10 +33,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
-
-//app.MapUsersEndpoints();
 app.MapAppointmentsEndpoints();
 app.MapOfferingsEndpoints();
 app.MapSchedulesEndpoints();
-//app.UseHttpsRedirection();
 app.Run();

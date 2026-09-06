@@ -66,7 +66,8 @@ public class Schedule
         );
     }
 
-    public Appointment AddAppointment(Guid userId, TimeOnly startTime, List<AppointmentOfferingData> appointmentOfferingData)
+    public Appointment AddAppointment(Guid userId, TimeOnly startTime,
+        List<AppointmentOfferingData> appointmentOfferingData)
     {
         var interval = TimelineBuilder.BuildInterval(startTime, appointmentOfferingData);
         if (DateTime.Now > Date.ToDateTime(interval.Start))
@@ -84,6 +85,32 @@ public class Schedule
         return appointment;
     }
 
+    public void MoveAppointment(Guid appointmentId, TimeOnly startTime)
+    {
+        var appointment = _appointments.FirstOrDefault(a => a.Id == appointmentId);
+        if (appointment is null)
+            throw new BusinessException("Запись не найдена");
+        var interval = TimeInterval.Create(startTime, startTime.Add(appointment.Interval.Duration));
+        if (DateTime.Now > Date.ToDateTime(interval.Start))
+            throw new BusinessException("Нельзя создать запись в прошлом.");
+        if (!interval.IsInside(WorkInterval))
+            throw new BusinessException("Не рабочее время недоступно для записи.");
+        if (BreakInterval != null && interval.IsOverlapping(BreakInterval))
+            throw new BusinessException("Запись не должна занимать время перерыва.");
+        if (_appointments.Any(a =>
+                a.Interval.IsOverlapping(interval) &&
+                a.Status is AppointmentStatus.Confirmed or AppointmentStatus.Pending))
+            throw new BusinessException("Запись не должна занимать время других записей.");
+        appointment.ChangeInterval(interval);
+    }
+
+    public void RemoveAppointment(Guid appointmentId)
+    {
+        var appointment = _appointments.FirstOrDefault(a => a.Id == appointmentId);
+        if (appointment is null)
+            throw new BusinessException("Запись не найдена");
+        _appointments.Remove(appointment);
+    }
     public void ChangeBreakInterval(TimeInterval? newBreakInterval)
     {
         if (newBreakInterval is not null && !newBreakInterval.IsInside(WorkInterval))

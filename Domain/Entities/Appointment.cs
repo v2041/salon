@@ -1,5 +1,6 @@
 ﻿using Domain.Enums;
 using Domain.Exceptions;
+using Domain.Services;
 using Domain.ValueObjects;
 
 namespace Domain.Entities;
@@ -50,7 +51,7 @@ public class Appointment
             throw new BusinessException("Услуги не выбраны");
         var id = Guid.NewGuid();
         var offerings = appointmentOfferingData
-            .Select(d => new AppointmentOffering(id, d.OfferingId, d.Price));
+            .Select(d => new AppointmentOffering(id, d.OfferingId, d.Duration, d.Price));
         return new Appointment(
             id,
             schedule,
@@ -61,6 +62,41 @@ public class Appointment
         );
     }
 
+    internal void ChangeInterval(TimeInterval interval)
+    {
+        Interval = interval;
+    }
+
+    public void ChangeSchedule(Schedule schedule)
+    {
+        schedule.AddAppointment(
+            UserId,
+            Interval.Start,
+            _offerings
+                .Select(o => new AppointmentOfferingData(o.OfferingId, o.Price, o.Duration))
+                .ToList()
+        );
+        Schedule.RemoveAppointment(Id);
+    }
+
+    public void ChangeOfferingPrice(Guid offeringId, Money price)
+    {
+        var offering = _offerings.FirstOrDefault(o => o.OfferingId == offeringId);
+        if (offering == null)
+            throw new BusinessException("Услуга не найдена");
+        offering.ChangePrice(price);
+    }
+
+    public void ChangeOfferingDuration(Guid offeringId, Money price)
+    {
+        
+    }
+    public bool HasFreeTimeAfter(TimeSpan duration)
+    {
+        var freeIntervals = TimelineBuilder.FindFreeIntervals(Schedule);
+        var after = freeIntervals.FirstOrDefault(i => i.Start >= Interval.End);
+        return after != null && after.Duration >= duration;
+    }
     public void Cancel()
     {
         if (Status != AppointmentStatus.Pending && Status != AppointmentStatus.Confirmed)
