@@ -1,13 +1,12 @@
-'use client'
-import React from "react";
-import SimpleBottomNavigation from "@/components/layout/BottomNavigation";
+import {AppRouterCacheProvider} from "@mui/material-nextjs/v13-appRouter";
 
-export default function RootLayout({children}: { children: React.ReactNode }) {
+export default function RootLayout({children}: {children: React.ReactNode}) {
     return (
         <html>
         <body>
-        {children}
-        <SimpleBottomNavigation></SimpleBottomNavigation>
+        <AppRouterCacheProvider>
+            {children}
+        </AppRouterCacheProvider>
         </body>
         </html>
     );
