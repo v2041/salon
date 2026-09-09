@@ -32,8 +32,8 @@ public static class TimelineBuilder
             return [];
         var busyIntervals = FindBusyIntervals(schedule);
         var freeIntervals = new List<TimeInterval>();
-        var currentStart = schedule.Date == DateOnly.FromDateTime(DateTime.Now)
-            ? TimeOnly.FromDateTime(DateTime.Now)
+        var currentStart = schedule.Date == DateOnly.FromDateTime(DateTime.UtcNow)
+            ? TimeOnly.FromDateTime(DateTime.UtcNow)
             : schedule.WorkInterval.Start;
 
         foreach (var busy in busyIntervals)

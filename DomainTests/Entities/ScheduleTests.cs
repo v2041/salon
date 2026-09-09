@@ -19,7 +19,7 @@ public class ScheduleTests
             int? breakEndHours
         )
         {
-            var date = DateOnly.FromDateTime(DateTime.Now).AddDays(1);
+            var date = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1);
             var workInterval = TimeInterval.Create(
                 TimeOnly.FromTimeSpan(TimeSpan.FromHours(workStartHours)),
                 TimeOnly.FromTimeSpan(TimeSpan.FromHours(WorkEndHours))
@@ -42,7 +42,7 @@ public class ScheduleTests
         public void Create_WhenBreakNotInside_ThrowsBusinessException()
         {
             bool isWorking = true;
-            var date = DateOnly.FromDateTime(DateTime.Now).AddDays(1);
+            var date = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1);
             var workInterval = TimeInterval.Create(
                 TimeOnly.FromTimeSpan(TimeSpan.FromHours(10)),
                 TimeOnly.FromTimeSpan(TimeSpan.FromHours(18))
@@ -58,7 +58,7 @@ public class ScheduleTests
         public void Create_WhenBreakBigger_ThrowsBusinessException()
         {
             bool isWorking = true;
-            var date = DateOnly.FromDateTime(DateTime.Now).AddDays(1);
+            var date = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1);
             var workInterval = TimeInterval.Create(
                 TimeOnly.FromTimeSpan(TimeSpan.FromHours(10)),
                 TimeOnly.FromTimeSpan(TimeSpan.FromHours(18))
@@ -74,7 +74,7 @@ public class ScheduleTests
         public void Create_WhenBreakEqualsWork_ThrowsBusinessException()
         {
             bool isWorking = true;
-            var date = DateOnly.FromDateTime(DateTime.Now).AddDays(1);
+            var date = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1);
             var workInterval = TimeInterval.Create(
                 TimeOnly.FromTimeSpan(TimeSpan.FromHours(10)),
                 TimeOnly.FromTimeSpan(TimeSpan.FromHours(18))
@@ -90,7 +90,7 @@ public class ScheduleTests
         public void Create_WhenWorkTooSmall_ThrowsBusinessException()
         {
             bool isWorking = true;
-            var date = DateOnly.FromDateTime(DateTime.Now).AddDays(1);
+            var date = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1);
             var workInterval = TimeInterval.Create(
                 TimeOnly.FromTimeSpan(TimeSpan.FromHours(10)),
                 TimeOnly.FromTimeSpan(TimeSpan.FromHours(11))
@@ -105,7 +105,7 @@ public class ScheduleTests
         public void AddAppointment_WithValid_ReturnsAppointment()
         {
             bool isWorking = true;
-            var date = DateOnly.FromDateTime(DateTime.Today).AddDays(1);
+            var date = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1);
             var startTime = new TimeOnly(10, 0, 0);
             var workInterval = TimeInterval.Create(
                 new TimeOnly(10, 0, 0),

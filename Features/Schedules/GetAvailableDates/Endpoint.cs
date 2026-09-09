@@ -39,7 +39,7 @@ public static class Endpoint
         var schedules = await db.Schedules
             .Include(s => s.Appointments)
             .AsNoTracking()
-            .Where(s => s.Date >= DateOnly.FromDateTime(DateTime.Now))
+            .Where(s => s.Date >= DateOnly.FromDateTime(DateTime.UtcNow))
             .ToListAsync(token);
 
         var response = new GetAvailableDatesResponse(schedules

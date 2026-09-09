@@ -30,9 +30,9 @@ public class Offering
     }
 
     public Guid Id { get; }
-    public Money Price { get; private set; }
-    public string Title { get; private set; }
-    public string Description { get; private set; }
+    public Money Price { get; private set; } = default!;
+    public string Title { get; private set; } = string.Empty;
+    public string Description { get; private set; } = string.Empty;
     public TimeSpan Duration { get; private set; }
     public bool IsActive { get; private set; }
 

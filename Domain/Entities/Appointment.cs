@@ -103,7 +103,7 @@ public class Appointment
             throw new BusinessException("Действие недоступно для текущего статуса записи");
 
         if (Status == AppointmentStatus.Confirmed &&
-            (Schedule.Date.ToDateTime(Interval.Start) - DateTime.Now).TotalHours < 2)
+            (Schedule.Date.ToDateTime(Interval.Start) - DateTime.UtcNow).TotalHours < 2)
             throw new BusinessException("Нельзя отменить запись менее чем за 2 часа до начала");
 
         Status = AppointmentStatus.Canceled;

@@ -11,7 +11,7 @@ public static class Endpoint
     )
     {
         var schedules = await db.Schedules
-            .Where(s => s.Date >= DateOnly.FromDateTime(DateTime.Now))
+            .Where(s => s.Date >= DateOnly.FromDateTime(DateTime.UtcNow))
             .ToListAsync(token);
 
         var responses = schedules.Select(s =>

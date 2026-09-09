@@ -1,0 +1,19 @@
+# Build results
+[Bb]in/
+[Oo]bj/
+artifacts/
+TestResults/
+
+# Rider / Visual Studio
+.idea/
+.vs/
+*.sln.DotSettings.user
+*.user
+
+# NuGet
+*.nupkg
+*.snk
+
+# OS
+Thumbs.db
+.DS_Store

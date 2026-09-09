@@ -44,9 +44,9 @@ public class Schedule
         TimeInterval? breakInterval
     )
     {
-        if (date < DateOnly.FromDateTime(DateTime.Now) ||
-            (date == DateOnly.FromDateTime(DateTime.Now) &&
-             workInterval.Start < TimeOnly.FromDateTime(DateTime.Now)))
+        if (date < DateOnly.FromDateTime(DateTime.UtcNow) ||
+            (date == DateOnly.FromDateTime(DateTime.UtcNow) &&
+             workInterval.Start < TimeOnly.FromDateTime(DateTime.UtcNow)))
         {
             throw new BusinessException("Нельзя назначить рабочий день в прошлом.");
         }
@@ -70,7 +70,7 @@ public class Schedule
         List<AppointmentOfferingData> appointmentOfferingData)
     {
         var interval = TimelineBuilder.BuildInterval(startTime, appointmentOfferingData);
-        if (DateTime.Now > Date.ToDateTime(interval.Start))
+        if (DateTime.UtcNow > Date.ToDateTime(interval.Start))
             throw new BusinessException("Нельзя создать запись в прошлом.");
         if (!interval.IsInside(WorkInterval))
             throw new BusinessException("Не рабочее время недоступно для записи.");
@@ -91,7 +91,7 @@ public class Schedule
         if (appointment is null)
             throw new BusinessException("Запись не найдена");
         var interval = TimeInterval.Create(startTime, startTime.Add(appointment.Interval.Duration));
-        if (DateTime.Now > Date.ToDateTime(interval.Start))
+        if (DateTime.UtcNow > Date.ToDateTime(interval.Start))
             throw new BusinessException("Нельзя создать запись в прошлом.");
         if (!interval.IsInside(WorkInterval))
             throw new BusinessException("Не рабочее время недоступно для записи.");

@@ -17,7 +17,7 @@ public class VerificationCode
 
     public static VerificationCode Create(string phone, DateTime? dateTime = null)
     {
-        var now = dateTime ?? DateTime.Now;
+        var now = dateTime ?? DateTime.UtcNow;
         var code = GenerateCode();
         var expiresAt = now.AddMinutes(5);
         return new VerificationCode(phone, code, expiresAt, now);
