@@ -9,7 +9,7 @@ public static class AppointmentsModule
         var group = app.MapGroup("/api/appointments")
             .WithTags("Appointments");
         group.MapGet("/{id}", GetAppointment.Endpoint.GetAppointmentAsync);
-        group.MapGet("/admin/all", GetAllAppointments.Endpoint.GetAllAppointmentsAsync);
+        group.MapGet("/all", GetAllAppointments.Endpoint.GetAllAppointmentsAsync);
         group.MapGet("/user", GetUserAppointments.Endpoint.GetUserAppointmentsAsync);
         group.MapPost("/", CreateAppointment.Endpoint.CreateAppointmentAsync);
         group.MapPatch("{id}/status", ChangeAppointmentStatus.Endpoint.ChangeAppointmentStatusAsync);

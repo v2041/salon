@@ -1,5 +1,5 @@
 ﻿using Domain.ValueObjects;
 
-namespace Features.Schedules.GetGain;
+namespace Features.Analytics.GetGain;
 
 public record GetGainResponse(Money Gain);

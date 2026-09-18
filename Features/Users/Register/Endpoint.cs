@@ -1,4 +1,5 @@
 ﻿using Domain.Entities;
+using Infrastructure.Authentication;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,6 +10,8 @@ public static class Endpoint
     public static async Task<IResult> RegisterAsync(
         RegisterRequest request,
         SalonDbContext db,
+        IConfiguration configuration,
+        HttpContext context,
         CancellationToken token
     )
     {
@@ -22,6 +25,15 @@ public static class Endpoint
         db.VerificationCodes.Remove(code);
         db.Users.Add(user);
         await db.SaveChangesAsync(token);
-        return Results.Created($"/users/{user.Id}", user);
+        var jwtToken = JwtTokenGenerator.Create(user, configuration);
+        var cookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = false,
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTimeOffset.UtcNow.AddDays(30)
+        };
+        context.Response.Cookies.Append("some-cookies", jwtToken, cookieOptions);
+        return Results.Ok();
     }
 }

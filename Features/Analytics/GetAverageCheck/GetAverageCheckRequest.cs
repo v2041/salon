@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace Features.Schedules.GetGain;
+namespace Features.Analytics.GetAverageCheck;
 
-public record GetGainRequest(
+public record GetAverageCheckRequest(
     [FromQuery] DateOnly From,
     [FromQuery] DateOnly To
 );

@@ -24,7 +24,7 @@ public static class Endpoint
                 );
             return Results.ValidationProblem(errors);
         }
-        
+
         var response = await db.Offerings
             .AsNoTracking()
             .Where(o => o.Id == request.Id)
@@ -33,7 +33,8 @@ public static class Endpoint
                 o.Title,
                 o.Description,
                 o.Price,
-                o.Duration
+                o.Duration,
+                o.Category
             ))
             .FirstOrDefaultAsync(token);
         return response == null ? Results.NotFound() : Results.Ok(response);

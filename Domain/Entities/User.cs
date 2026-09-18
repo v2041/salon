@@ -50,4 +50,9 @@ public class User
             UserRole.Default
         );
     }
+
+    public void MarkLoggedIn()
+    {
+        LastLoginAt = DateTime.UtcNow;
+    }
 }

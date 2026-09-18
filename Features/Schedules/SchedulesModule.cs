@@ -8,7 +8,6 @@ public static class SchedulesModule
             .WithTags("Schedules");
 
         group.MapGet("/free-time", GetFreeTime.Endpoint.GetFreeTimeAsync);
-        group.MapGet("/gain", GetGain.Endpoint.GetGainAsync);
         group.MapGet("/available-dates", GetAvailableDates.Endpoint.GetAvailableDatesAsync);
         group.MapGet("/", GetAllSchedules.Endpoint.GetAllSchedulesAsync);
         group.MapPost("/", CreateSchedule.Endpoint.CreateScheduleAsync);

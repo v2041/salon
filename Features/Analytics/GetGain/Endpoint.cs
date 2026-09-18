@@ -3,7 +3,7 @@ using Domain.ValueObjects;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace Features.Schedules.GetGain;
+namespace Features.Analytics.GetGain;
 
 public static class Endpoint
 {

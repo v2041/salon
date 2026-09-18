@@ -32,11 +32,11 @@ public static class Endpoint
             return Results.Conflict();
 
         var offering = Offering.Create(Money.FromDecimal(request.Price), request.Title, request.Description,
-            request.Duration);
+            request.Duration, request.Category);
         db.Offerings.Add(offering);
         await db.SaveChangesAsync(token);
         var response = new CreateOfferingResponse(offering.Id, offering.Title, offering.Description, offering.Price,
-            offering.Duration);
+            offering.Duration, offering.Category);
         return Results.Created($"api/offerings/{offering.Id}", response);
     }
 }

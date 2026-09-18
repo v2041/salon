@@ -1,6 +1,13 @@
-﻿namespace Features.Offerings.ChangeOffering;
+﻿using Domain.Enums;
+using Domain.ValueObjects;
 
-public class ChangeOfferingResponse
-{
-    
-}
+namespace Features.Offerings.ChangeOffering;
+
+public record ChangeOfferingResponse(
+    Guid Id,
+    string Title,
+    string Description,
+    Money Price,
+    TimeSpan Duration,
+    Category Category
+);

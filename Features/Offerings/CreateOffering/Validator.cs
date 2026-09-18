@@ -7,7 +7,7 @@ public class Validator : AbstractValidator<CreateOfferingRequest>
     public Validator()
     {
         RuleLevelCascadeMode = CascadeMode.Stop;
-            
+
         RuleFor(x => x.Title)
             .NotEmpty()
             .WithMessage("Требуется название.");
@@ -20,5 +20,9 @@ public class Validator : AbstractValidator<CreateOfferingRequest>
             .NotEmpty()
             .WithMessage("Требуется длительность.")
             .GreaterThan(TimeSpan.Zero);
+
+        RuleFor(x => x.Category)
+            .IsInEnum()
+            .WithMessage("Некорректная категория.");
     }
 }

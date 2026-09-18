@@ -1,4 +1,5 @@
-﻿using Domain.ValueObjects;
+﻿using Domain.Enums;
+using Domain.ValueObjects;
 
 namespace Features.Offerings.GetOffering;
 
@@ -7,5 +8,6 @@ public record GetOfferingResponse(
     string Title,
     string Description,
     Money Price,
-    TimeSpan Duration
-    );
+    TimeSpan Duration,
+    Category Category
+);

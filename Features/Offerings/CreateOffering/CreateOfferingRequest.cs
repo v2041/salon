@@ -1,3 +1,11 @@
-﻿namespace Features.Offerings.CreateOffering;
+﻿using Domain.Enums;
 
-public record CreateOfferingRequest(decimal Price, string Title, string Description, TimeSpan Duration);
+namespace Features.Offerings.CreateOffering;
+
+public record CreateOfferingRequest(
+    decimal Price,
+    string Title,
+    string Description,
+    TimeSpan Duration,
+    Category Category
+);

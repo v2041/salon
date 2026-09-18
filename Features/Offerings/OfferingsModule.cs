@@ -9,6 +9,7 @@ public static class OfferingsModule
         group.MapGet("/{id}", GetOffering.Endpoint.GetOfferingAsync);
         group.MapGet("/", GetAllOfferings.Endpoint.GetAllOfferingsAsync);
         group.MapPost("/", CreateOffering.Endpoint.CreateOfferingAsync);
-        group.MapDelete("/{id}", DeleteOffering.Endpoint.DeleteOfferingAsync);
+        group.MapPut("/{id}", ChangeOffering.Endpoint.ChangeOfferingAsync).RequireAuthorization();
+        group.MapDelete("/{id}", DeleteOffering.Endpoint.DeleteOfferingAsync).RequireAuthorization();
     }
 }

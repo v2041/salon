@@ -19,7 +19,8 @@ public static class Endpoint
                 o.Title,
                 o.Description,
                 o.Price,
-                o.Duration
+                o.Duration,
+                o.Category
             ))
             .ToListAsync(token);
         return Results.Ok(response);

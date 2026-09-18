@@ -3,6 +3,7 @@ using System;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(SalonDbContext))]
-    partial class SalonDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260918184732_AddCategoryToOffering")]
+    partial class AddCategoryToOffering
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -145,20 +148,20 @@ namespace Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("d4c60e8f-86b8-4634-8008-9c78df7e7347"),
-                            CreatedAt = new DateTime(2026, 9, 18, 18, 53, 16, 900, DateTimeKind.Utc).AddTicks(6594),
+                            Id = new Guid("8cfe2e74-089c-42c1-99db-b95eb9f0a369"),
+                            CreatedAt = new DateTime(2026, 9, 18, 18, 47, 32, 355, DateTimeKind.Utc).AddTicks(4644),
                             FirstName = "Admin",
-                            LastLoginAt = new DateTime(2026, 9, 18, 18, 53, 16, 900, DateTimeKind.Utc).AddTicks(6594),
+                            LastLoginAt = new DateTime(2026, 9, 18, 18, 47, 32, 355, DateTimeKind.Utc).AddTicks(4644),
                             LastName = "Test",
                             Phone = "+79991234567",
                             Role = 0
                         },
                         new
                         {
-                            Id = new Guid("ff9152cd-b1b1-4218-9cdf-d80155e145d8"),
-                            CreatedAt = new DateTime(2026, 9, 18, 18, 53, 16, 901, DateTimeKind.Utc).AddTicks(1640),
+                            Id = new Guid("3f3bc361-39a1-4eb9-8993-4fa07e7d89cf"),
+                            CreatedAt = new DateTime(2026, 9, 18, 18, 47, 32, 355, DateTimeKind.Utc).AddTicks(9727),
                             FirstName = "Client",
-                            LastLoginAt = new DateTime(2026, 9, 18, 18, 53, 16, 901, DateTimeKind.Utc).AddTicks(1640),
+                            LastLoginAt = new DateTime(2026, 9, 18, 18, 47, 32, 355, DateTimeKind.Utc).AddTicks(9727),
                             LastName = "Test",
                             Phone = "+79341234567",
                             Role = 0

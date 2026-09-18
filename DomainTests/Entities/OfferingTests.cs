@@ -1,4 +1,5 @@
 ﻿using Domain.Entities;
+using Domain.Enums;
 using Domain.Exceptions;
 using Domain.ValueObjects;
 
@@ -12,7 +13,8 @@ public class OfferingTests
             Money.FromDecimal(500),
             "услуга",
             "описание услуги",
-            TimeSpan.FromMinutes(30)
+            TimeSpan.FromMinutes(30),
+            Category.Hair
         );
 
         [Fact]
@@ -22,7 +24,8 @@ public class OfferingTests
                 Money.FromDecimal(500),
                 "title",
                 "desc",
-                TimeSpan.FromMinutes(30)
+                TimeSpan.FromMinutes(30),
+                Category.Hair
             );
             Assert.IsType<Offering>(offering);
         }
@@ -42,7 +45,8 @@ public class OfferingTests
         )
         {
             Assert.Throws<BusinessException>(() =>
-                Offering.Create(Money.FromDecimal(100), title, description, TimeSpan.FromMinutes(durationMinutes)));
+                Offering.Create(Money.FromDecimal(100), title, description, TimeSpan.FromMinutes(durationMinutes),
+                    Category.Hair));
         }
     }
 
@@ -52,7 +56,8 @@ public class OfferingTests
             Money.FromDecimal(500),
             "услуга",
             "описание услуги",
-            TimeSpan.FromMinutes(30)
+            TimeSpan.FromMinutes(30),
+            Category.Hair
         );
 
         [Fact]
@@ -76,7 +81,8 @@ public class OfferingTests
             Money.FromDecimal(500),
             "услуга",
             "описание услуги",
-            TimeSpan.FromMinutes(30)
+            TimeSpan.FromMinutes(30),
+            Category.Hair
         );
 
         [Fact]
@@ -116,7 +122,8 @@ public class OfferingTests
             Money.FromDecimal(500),
             "услуга",
             "описание услуги",
-            TimeSpan.FromMinutes(30)
+            TimeSpan.FromMinutes(30),
+            Category.Hair
         );
 
         [Fact]
@@ -142,7 +149,8 @@ public class OfferingTests
             Money.FromDecimal(500),
             "услуга",
             "описание услуги",
-            TimeSpan.FromMinutes(30)
+            TimeSpan.FromMinutes(30),
+            Category.Hair
         );
 
         [Fact]
@@ -151,6 +159,24 @@ public class OfferingTests
             var validPrice = Money.FromDecimal(100);
             _offering.ChangePrice(validPrice);
             Assert.Equal(validPrice, _offering.Price);
+        }
+    }
+
+    public class ChangeCategory
+    {
+        private readonly Offering _offering = Offering.Create(
+            Money.FromDecimal(500),
+            "услуга",
+            "описание услуги",
+            TimeSpan.FromMinutes(30),
+            Category.Hair
+        );
+
+        [Fact]
+        public void ChangeCategory_WithValidCategory_UpdatesCategory()
+        {
+            _offering.ChangeCategory(Category.Nails);
+            Assert.Equal(Category.Nails, _offering.Category);
         }
     }
 }

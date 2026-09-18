@@ -1,4 +1,5 @@
-﻿using Domain.Exceptions;
+﻿using Domain.Enums;
+using Domain.Exceptions;
 using Domain.ValueObjects;
 
 namespace Domain.Entities;
@@ -18,7 +19,8 @@ public class Offering
         string title,
         string description,
         TimeSpan duration,
-        bool isActive
+        bool isActive,
+        Category category
     )
     {
         Id = id;
@@ -27,6 +29,7 @@ public class Offering
         Description = description;
         Duration = duration;
         IsActive = isActive;
+        Category = category;
     }
 
     public Guid Id { get; }
@@ -35,8 +38,9 @@ public class Offering
     public string Description { get; private set; } = string.Empty;
     public TimeSpan Duration { get; private set; }
     public bool IsActive { get; private set; }
+    public Category Category { get; private set; }
 
-    public static Offering Create(Money price, string title, string description, TimeSpan duration)
+    public static Offering Create(Money price, string title, string description, TimeSpan duration, Category category)
     {
         if (duration <= TimeSpan.FromMinutes(MIN_DURATION_MINUTES))
             throw new BusinessException($"Минимальная длительность услуги - {MIN_DURATION_MINUTES} минут.");
@@ -46,7 +50,7 @@ public class Offering
             throw new BusinessException("Описание не должно быть пустым.");
         if (title.Length > MAX_TITLE_LENGTH)
             throw new BusinessException("Название слишком длинное.");
-        return new Offering(Guid.NewGuid(), price, title, description, duration, true);
+        return new Offering(Guid.NewGuid(), price, title, description, duration, true, category);
     }
 
     public void ChangeTitle(string newTitle)
@@ -73,6 +77,7 @@ public class Offering
     }
 
     public void ChangePrice(Money newPrice) => Price = newPrice;
+    public void ChangeCategory(Category newCategory) => Category = newCategory;
     public void Remove() => IsActive = false;
     public void Restore() => IsActive = true;
 }
