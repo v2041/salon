@@ -10,6 +10,9 @@ TestResults/
 *.sln.DotSettings.user
 *.user
 
+# Local config with secrets
+WebApi/appsettings.Development.json
+
 # NuGet
 *.nupkg
 *.snk
