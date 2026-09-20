@@ -26,6 +26,10 @@ public record TimeInterval
             : new TimeInterval(start, end);
     }
 
+    public static TimeSpan IntervalsDuration(IEnumerable<TimeInterval> intervals)
+        => intervals.Aggregate(TimeSpan.Zero, (current, interval) => current + interval.Duration);
+
+
     public bool IsOverlapping(TimeInterval other) => Start < other.End && End > other.Start;
     public bool IsInside(TimeInterval other) => Start >= other.Start && End <= other.End;
     public TimeSpan Duration => End - Start;
