@@ -1,5 +1,6 @@
 ﻿using Infrastructure.Authentication;
 using Infrastructure.Data;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Features.Users.Login;
@@ -7,7 +8,7 @@ namespace Features.Users.Login;
 public static class Endpoint
 {
     public static async Task<IResult> LoginAsync(
-        LoginRequest request,
+        [FromBody] LoginRequest request,
         SalonDbContext db,
         IConfiguration configuration,
         HttpContext context,

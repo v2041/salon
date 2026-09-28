@@ -2,12 +2,12 @@
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace Features.Appointments.ChangeAppointmentOffering;
+namespace Features.Appointments.ChangeAppointmentOfferingPrice;
 
 public static class Endpoint
 {
     public static async Task<IResult> ChangeAppointmentOfferingPriceAsync(
-        ChangeAppointmentOfferingPriceRequest request,
+        [AsParameters] ChangeAppointmentOfferingPriceRequest request,
         SalonDbContext db,
         CancellationToken token
     )

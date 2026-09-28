@@ -1,4 +1,5 @@
 ﻿using Infrastructure.Data;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Features.Schedules.ChangeSchedule;
@@ -6,7 +7,7 @@ namespace Features.Schedules.ChangeSchedule;
 public static class Endpoint
 {
     public static async Task<IResult> ChangeScheduleAsync(
-        ChangeScheduleRequest request,
+        [FromBody] ChangeScheduleRequest request,
         SalonDbContext db,
         CancellationToken token
     )

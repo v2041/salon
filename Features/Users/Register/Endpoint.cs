@@ -1,6 +1,7 @@
 ﻿using Domain.Entities;
 using Infrastructure.Authentication;
 using Infrastructure.Data;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Features.Users.Register;
@@ -8,7 +9,7 @@ namespace Features.Users.Register;
 public static class Endpoint
 {
     public static async Task<IResult> RegisterAsync(
-        RegisterRequest request,
+        [FromBody] RegisterRequest request,
         SalonDbContext db,
         IConfiguration configuration,
         HttpContext context,

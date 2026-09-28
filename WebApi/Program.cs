@@ -50,13 +50,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             }
         };
     });
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("Admin", p => p.RequireRole("Admin"))
+    .AddPolicy("User", p => p.RequireAuthenticatedUser());
 builder.Services.AddHostedService<ScheduleService>();
 var app = builder.Build();
 app.UseCors();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();

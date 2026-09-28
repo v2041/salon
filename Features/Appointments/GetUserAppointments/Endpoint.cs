@@ -1,4 +1,6 @@
-﻿using Infrastructure.Data;
+﻿using System.Security.Claims;
+using Domain.Entities;
+using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace Features.Appointments.GetUserAppointments;
@@ -6,22 +8,22 @@ namespace Features.Appointments.GetUserAppointments;
 public static class Endpoint
 {
     public static async Task<IResult> GetUserAppointmentsAsync(
-        [AsParameters] GetUserAppointmentsRequest request,
+        HttpContext context,
         SalonDbContext db,
         CancellationToken token
     )
     {
-        if (!await db.Users.AnyAsync(u => u.Id == request.UserId, token))
-            return Results.NotFound();
+        var value = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (value == null) return Results.NotFound();
+        var userId = Guid.Parse(value);
         var response = await db.Appointments
             .AsNoTracking()
-            .Where(a => a.UserId == request.UserId)
+            .Where(a => a.UserId == userId)
             .Include(a => a.Offerings)
             .Select(a => new GetUserAppointmentsResponse(
                 a.Id,
                 a.Schedule.Date,
                 a.Interval,
-                a.UserId,
                 a.Status,
                 a.Price
             ))

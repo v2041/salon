@@ -4,12 +4,13 @@ public static class OfferingsModule
 {
     public static void MapOfferingsEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/offerings")
+        var group = app
+            .MapGroup("/api/offerings")
             .WithTags("Offerings");
         group.MapGet("/{id}", GetOffering.Endpoint.GetOfferingAsync);
         group.MapGet("/", GetAllOfferings.Endpoint.GetAllOfferingsAsync);
-        group.MapPost("/", CreateOffering.Endpoint.CreateOfferingAsync);
-        group.MapPut("/{id}", ChangeOffering.Endpoint.ChangeOfferingAsync).RequireAuthorization();
-        group.MapDelete("/{id}", DeleteOffering.Endpoint.DeleteOfferingAsync).RequireAuthorization();
+        group.MapPost("/", CreateOffering.Endpoint.CreateOfferingAsync).RequireAuthorization("Admin");
+        group.MapPut("/{id}", ChangeOffering.Endpoint.ChangeOfferingAsync).RequireAuthorization("Admin");
+        group.MapDelete("/{id}", DeleteOffering.Endpoint.DeleteOfferingAsync).RequireAuthorization("Admin");
     }
 }

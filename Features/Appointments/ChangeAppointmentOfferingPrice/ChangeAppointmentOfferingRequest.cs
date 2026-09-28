@@ -1,9 +1,10 @@
 ﻿using Domain.ValueObjects;
+using Microsoft.AspNetCore.Mvc;
 
-namespace Features.Appointments.ChangeAppointmentOffering;
+namespace Features.Appointments.ChangeAppointmentOfferingPrice;
 
 public record ChangeAppointmentOfferingPriceRequest(
-    Guid AppointmentId,
-    Guid OfferingId,
-    Money Price
+    [FromRoute] Guid AppointmentId,
+    [FromRoute] Guid OfferingId,
+    [FromBody] Money Price
 );

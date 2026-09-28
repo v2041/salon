@@ -1,5 +1,6 @@
 ﻿using Infrastructure.Data;
 using Infrastructure.Entities;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Features.Users.SendVerificationCode;
@@ -7,7 +8,7 @@ namespace Features.Users.SendVerificationCode;
 public static class Endpoint
 {
     public static async Task<IResult> SendVerificationCodeAsync(
-        SendVerificationCodeRequest request,
+        [FromBody] SendVerificationCodeRequest request,
         SalonDbContext db,
         CancellationToken token
     )

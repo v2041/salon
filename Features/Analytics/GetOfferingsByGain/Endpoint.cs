@@ -1,14 +1,15 @@
 ﻿using Domain.Enums;
 using Domain.ValueObjects;
+using Features.Analytics.GetOfferingsByPopularity;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace Features.Analytics.GetOfferingsByPopularity;
+namespace Features.Analytics.GetOfferingsByGain;
 
 public static class Endpoint
 {
-    public static async Task<IResult> GetOfferingsByPopularityAsync(
-        [AsParameters] GetOfferingsByPopularityRequest request,
+    public static async Task<IResult> GetOfferingsByGainAsync(
+        [AsParameters] GetOfferingsByGainRequest request,
         SalonDbContext db,
         CancellationToken token
     )
@@ -30,12 +31,12 @@ public static class Endpoint
                     Count = appointmentOfferings.Count()
                 })
             .Where(x => x.Count > 0)
-            .OrderByDescending(x => x.Count)
+            .OrderByDescending(x => x.PriceValue)
             .ThenBy(x => x.Name)
             .ToListAsync(token);
 
         var response = rows
-            .Select(r => new GetOfferingsByPopularityResponse(
+            .Select(r => new GetOfferingsByGainResponse(
                 r.Name,
                 r.Count,
                 Money.FromDecimal(r.PriceValue)))
