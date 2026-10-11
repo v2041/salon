@@ -1,0 +1,9 @@
+
+**/bin/
+**/obj/
+**/node_modules/
+
+.idea/
+*.user
+
+backend/WebApi/appsettings.Development.json
