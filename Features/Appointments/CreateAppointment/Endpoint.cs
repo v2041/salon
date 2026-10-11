@@ -1,4 +1,5 @@
-﻿using Domain.Exceptions;
+﻿using System.Security.Claims;
+using Domain.Exceptions;
 using Domain.Services;
 using Domain.ValueObjects;
 using FluentValidation;
@@ -12,6 +13,7 @@ public static class Endpoint
 {
     public static async Task<IResult> CreateAppointmentAsync(
         [FromBody] CreateAppointmentRequest request,
+        HttpContext context,
         IValidator<CreateAppointmentRequest> validator,
         SalonDbContext db,
         CancellationToken token
@@ -29,8 +31,9 @@ public static class Endpoint
             return Results.ValidationProblem(errors);
         }
 
-        if (!await db.Users.AnyAsync(u => u.Id == request.UserId, token))
-            throw new NotFoundException("Пользователь не найден");
+        var value = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (value == null) return Results.NotFound();
+        var userId = Guid.Parse(value);
 
         var schedule = await db.Schedules
             .Include(s => s.Appointments)
@@ -50,7 +53,7 @@ public static class Endpoint
             .Select(o => new AppointmentOfferingData(o.Id, o.Price, o.Duration))
             .ToList();
         
-        var appointment = schedule.AddAppointment(request.UserId, request.Time, appointmentOfferingDataList);
+        var appointment = schedule.AddAppointment(userId, request.Time, appointmentOfferingDataList);
 
         await db.SaveChangesAsync(token);
 

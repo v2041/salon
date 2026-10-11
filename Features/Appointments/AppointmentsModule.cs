@@ -1,6 +1,4 @@
-﻿using Endpoint = Features.Appointments.ChangeAppointmentStatus.Endpoint;
-
-namespace Features.Appointments;
+﻿namespace Features.Appointments;
 
 public static class AppointmentsModule
 {
@@ -10,11 +8,12 @@ public static class AppointmentsModule
             .MapGroup("/api/appointments")
             .WithTags("Appointments")
             .RequireAuthorization("User");
-        group.MapGet("/{id}", GetAppointment.Endpoint.GetAppointmentAsync);
+        group.MapGet("/{id}", GetAppointment.Endpoint.GetAppointmentAsync).RequireAuthorization("Admin");
         group.MapGet("/all", GetAllAppointments.Endpoint.GetAllAppointmentsAsync).RequireAuthorization("Admin");
         group.MapGet("/user", GetUserAppointments.Endpoint.GetUserAppointmentsAsync);
         group.MapPost("/", CreateAppointment.Endpoint.CreateAppointmentAsync);
         group.MapPatch("{id}/cancel", CancelAppointment.Endpoint.CancelAppointmentAsync);
+        group.MapPatch("{id}/change-time", ChangeAppointmentTime.Endpoint.ChangeAppointmentTimeAsync).RequireAuthorization("Admin");
         group.MapPatch("{id}/change-status", ChangeAppointmentStatus.Endpoint.ChangeAppointmentStatusAsync).RequireAuthorization("Admin");
         group.MapPatch("{AppointmentId}/offering/{OfferingId}/change-price", ChangeAppointmentOfferingPrice.Endpoint.ChangeAppointmentOfferingPriceAsync).RequireAuthorization("Admin");
     }

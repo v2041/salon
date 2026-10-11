@@ -1,10 +1,7 @@
-﻿using Domain.Enums;
-using Domain.ValueObjects;
-
-namespace Features.Appointments.ChangeAppointment;
+﻿namespace Features.Appointments.ChangeAppointmentTime;
 
 public record ChangeAppointmentTimeRequest(
     Guid Id,
-    DateOnly? Date,
-    TimeOnly? Time
+    DateOnly Date,
+    TimeOnly Time
 );

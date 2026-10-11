@@ -67,18 +67,6 @@ public class Appointment
         Interval = interval;
     }
 
-    public void ChangeSchedule(Schedule schedule)
-    {
-        schedule.AddAppointment(
-            UserId,
-            Interval.Start,
-            _offerings
-                .Select(o => new AppointmentOfferingData(o.OfferingId, o.Price, o.Duration))
-                .ToList()
-        );
-        Schedule.RemoveAppointment(Id);
-    }
-
     public void ChangeOfferingPrice(Guid offeringId, Money price)
     {
         var offering = _offerings.FirstOrDefault(o => o.OfferingId == offeringId);
@@ -87,16 +75,15 @@ public class Appointment
         offering.ChangePrice(price);
     }
 
+    public void ChangeSchedule(Schedule schedule)
+    {
+        Schedule = schedule;
+    }
+
     public void ChangeOfferingDuration(Guid offeringId, Money price)
     {
-        
     }
-    public bool HasFreeTimeAfter(TimeSpan duration)
-    {
-        var freeIntervals = TimelineBuilder.FindFreeIntervals(Schedule);
-        var after = freeIntervals.FirstOrDefault(i => i.Start >= Interval.End);
-        return after != null && after.Duration >= duration;
-    }
+
     public void Cancel()
     {
         if (Status != AppointmentStatus.Pending && Status != AppointmentStatus.Confirmed)

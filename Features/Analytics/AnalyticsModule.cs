@@ -7,6 +7,7 @@ public static class AnalyticsModule
         var group = app.MapGroup("api/analytics/").WithTags("Analytics").RequireAuthorization("Admin");
         group.MapGet("/gain", GetGain.Endpoint.GetGainAsync);
         group.MapGet("/offerings-popularity", GetOfferingsByPopularity.Endpoint.GetOfferingsByPopularityAsync);
+        group.MapGet("/offerings-gain", GetOfferingsByGain.Endpoint.GetOfferingsByGainAsync);
         group.MapGet("/no-show-rate", GetNoShowRate.Endpoint.GetNoShowRateAsync);
         group.MapGet("/average-check", GetAverageCheck.Endpoint.GetAverageCheckAsync);
         group.MapGet("/average-hour-gain", GetAverageHourGain.Endpoint.GetAverageHourGainAsync);

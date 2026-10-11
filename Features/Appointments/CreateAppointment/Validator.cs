@@ -8,11 +8,7 @@ public class Validator : AbstractValidator<CreateAppointmentRequest>
     public Validator()
     {
         RuleLevelCascadeMode = CascadeMode.Stop;
-
-        RuleFor(x => x.UserId)
-            .NotEmpty()
-            .WithMessage("UserId обязателен");
-
+        
         RuleFor(x => x.OfferingIds)
             .NotEmpty()
             .WithMessage("Список услуг обязателен")
