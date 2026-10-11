@@ -1,0 +1,22 @@
+# Build results
+[Bb]in/
+[Oo]bj/
+artifacts/
+TestResults/
+
+# Rider / Visual Studio
+.idea/
+.vs/
+*.sln.DotSettings.user
+*.user
+
+# Local config with secrets
+WebApi/appsettings.Development.json
+
+# NuGet
+*.nupkg
+*.snk
+
+# OS
+Thumbs.db
+.DS_Store
