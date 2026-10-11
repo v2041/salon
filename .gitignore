@@ -6,4 +6,7 @@
 .idea/
 *.user
 
+# Локальные инструкции AI-агентов — не коммитить, живут только на диске
+**/AGENTS.md
+
 backend/WebApi/appsettings.Development.json
