@@ -146,19 +146,19 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = new Guid("d4c60e8f-86b8-4634-8008-9c78df7e7347"),
-                            CreatedAt = new DateTime(2026, 9, 18, 18, 53, 16, 900, DateTimeKind.Utc).AddTicks(6594),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             FirstName = "Admin",
-                            LastLoginAt = new DateTime(2026, 9, 18, 18, 53, 16, 900, DateTimeKind.Utc).AddTicks(6594),
+                            LastLoginAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             LastName = "Test",
                             Phone = "+79991234567",
-                            Role = 0
+                            Role = 1
                         },
                         new
                         {
                             Id = new Guid("ff9152cd-b1b1-4218-9cdf-d80155e145d8"),
-                            CreatedAt = new DateTime(2026, 9, 18, 18, 53, 16, 901, DateTimeKind.Utc).AddTicks(1640),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             FirstName = "Client",
-                            LastLoginAt = new DateTime(2026, 9, 18, 18, 53, 16, 901, DateTimeKind.Utc).AddTicks(1640),
+                            LastLoginAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             LastName = "Test",
                             Phone = "+79341234567",
                             Role = 0

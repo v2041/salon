@@ -41,14 +41,33 @@ public class User
         DateTime dateTime
     )
     {
+        return Create(firstName, lastName, phone, dateTime, Guid.NewGuid());
+    }
+
+    public static User Create(
+        string firstName,
+        string? lastName,
+        string phone,
+        DateTime dateTime,
+        Guid id
+    )
+    {
         return new User(
-            Guid.NewGuid(),
+            id,
             firstName,
             lastName,
             phone,
             dateTime,
             UserRole.Default
         );
+    }
+
+    public void PromoteToAdmin()
+    {
+        if (Role == UserRole.Admin)
+            return;
+
+        Role = UserRole.Admin;
     }
 
     public void MarkLoggedIn()
