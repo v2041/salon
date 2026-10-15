@@ -1,24 +1,27 @@
-import {ExpandLess as ExpandLessIcon, ExpandMore as ExpandMoreIcon} from "@mui/icons-material";
-import {Box, Checkbox, Collapse, List, ListItemButton, Paper, Stack, Typography} from "@mui/material";
-import {useState} from "react";
-import {formatDurationValue, formatPrice} from "@/lib/format";
+"use client";
 
-export type Offering = {id: number; title: string; category: string; price: number; duration: number};
+import {ExpandLess as ExpandLessIcon, ExpandMore as ExpandMoreIcon} from "@mui/icons-material";
+import {Box, Checkbox, Collapse, List, ListItem, ListItemButton, Paper, Stack, Typography} from "@mui/material";
+import {useState} from "react";
+import {durationToMinutes, formatCategory, formatDurationValue, formatPrice} from "@/lib/format";
+import type {OfferingResponse} from "@/lib/types";
 
 type Props = {
-    offerings: Offering[];
-    selectedIds: number[];
-    onToggle: (id: number) => void;
+    offerings: OfferingResponse[];
+    selectedIds?: string[];
+    onToggle?: (id: string) => void;
 };
 
-export default function OfferingList({offerings, selectedIds, onToggle}: Props) {
+export default function OfferingList({offerings, selectedIds = [], onToggle}: Props) {
     const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+    const selectable = onToggle !== undefined;
 
-    const groups: {category: string; items: Offering[]}[] = [];
+    const groups: {category: string; items: OfferingResponse[]}[] = [];
     for (const o of offerings) {
-        const g = groups.find(x => x.category === o.category);
+        const category = formatCategory(o.category);
+        const g = groups.find(x => x.category === category);
         if (g) g.items.push(o);
-        else groups.push({category: o.category, items: [o]});
+        else groups.push({category, items: [o]});
     }
 
     return (
@@ -34,7 +37,7 @@ export default function OfferingList({offerings, selectedIds, onToggle}: Props) 
                         >
                             <Stack direction="row" spacing={1} sx={{alignItems: "center"}}>
                                 <Typography variant="subtitle1" sx={{fontWeight: 600}}>{category}</Typography>
-                                {selectedCount > 0 && (
+                                {selectable && selectedCount > 0 && (
                                     <Typography variant="body2" color="primary">{selectedCount}</Typography>
                                 )}
                             </Stack>
@@ -44,20 +47,44 @@ export default function OfferingList({offerings, selectedIds, onToggle}: Props) 
                             <List disablePadding sx={{pt: 0.5}}>
                                 {items.map(o => {
                                     const checked = selectedIds.includes(o.id);
-                                    return (
-                                        <ListItemButton key={o.id} selected={checked} onClick={() => onToggle(o.id)} sx={{borderRadius: 1, "& + &": {mt: 0.5}}}>
-                                            <Checkbox
-                                                checked={checked}
-                                                tabIndex={-1}
-                                                onClick={e => e.stopPropagation()}
-                                                onChange={() => onToggle(o.id)}
-                                                slotProps={{input: {"aria-label": o.title}}}
-                                            />
-                                            <Typography variant="body2" sx={{fontWeight: 500, flexGrow: 1}}>{o.title}</Typography>
-                                            <Stack direction="row" spacing={1} sx={{alignItems: "baseline"}}>
-                                                <Typography variant="body2" color="text.secondary">{formatDurationValue(o.duration)}</Typography>
-                                                <Typography variant="body2" sx={{fontWeight: 600, whiteSpace: "nowrap"}}>{formatPrice(o.price)}</Typography>
+                                    const content = (
+                                        <>
+                                            {selectable && (
+                                                <Checkbox
+                                                    checked={checked}
+                                                    tabIndex={-1}
+                                                    onClick={e => e.stopPropagation()}
+                                                    onChange={() => onToggle?.(o.id)}
+                                                    slotProps={{input: {"aria-label": o.title}}}
+                                                />
+                                            )}
+                                            <Box sx={{flexGrow: 1, minWidth: 0}}>
+                                                <Typography variant="body2" sx={{fontWeight: 500}}>{o.title}</Typography>
+                                                <Typography variant="caption" color="text.secondary" sx={{display: "block"}}>
+                                                    {o.description}
+                                                </Typography>
+                                            </Box>
+                                            <Stack direction="row" spacing={1} sx={{alignItems: "baseline", flexShrink: 0}}>
+                                                <Typography variant="body2" color="text.secondary">{formatDurationValue(durationToMinutes(o.duration))}</Typography>
+                                                <Typography variant="body2" sx={{fontWeight: 600, whiteSpace: "nowrap"}}>{formatPrice(o.price.value)}</Typography>
                                             </Stack>
+                                        </>
+                                    );
+                                    if (!selectable) {
+                                        return (
+                                            <ListItem key={o.id} sx={{borderRadius: 1, "& + &": {mt: 0.5}}}>
+                                                {content}
+                                            </ListItem>
+                                        );
+                                    }
+                                    return (
+                                        <ListItemButton
+                                            key={o.id}
+                                            selected={checked}
+                                            onClick={() => onToggle?.(o.id)}
+                                            sx={{borderRadius: 1, "& + &": {mt: 0.5}}}
+                                        >
+                                            {content}
                                         </ListItemButton>
                                     );
                                 })}

@@ -1,3 +1,5 @@
+import {Category} from "./types";
+
 export function plural(n: number, one: string, few: string, many: string) {
     const n10 = n % 10;
     const n100 = n % 100;
@@ -25,6 +27,28 @@ export function formatDurationValue(mins: number) {
 
 export function formatDuration(start: string, end: string) {
     return formatDurationValue(Math.round((+new Date(end) - +new Date(start)) / 60000));
+}
+
+export function durationToMinutes(duration: string) {
+    const [hours, minutes] = duration.split(":").map(Number);
+    return hours * 60 + minutes;
+}
+
+export function formatTimeOnly(time: string) {
+    return time.slice(0, 5);
+}
+
+export function formatCategory(category: Category) {
+    switch (category) {
+        case Category.Hair:
+            return "Волосы";
+        case Category.Nails:
+            return "Ногти";
+        case Category.Face:
+            return "Лицо";
+        case Category.Other:
+            return "Прочее";
+    }
 }
 
 function startOfDay(d: Date) {

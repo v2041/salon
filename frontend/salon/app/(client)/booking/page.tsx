@@ -1,43 +1,28 @@
 ﻿"use client";
 
 import {CheckCircle as CheckCircleIcon} from "@mui/icons-material";
-import {Button, Stack, Typography} from "@mui/material";
+import {Alert, Button, CircularProgress, Paper, Stack, Typography} from "@mui/material";
 import type {ReactNode} from "react";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import BookingSummaryBar from "@/components/booking/BookingSummaryBar";
 import Calendar from "@/components/booking/Calendar";
-import OfferingList, {type Offering} from "@/components/booking/OfferingList";
+import OfferingList from "@/components/booking/OfferingList";
 import TimeGrid from "@/components/booking/TimeGrid";
-import {AppointmentCard, AppointmentStatus, type Appointment} from "@/components/MyAppointmentsList";
-import {formatDurationValue, minutesToTime, timeToMinutes, toIsoDate} from "@/lib/format";
+import {ApiError, appointmentsApi, offeringsApi, schedulesApi} from "@/lib/api";
+import {
+    durationToMinutes,
+    formatDayLabel,
+    formatDurationValue,
+    formatPrice,
+    formatTimeOnly,
+    minutesToTime,
+    timeToMinutes,
+} from "@/lib/format";
+import type {Money, OfferingResponse, TimeInterval} from "@/lib/types";
 
-const OFFERINGS: Offering[] = [
-    {id: 2, title: "Стрижка", category: "Волосы", price: 600, duration: 45},
-    {id: 3, title: "Окрашивание", category: "Волосы", price: 4500, duration: 180},
-    {id: 4, title: "Укладка", category: "Волосы", price: 1200, duration: 60},
-    {id: 1, title: "Маникюр", category: "Ногти", price: 2000, duration: 60},
-    {id: 5, title: "Педикюр", category: "Ногти", price: 2500, duration: 90},
-];
-
-const FREE_INTERVALS = [
-    {start: "10:00", end: "13:30"},
-    {start: "14:00", end: "17:30"},
-    {start: "18:00", end: "20:00"},
-];
-
-const AVAILABLE_DATES: string[] = (() => {
-    const dates: string[] = [];
-    for (let i = 0; dates.length < 10; i++) {
-        const d = new Date();
-        d.setDate(d.getDate() + i);
-        if (d.getDay() !== 1) dates.push(toIsoDate(d));
-    }
-    return dates;
-})();
-
-function buildSlots(totalDuration: number): string[] {
+function buildSlots(intervals: TimeInterval[], totalDuration: number): string[] {
     const slots: string[] = [];
-    for (const iv of FREE_INTERVALS) {
+    for (const iv of intervals) {
         const start = timeToMinutes(iv.start);
         const end = timeToMinutes(iv.end);
         for (let t = start; t + totalDuration <= end; t += 30) {
@@ -56,50 +41,147 @@ function Section({title, children}: {title: string; children: ReactNode}) {
     );
 }
 
+function Loader() {
+    return (
+        <Stack sx={{alignItems: "center", py: 2}}>
+            <CircularProgress size={24}/>
+        </Stack>
+    );
+}
+
+function errorMessage(error: unknown, fallback: string) {
+    return error instanceof Error ? error.message : fallback;
+}
+
+type Booked = {id: string; date: string; start: string; end: string; price: Money};
+
 export default function BookingPage() {
-    const [selectedIds, setSelectedIds] = useState<number[]>([]);
+    const [offerings, setOfferings] = useState<OfferingResponse[]>([]);
+    const [offeringsLoading, setOfferingsLoading] = useState(true);
+    const [offeringsError, setOfferingsError] = useState<string | null>(null);
+
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [availableDates, setAvailableDates] = useState<string[]>([]);
+    const [datesLoading, setDatesLoading] = useState(false);
+    const [datesError, setDatesError] = useState<string | null>(null);
     const [date, setDate] = useState<string | null>(null);
+
+    const [intervals, setIntervals] = useState<TimeInterval[]>([]);
+    const [slotsLoading, setSlotsLoading] = useState(false);
     const [time, setTime] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [booked, setBooked] = useState<{date: string; time: string} | null>(null);
 
-    const selectedOfferings = OFFERINGS.filter(o => selectedIds.includes(o.id));
-    const total = selectedOfferings.reduce((sum, o) => sum + o.price, 0);
-    const totalDuration = selectedOfferings.reduce((sum, o) => sum + o.duration, 0);
-    const slots = date ? buildSlots(totalDuration) : [];
+    const [submitting, setSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
+    const [booked, setBooked] = useState<Booked | null>(null);
 
-    function toggleOffering(id: number) {
-        setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+    useEffect(() => {
+        offeringsApi.getAll()
+            .then(setOfferings)
+            .catch((e: unknown) => setOfferingsError(errorMessage(e, "Не удалось загрузить услуги")))
+            .finally(() => setOfferingsLoading(false));
+    }, []);
+
+    useEffect(() => {
+        if (selectedIds.length === 0) return;
+        let cancelled = false;
+        schedulesApi.getAvailableDates(selectedIds)
+            .then(res => {
+                if (!cancelled) setAvailableDates(res.dates);
+            })
+            .catch((e: unknown) => {
+                if (!cancelled) setDatesError(errorMessage(e, "Не удалось загрузить даты"));
+            })
+            .finally(() => {
+                if (!cancelled) setDatesLoading(false);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [selectedIds]);
+
+    useEffect(() => {
+        if (!date) return;
+        let cancelled = false;
+        schedulesApi.getFreeTime(date)
+            .then(res => {
+                if (!cancelled) setIntervals(res.freeIntervals);
+            })
+            .catch(() => {
+                if (!cancelled) setIntervals([]);
+            })
+            .finally(() => {
+                if (!cancelled) setSlotsLoading(false);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [date]);
+
+    const selectedOfferings = offerings.filter(o => selectedIds.includes(o.id));
+    const total = selectedOfferings.reduce((sum, o) => sum + o.price.value, 0);
+    const totalDuration = selectedOfferings.reduce((sum, o) => sum + durationToMinutes(o.duration), 0);
+    const slots = date ? buildSlots(intervals, totalDuration) : [];
+
+    function toggleOffering(id: string) {
+        const next = selectedIds.includes(id) ? selectedIds.filter(x => x !== id) : [...selectedIds, id];
+        setSelectedIds(next);
         setDate(null);
         setTime(null);
+        setAvailableDates([]);
+        setIntervals([]);
+        setDatesError(null);
+        setDatesLoading(next.length > 0);
     }
 
-    function submit() {
+    function selectDate(next: string) {
+        setDate(next);
+        setTime(null);
+        setIntervals([]);
+        setSlotsLoading(true);
+    }
+
+    async function submit() {
         if (!date || !time) return;
-        setLoading(true);
-        setTimeout(() => {
-            setLoading(false);
-            setBooked({date, time});
-        }, 600);
+        setSubmitting(true);
+        setSubmitError(null);
+        try {
+            const created = await appointmentsApi.create({
+                date,
+                time: `${time}:00`,
+                offeringIds: selectedIds,
+            });
+            setBooked({
+                id: created.id,
+                date: created.date,
+                start: created.interval.start,
+                end: created.interval.end,
+                price: created.price,
+            });
+        } catch (e) {
+            if (e instanceof ApiError && e.status === 401) {
+                setSubmitError("Войдите, чтобы записаться");
+            } else {
+                setSubmitError(errorMessage(e, "Не удалось создать запись"));
+            }
+        } finally {
+            setSubmitting(false);
+        }
     }
 
     function reset() {
         setSelectedIds([]);
         setDate(null);
         setTime(null);
+        setAvailableDates([]);
+        setIntervals([]);
+        setDatesError(null);
+        setDatesLoading(false);
+        setSlotsLoading(false);
+        setSubmitError(null);
         setBooked(null);
     }
 
     if (booked) {
-        const start = `${booked.date}T${booked.time}:00`;
-        const end = `${booked.date}T${minutesToTime(timeToMinutes(booked.time) + totalDuration)}:00`;
-        const appointment: Appointment = {
-            id: 1,
-            start,
-            end,
-            status: AppointmentStatus.Pending,
-            services: selectedOfferings.map(o => ({id: o.id, name: o.title, price: o.price})),
-        };
         return (
             <>
                 <h1>Записаться</h1>
@@ -108,7 +190,16 @@ export default function BookingPage() {
                         <CheckCircleIcon color="success" sx={{fontSize: 56}}/>
                         <Typography variant="h6">Вы записаны!</Typography>
                     </Stack>
-                    <AppointmentCard appointment={appointment} muted={false}/>
+                    <Paper variant="outlined" elevation={1} sx={{borderRadius: 2, p: 2, borderColor: "text.disabled"}}>
+                        <Stack spacing={0.5}>
+                            <Typography variant="subtitle1" sx={{fontWeight: 600}}>{formatDayLabel(booked.date)}</Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                {formatTimeOnly(booked.start)}–{formatTimeOnly(booked.end)} ·{" "}
+                                {formatDurationValue(timeToMinutes(booked.end) - timeToMinutes(booked.start))}
+                            </Typography>
+                            <Typography variant="body2" sx={{fontWeight: 600}}>{formatPrice(booked.price.value)}</Typography>
+                        </Stack>
+                    </Paper>
                     <Stack direction="row" spacing={2} sx={{justifyContent: "center", pb: 4}}>
                         <Button variant="contained" href="/my-appointments">Мои записи</Button>
                         <Button variant="text" onClick={reset}>Записаться ещё раз</Button>
@@ -123,27 +214,40 @@ export default function BookingPage() {
             <h1>Записаться</h1>
             <Stack spacing={4} sx={{pb: 20}}>
                 <Section title="Услуги">
-                    <OfferingList offerings={OFFERINGS} selectedIds={selectedIds} onToggle={toggleOffering}/>
+                    {offeringsLoading
+                        ? <Loader/>
+                        : offeringsError
+                            ? <Alert severity="error">{offeringsError}</Alert>
+                            : <OfferingList offerings={offerings} selectedIds={selectedIds} onToggle={toggleOffering}/>}
                 </Section>
                 <Section title="Дата">
                     {selectedIds.length === 0
                         ? <Typography color="text.secondary">Сначала выберите услуги</Typography>
-                        : <Calendar availableDates={AVAILABLE_DATES} selected={date} onSelect={setDate}/>}
+                        : datesLoading
+                            ? <Loader/>
+                            : datesError
+                                ? <Alert severity="error">{datesError}</Alert>
+                                : availableDates.length === 0
+                                    ? <Typography color="text.secondary">Нет доступных дат</Typography>
+                                    : <Calendar availableDates={availableDates} selected={date} onSelect={selectDate}/>}
                 </Section>
                 <Section title="Время">
                     {!date
                         ? <Typography color="text.secondary">Выберите дату</Typography>
-                        : slots.length === 0
-                            ? <Typography color="text.secondary">Нет свободных слотов</Typography>
-                            : <TimeGrid slots={slots} selected={time} onSelect={setTime}/>}
+                        : slotsLoading
+                            ? <Loader/>
+                            : slots.length === 0
+                                ? <Typography color="text.secondary">Нет свободных слотов</Typography>
+                                : <TimeGrid slots={slots} selected={time} onSelect={setTime}/>}
                 </Section>
+                {submitError && <Alert severity="error">{submitError}</Alert>}
             </Stack>
             {selectedIds.length > 0 && (
                 <BookingSummaryBar
                     total={total}
                     durationLabel={formatDurationValue(totalDuration)}
                     disabled={!date || !time}
-                    loading={loading}
+                    loading={submitting}
                     onSubmit={submit}
                 />
             )}

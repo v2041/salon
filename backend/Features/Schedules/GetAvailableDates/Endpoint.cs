@@ -9,7 +9,7 @@ namespace Features.Schedules.GetAvailableDates;
 public static class Endpoint
 {
     public static async Task<IResult> GetAvailableDatesAsync(
-        [FromQuery] GetAvailableDatesRequest request,
+        [FromQuery(Name = "offeringIds")] GetAvailableDatesRequest request,
         IValidator<GetAvailableDatesRequest> validator,
         SalonDbContext db,
         CancellationToken token
