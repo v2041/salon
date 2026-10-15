@@ -45,6 +45,9 @@ Salon.API/
 GET /api/appointments/{id} - Получить запись по ID (доступ: все)
 GET /api/appointments/admin/all - Все записи (доступ: Admin)
 GET /api/appointments/user - Записи пользователя (доступ: User)
+  Ответ: [{ "id": "guid", "date": "2026-08-10", "interval": { "start": "10:00:00", "end": "11:00:00" },
+    "status": 0, "price": { "value": 2000, "currency": "RUB" },
+    "offerings": [{ "title": "Маникюр", "price": { "value": 2000, "currency": "RUB" } }] }]
 POST /api/appointments/ - Создать запись (доступ: User)
 PATCH /api/appointments/{id}/status - Изменить статус (доступ: Admin/User)
 
@@ -98,10 +101,19 @@ GET /api/schedules/free-time?date=2026-08-10
 GET /api/schedules/available-dates?offeringIds=guid1,guid2
 Ответ: { "dates": ["2026-08-10", "2026-08-12"] }
 
-### Аутентификация (планируется)
+### Аутентификация
 
-POST /api/auth/request-code - Запросить код подтверждения
+POST /api/auth/send-code - Отправить код подтверждения
+  Тело: { "phone": "+79991234567" }
+  Ответ: { "expiresAt": "2026-08-10T10:05:00", "isRegistered": true }
 POST /api/auth/login - Вход по телефону + код
+  Тело: { "phone": "+79991234567", "code": "1234" }
+POST /api/auth/register - Регистрация нового клиента
+  Тело: { "phone": "+79991234567", "code": "1234", "firstName": "Иван", "lastName": "Иванов" }
+POST /api/auth/logout - Выход, удаляет cookie. Ответ: 204
+GET /api/auth/me - Текущий пользователь (требует cookie)
+  Ответ: { "id": "guid", "firstName": "Иван", "lastName": "Иванов", "phone": "+79991234567", "role": 0 }
+  Без cookie: 401
 
 ## Доменная модель
 

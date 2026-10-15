@@ -9,5 +9,7 @@ public static class UsersModule
         group.MapPost("/register",Register.Endpoint.RegisterAsync);
         group.MapPost("/login",Login.Endpoint.LoginAsync);
         group.MapPost("/send-code",SendVerificationCode.Endpoint.SendVerificationCodeAsync);
+        group.MapPost("/logout",Logout.Endpoint.Logout);
+        group.MapGet("/me",GetCurrentUser.Endpoint.GetCurrentUserAsync).RequireAuthorization();
     }
 }

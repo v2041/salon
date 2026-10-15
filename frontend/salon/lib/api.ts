@@ -13,6 +13,7 @@
     type CreateAppointmentRequest,
     type CreateOfferingRequest,
     type CreateScheduleRequest,
+    type CurrentUser,
     type FreeTimeResponse,
     type GainResponse,
     type LoginRequest,
@@ -24,6 +25,7 @@
     type ScheduleResponse,
     type SendVerificationCodeRequest,
     type SendVerificationCodeResponse,
+    type UserAppointmentResponse,
 } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5164";
@@ -105,7 +107,7 @@ export const schedulesApi = {
 export const appointmentsApi = {
     get: (id: string) => apiFetch<AppointmentDetailResponse>(`/api/appointments/${id}`),
     getAll: () => apiFetch<AdminAppointmentResponse[]>("/api/appointments/all"),
-    getByUser: () => apiFetch<AppointmentResponse[]>("/api/appointments/user"),
+    getByUser: () => apiFetch<UserAppointmentResponse[]>("/api/appointments/user"),
     create: (request: CreateAppointmentRequest) =>
         apiFetch<AppointmentResponse>("/api/appointments/", { method: "POST", ...json(request) }),
     cancel: (id: string) =>
@@ -131,6 +133,8 @@ export const authApi = {
         apiFetch<void>("/api/auth/login", { method: "POST", ...json(request) }),
     register: (request: RegisterRequest) =>
         apiFetch<void>("/api/auth/register", { method: "POST", ...json(request) }),
+    logout: () => apiFetch<void>("/api/auth/logout", { method: "POST" }),
+    me: () => apiFetch<CurrentUser>("/api/auth/me"),
 };
 
 export const analyticsApi = {

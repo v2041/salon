@@ -17,10 +17,12 @@ public static class Endpoint
         if (existing is not null)
             db.VerificationCodes.Remove(existing);
 
+        var isRegistered = await db.Users.AnyAsync(u => u.Phone == request.Phone, token);
+
         var code = VerificationCode.Create(request.Phone);
         db.VerificationCodes.Add(code);
         await db.SaveChangesAsync(token);
-        var response = new SendVerificationCodeResponse(code.ExpiresAt);
+        var response = new SendVerificationCodeResponse(code.ExpiresAt, isRegistered);
         return Results.Ok(response);
     }
 }

@@ -100,6 +100,15 @@ export type AdminAppointmentResponse = {
     status: AppointmentStatus;
 };
 
+export type UserAppointmentOffering = {
+    title: string;
+    price: Money;
+};
+
+export type UserAppointmentResponse = AppointmentResponse & {
+    offerings: UserAppointmentOffering[];
+};
+
 export type FreeTimeResponse = {
     freeIntervals: TimeInterval[];
 };
@@ -160,6 +169,15 @@ export type SendVerificationCodeRequest = {
 
 export type SendVerificationCodeResponse = {
     expiresAt: string;
+    isRegistered: boolean;
+};
+
+export type CurrentUser = {
+    id: string;
+    firstName: string;
+    lastName: string;
+    phone: string;
+    role: UserRole;
 };
 
 export type LoginRequest = {
