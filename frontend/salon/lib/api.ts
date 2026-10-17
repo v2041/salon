@@ -10,6 +10,7 @@
     type ChangeAppointmentTimeRequest,
     type ChangeOfferingRequest,
     type ChangeScheduleRequest,
+    type CreateAppointmentForUserRequest,
     type CreateAppointmentRequest,
     type CreateOfferingRequest,
     type CreateScheduleRequest,
@@ -110,6 +111,8 @@ export const appointmentsApi = {
     getByUser: () => apiFetch<UserAppointmentResponse[]>("/api/appointments/user"),
     create: (request: CreateAppointmentRequest) =>
         apiFetch<AppointmentResponse>("/api/appointments/", { method: "POST", ...json(request) }),
+    createForUser: (request: CreateAppointmentForUserRequest) =>
+        apiFetch<AppointmentResponse>("/api/appointments/admin", { method: "POST", ...json(request) }),
     cancel: (id: string) =>
         apiFetch<void>(`/api/appointments/${id}/cancel`, {
             method: "PATCH",
@@ -123,6 +126,11 @@ export const appointmentsApi = {
         apiFetch<void>(`/api/appointments/${appointmentId}/offering/${offeringId}/change-price`, {
             method: "PATCH",
             ...json(price),
+        }),
+    changeOfferingDuration: (appointmentId: string, offeringId: string, duration: string) =>
+        apiFetch<void>(`/api/appointments/${appointmentId}/offering/${offeringId}/change-duration`, {
+            method: "PATCH",
+            ...json(duration),
         }),
 };
 

@@ -1,9 +1,14 @@
 :root {
-  --background: #f7f2ea;
-  --foreground: #1a1a1a;
+  --background: #ffffff;
+  --foreground: #241b1b;
+}
+
+html {
+  height: 100%;
 }
 
 body {
   color: var(--foreground);
-  background: var(--background);
+  background-color: #ffffff;
+  min-height: 100vh;
 }

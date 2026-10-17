@@ -4,6 +4,7 @@ import {Alert, Box, Button, Paper, Stack, TextField, Typography} from "@mui/mate
 import {useState} from "react";
 import {authApi} from "@/lib/api";
 import {useAuth} from "@/lib/auth";
+import {accentInk} from "@/lib/theme";
 
 export default function LoginScreen() {
     const {refresh} = useAuth();
@@ -49,7 +50,7 @@ export default function LoginScreen() {
             <Paper sx={{p: 3.5, width: "100%", maxWidth: 400, borderRadius: "24px", border: 1, borderColor: "divider", boxShadow: "0 30px 70px -40px rgba(26,26,26,0.55)"}}>
                 <Stack spacing={2.25}>
                     <Stack spacing={0.5}>
-                        <Typography variant="overline" sx={{color: "secondary.main", letterSpacing: "0.16em"}}>
+                        <Typography variant="overline" sx={{color: accentInk, letterSpacing: "0.16em"}}>
                             Онлайн-запись
                         </Typography>
                         <Typography variant="h5">Салон красоты</Typography>

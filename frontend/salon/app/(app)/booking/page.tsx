@@ -7,38 +7,20 @@ import Calendar from "@/components/booking/Calendar";
 import ServicePicker from "@/components/booking/ServicePicker";
 import TimeGrid from "@/components/booking/TimeGrid";
 import {appointmentsApi, offeringsApi, schedulesApi} from "@/lib/api";
-import {durationToMinutes, formatDayLabel, formatDurationValue, formatPrice, formatTimeOnly, minutesToTime, timeToMinutes} from "@/lib/format";
-import {cardShadow} from "@/lib/theme";
+import {durationToMinutes, formatDayLabel, formatDurationValue, formatPrice, formatTimeOnly, timeToMinutes} from "@/lib/format";
+import {accentInk, cardSx, darkSurface, serviceZoneBorder} from "@/lib/theme";
+import {buildSlots} from "@/lib/slots";
 import type {Money, OfferingResponse, TimeInterval} from "@/lib/types";
 
 const CONTACTS = {address: "ул. Примерная, д. 1", phone: "+7 (999) 123-45-67"};
-
-const cardSx = {
-    p: 2,
-    borderRadius: "20px",
-    border: 1,
-    borderColor: "divider",
-    bgcolor: "background.paper",
-    boxShadow: cardShadow,
-};
 
 const darkSx = {
     p: 2,
     borderRadius: "20px",
     border: "none",
-    color: "#F6F1E8",
-    backgroundImage: "linear-gradient(135deg, #1B1916 0%, #2C2721 100%)",
+    color: "#FBF3F2",
+    backgroundColor: darkSurface,
 };
-
-function buildSlots(intervals: TimeInterval[], total: number) {
-    const slots: string[] = [];
-    for (const iv of intervals) {
-        for (let t = timeToMinutes(iv.start); t + total <= timeToMinutes(iv.end); t += 30) {
-            slots.push(minutesToTime(t));
-        }
-    }
-    return slots;
-}
 
 function Loader() {
     return <Stack sx={{alignItems: "center", py: 3}}><CircularProgress size={22}/></Stack>;
@@ -55,7 +37,7 @@ function StepDots({step}: {step: "services" | "time"}) {
                         height: 4,
                         width: 34,
                         borderRadius: 2,
-                        bgcolor: i <= active ? "secondary.main" : "divider",
+                        bgcolor: i <= active ? "primary.main" : "divider",
                         transition: "background-color .2s",
                     }}
                 />
@@ -166,8 +148,8 @@ export default function BookingPage() {
             <Stack spacing={2.5}>
                 <Paper sx={{...cardSx, p: 3}}>
                     <Stack spacing={2} sx={{alignItems: "center", textAlign: "center"}}>
-                        <Box sx={{width: 64, height: 64, borderRadius: "50%", bgcolor: "rgba(169,131,92,0.14)", display: "flex", alignItems: "center", justifyContent: "center"}}>
-                            <CheckCircleIcon sx={{fontSize: 34, color: "secondary.main"}}/>
+                        <Box sx={{width: 64, height: 64, borderRadius: "50%", bgcolor: "rgba(201,138,147,0.18)", display: "flex", alignItems: "center", justifyContent: "center"}}>
+                            <CheckCircleIcon sx={{fontSize: 34, color: accentInk}}/>
                         </Box>
                         <Typography variant="h6">Вы записаны</Typography>
                         <Stack spacing={0.25}>
@@ -189,7 +171,7 @@ export default function BookingPage() {
     return (
         <Stack spacing={2.5}>
             <Stack spacing={1}>
-                <Typography variant="overline" sx={{color: "secondary.main", letterSpacing: "0.16em"}}>
+                <Typography variant="overline" sx={{color: accentInk, letterSpacing: "0.16em"}}>
                     Онлайн-запись
                 </Typography>
                 <Typography variant="h5">
@@ -202,7 +184,7 @@ export default function BookingPage() {
 
             {step === "services" && (
                 <>
-                    <Paper sx={{...cardSx, p: 1.5}}>
+                    <Paper sx={{...cardSx, p: 1.5, border: 3, borderColor: serviceZoneBorder}}>
                         {offeringsLoading
                             ? <Loader/>
                             : <ServicePicker offerings={offerings} selectedIds={selectedIds} onToggle={toggle}/>}

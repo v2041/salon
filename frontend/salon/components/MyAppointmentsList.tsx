@@ -5,7 +5,7 @@ import {Alert, Box, Chip, CircularProgress, Divider, Paper, Stack, Typography} f
 import {useEffect, useState} from "react";
 import {appointmentsApi} from "@/lib/api";
 import {formatDayLabel, formatDurationValue, formatPrice, formatTimeOnly, timeToMinutes} from "@/lib/format";
-import {cardShadow} from "@/lib/theme";
+import {accentInk, cardSx} from "@/lib/theme";
 import {AppointmentStatus} from "@/lib/types";
 import type {UserAppointmentResponse} from "@/lib/types";
 
@@ -18,17 +18,7 @@ const STATUS_META: Record<AppointmentStatus, {label: string; color: "warning" | 
     [AppointmentStatus.Rejected]: {label: "Отклонена", color: "error"},
 };
 
-const cardSx = {
-    p: 2,
-    borderRadius: "20px",
-    border: 1,
-    borderColor: "divider",
-    bgcolor: "background.paper",
-    boxShadow: cardShadow,
-};
-
-function startOf(a: UserAppointmentResponse) {
-    return new Date(`${a.date}T${a.interval.start}`);
+function startOf(a: UserAppointmentResponse) {    return new Date(`${a.date}T${a.interval.start}`);
 }
 
 function AppointmentCard({appointment, muted}: {appointment: UserAppointmentResponse; muted: boolean}) {
@@ -81,13 +71,13 @@ function Section({
     return (
         <Stack spacing={1.5}>
             <Stack direction="row" spacing={1} sx={{alignItems: "baseline"}}>
-                <Typography variant="overline" sx={{color: "text.secondary", letterSpacing: "0.14em"}}>
+                <Typography variant="overline" sx={{color: accentInk, letterSpacing: "0.14em"}}>
                     {title}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">{appointments.length}</Typography>
+                <Typography variant="caption" sx={{color: "text.secondary"}}>{appointments.length}</Typography>
             </Stack>
             {appointments.length === 0 && (
-                <Typography variant="body2" color="text.secondary">Нет записей</Typography>
+                <Typography variant="body2" sx={{color: "text.secondary"}}>Нет записей</Typography>
             )}
             {appointments.map(a => (
                 <AppointmentCard key={a.id} appointment={a} muted={muted}/>
@@ -122,7 +112,7 @@ export default function MyAppointmentsList() {
     }, []);
 
     if (loading) {
-        return <Box sx={{display: "flex", justifyContent: "center", py: 4}}><CircularProgress size={24}/></Box>;
+        return <Box sx={{display: "flex", justifyContent: "center", py: 4}}><CircularProgress size={24} sx={{color: accentInk}}/></Box>;
     }
 
     if (error) {

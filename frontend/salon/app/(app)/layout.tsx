@@ -17,11 +17,14 @@ import Link from "next/link";
 import {usePathname} from "next/navigation";
 import LoginScreen from "@/components/LoginScreen";
 import {useAuth} from "@/lib/auth";
+import {UserRole} from "@/lib/types";
 
 const TABS = [
     {path: "/booking", label: "Записаться"},
     {path: "/my-appointments", label: "Мои записи"},
 ];
+
+const ADMIN_TAB = {path: "/admin", label: "Панель"};
 
 export default function AppLayout({children}: {children: React.ReactNode}) {
     const {user, loading, signOut} = useAuth();
@@ -36,6 +39,8 @@ export default function AppLayout({children}: {children: React.ReactNode}) {
     }
 
     if (!user) return <LoginScreen/>;
+
+    const tabs = user.role === UserRole.Admin ? [...TABS, ADMIN_TAB] : TABS;
 
     return (
         <>
@@ -55,7 +60,7 @@ export default function AppLayout({children}: {children: React.ReactNode}) {
                         spacing={0.25}
                         sx={{bgcolor: "rgba(255,255,255,0.08)", p: 0.5, borderRadius: 999}}
                     >
-                        {TABS.map(t => {
+                        {tabs.map(t => {
                             const active = pathname === t.path;
                             return (
                                 <ButtonBase

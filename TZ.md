@@ -45,8 +45,9 @@
 | POST | `/api/appointments/` | Создать запись; `userId` **из JWT-claims ✓** | **User ✓** |
 | PATCH | `/api/appointments/{id}/cancel` | Отмена своей записи (с проверкой владельца) | **User + владелец ✓** |
 | PATCH | `/api/appointments/{id}/change-status` | Смена статуса (мастер) | **Admin ✓** |
-| PATCH | `/api/appointments/{id}/change-time` | Перенос времени | **User ✗ (баг — должна быть Admin)** |
+| PATCH | `/api/appointments/{id}/change-time` | Перенос времени | **Admin ✓** |
 | PATCH | `/api/appointments/{AppointmentId}/offering/{OfferingId}/change-price` | Правка цены в записи | **Admin ✓** |
+| PATCH | `/api/appointments/{AppointmentId}/offering/{OfferingId}/change-duration` | Правка длительности услуги в записи | **Admin ✓** |
 | GET | `/api/analytics/*` (8 шт.: gain, offerings-popularity, offerings-gain, no-show-rate, average-check, average-hour-gain, workload-rate, best-clients) | Аналитика (вместо `schedules/gain`) | **Admin ✓** |
 | GET | `/healthz` | Health check (БД) | **не реализован** |
 
@@ -63,7 +64,7 @@
 - **`lib/api.ts` отсутствует, ни одного `fetch` к API нет.** Экранов входа (FR-A*) нет. Кнопки отмены записи (FR-B5) нет. Состояний error/empty нет.
 
 ### 2.3 Функциональные куски — подключены, но с расхождениями
-- `ChangeAppointmentTime` → зарегистрирован как `PATCH /api/appointments/{id}/change-time`, **но с политикой User вместо Admin (баг, §2.4)**.
+- `ChangeAppointmentTime` → зарегистрирован как `PATCH /api/appointments/{id}/change-time` (Admin).
 - `ChangeAppointmentOfferingPrice` → `PATCH /api/appointments/{AppointmentId}/offering/{OfferingId}/change-price` (Admin, путь отличается от §5).
 - `ChangeOffering` → `PUT /api/offerings/{id}` (Admin).
 
@@ -71,7 +72,7 @@
 
 **Критично:**
 1. **Роль Admin недостижима. — ✅ Исправлено 11.10.2026 (миграция `SeedAdminRole`).** Добавлен доменный метод `User.PromoteToAdmin()` (идемпотентный), сид `+79991234567` получает `Role=1`. `Create` по-прежнему всегда `Default` — регистрация не может создать Admin. После `dotnet ef database update` тестовый Admin работает.
-2. **`PATCH {id}/change-time` доступен любому залогиненному клиенту** — нет ни политики Admin, ни проверки владельца; клиент двигает чужие записи (нарушение FR-M3).
+2. ✅ Исправлено ранее: `PATCH {id}/change-time` требует роль Admin (см. `AppointmentsModule.cs`).
 3. **CORS без `AllowCredentials()`** — cookie с JWT не будет уходить с `localhost:3000` → живой фронт невозможен (FR-B3 блокируется).
 4. **`SendVerificationCode` не возвращает код в dev-режиме** — без доступа к БД авторизация непроходима (FR-A1).
 
@@ -80,12 +81,12 @@
 6. Неактивные услуги (`IsActive=false`) не фильтруются при создании записи и в `available-dates`.
 7. FR-B5 — 2-часовое правило отмены действует только для `Confirmed`, для `Pending` смягчено; кнопки отмены на фронте нет.
 8. FR-A4 (rate limiting) — не реализован; `/healthz` — не реализован.
-9. Тесты не покрывают `Appointment` (2 часа, переходы статусов), `TimelineBuilder`, `AppointmentTimeChanger`; пустые группы в `ScheduleTests`.
+9. Тесты не покрывают `Appointment` (правило 2 часов), `TimelineBuilder`, `AppointmentTimeChanger`; пустые группы в `ScheduleTests`. Частично закрыто 17.10.2026: `AppointmentTests` — переходы статусов, правка цены и длительности.
 10. Login/Register возвращают `BadRequest(string)` вместо `problem+json`; статус `Pending` в `change-status` → 404 вместо бизнес-ошибки.
 11. ~~Нестабильные сиды миграций~~ — ✅ частично 11.10.2026: сиды Users стабилизированы (фикс. Id + даты, миграция `SeedAdminRole`). Осталось: конфликт версий EF Core (10.0.4 vs 10.0.10) в Features.
 12. Фронт: краш `Calendar` при пустом списке дат; навигация через `href` вместо `next/link` (полные перезагрузки); мок-даты записей протухли; `useState` без `'use client'` в `OfferingList`/`Calendar`.
 
-**Мелочи:** пустой метод `Appointment.ChangeOfferingDuration`; опечатки в именах файлов аналитики (`GetOfferingsByPopulatiryResponse`); `Magic number bottom: 56`; `toLocaleDateString` вне `lib/format.ts`.
+**Мелочи:** опечатки в именах файлов аналитики (`GetOfferingsByPopulatiryResponse`); `Magic number bottom: 56`; `toLocaleDateString` вне `lib/format.ts`.
 
 ## 3. Функциональные требования
 
@@ -160,14 +161,15 @@ VerificationCode Phone, Code, ExpiresAt
 1. `Offering.Category` (string/enum) + индекс; миграция EF Core.
 2. Уникальный индекс по `Phone` на `Users` (если ещё нет).
 3. `Appointment.CreatedAt`, `CompletedAt?` — для аналитики и аудита.
-4. Снимок цены в `AppointmentOffering` сохранять/менять только через доменные методы (есть).
+4. Снимок цены и длительности в `AppointmentOffering` — только через доменные методы (есть); правка длительности не двигает `Appointment.Interval`.
 
 ## 5. API — изменения к текущему (статус 11.10.2026)
 
 **Сделано:**
 - ✅ `PUT /api/offerings/{id}` — зарегистрирован (Admin).
-- ✅ Перенос времени — `PATCH /api/appointments/{id}/change-time`, **но политика User → исправить на Admin + проверку владельца (§2.4 п.2)**.
+- ✅ Перенос времени — `PATCH /api/appointments/{id}/change-time` (Admin).
 - ✅ Правка цены — `PATCH /api/appointments/{AppointmentId}/offering/{OfferingId}/change-price` (Admin).
+- ✅ Правка длительности — `PATCH /api/appointments/{AppointmentId}/offering/{OfferingId}/change-duration` (Admin, 17.10.2026).
 - ✅ `POST /api/appointments/`: `userId` берётся из JWT-claims, из тела убран.
 - ✅ Авторизация по таблице 2.1 — проставлена, кроме бага change-time.
 - ✅ Отмена — отдельный `PATCH {id}/cancel` (User + проверка владельца); остальные переходы — `change-status` (Admin).
@@ -198,7 +200,7 @@ VerificationCode Phone, Code, ExpiresAt
 
 **Этап 0 — «Критичные баги ревью» (P0, новое 11.10.2026)**
 1. Исправить роль Admin в сидах (`User.Create` всегда Default) — иначе панель мастера недоступна (§2.4 п.1).
-2. Закрыть `change-time`: политика Admin или проверка владельца (§2.4 п.2).
+2. ✅ Закрыть `change-time`: политика Admin (сделано ранее).
 3. CORS `AllowCredentials()` (§2.4 п.3) + dev-возврат кода в send-code (§2.4 п.4).
 
 **Этап 1 — «Клиентская часть живая» (P0)**
@@ -209,7 +211,7 @@ VerificationCode Phone, Code, ExpiresAt
 **Этап 2 — «Панель мастера» (P0)**
 7. UI: управление услугами (CRUD, категории).
 8. UI: расписание (дни, перерывы, выходные).
-9. UI: календарь записей + смена статусов/времени/цен (features уже зарегистрированы).
+9. UI: календарь записей + смена статусов/времени/цен (features уже зарегистрированы). ✅ 17.10.2026: раздел «Записи» — статусы, цена, длительность. UI переноса времени не сделан.
 
 **Этап 3 — «Аналитика» (P1)**
 10. Экран мастера с графиками поверх 8 готовых endpoint'ов; закрыть FR-N1, FR-N2.

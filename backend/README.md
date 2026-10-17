@@ -42,21 +42,37 @@ Salon.API/
 
 ### Записи (Appointments)
 
-GET /api/appointments/{id} - Получить запись по ID (доступ: все)
-GET /api/appointments/admin/all - Все записи (доступ: Admin)
+GET /api/appointments/{id} - Получить запись по ID (доступ: Admin)
+GET /api/appointments/all - Все записи (доступ: Admin)
+  Ответ: [{ "id": "guid", "date": "2026-08-10", "interval": { "start": "10:00:00", "end": "11:00:00" },
+    "status": 0, "price": { "value": 2000, "currency": "RUB" },
+    "userId": "guid", "userName": "Иван", "userPhone": "+79341234567",
+    "offerings": [{ "offeringId": "guid", "title": "Маникюр", "price": { "value": 2000, "currency": "RUB" },
+      "duration": "01:00:00" }] }]
 GET /api/appointments/user - Записи пользователя (доступ: User)
   Ответ: [{ "id": "guid", "date": "2026-08-10", "interval": { "start": "10:00:00", "end": "11:00:00" },
     "status": 0, "price": { "value": 2000, "currency": "RUB" },
     "offerings": [{ "title": "Маникюр", "price": { "value": 2000, "currency": "RUB" } }] }]
 POST /api/appointments/ - Создать запись (доступ: User)
-PATCH /api/appointments/{id}/status - Изменить статус (доступ: Admin/User)
+  Тело (клиент): { "date": "2026-08-10", "time": "14:30:00", "offeringIds": ["guid"] }
+POST /api/appointments/admin - Создать запись клиенту по телефону (доступ: Admin)
+  Тело: { "phone": "+79341234567", "date": "2026-08-10", "time": "14:30:00", "offeringIds": ["guid"] }
+  Клиент не найден: 404 { "detail": "Клиент с таким телефоном не найден" }
+PATCH /api/appointments/{id}/cancel - Отменить свою запись (доступ: User)
+PATCH /api/appointments/{id}/change-time - Перенести время (доступ: Admin)
+  Тело: { "id": "guid", "date": "2026-08-10", "time": "16:00:00" }
+PATCH /api/appointments/{id}/change-status - Изменить статус (доступ: Admin)
+  Тело: { "id": "guid", "status": 1 }
+PATCH /api/appointments/{AppointmentId}/offering/{OfferingId}/change-price - Изменить цену услуги в записи (доступ: Admin)
+  Тело: { "value": 2500, "currency": "RUB" }
+PATCH /api/appointments/{AppointmentId}/offering/{OfferingId}/change-duration - Изменить длительность услуги в записи (доступ: Admin)
+  Тело: "01:30:00"
 
 Создание записи:
 POST /api/appointments/
 {
   "date": "2026-08-10",
   "time": "14:30",
-  "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
   "offeringIds": ["7c9e6679-7425-40de-944b-e07fc1f90ae7"]
 }
 

@@ -135,14 +135,16 @@ dotnet test
 
 | Метод | Путь | Примечание |
 |---|---|---|
-| GET | `/{id}` | одна запись |
-| GET | `/all` | все записи (мастер) |
+| GET | `/{id}` | одна запись (Admin) |
+| GET | `/all` | все записи: `userName`, `userPhone`, `offerings[{offeringId,title,price,duration}]` (Admin) |
 | GET | `/user` | записи текущего пользователя |
-| POST | `/` | `{ "date", "time", "userId", "offeringIds": [...] }` → `201 { "id", "date", "interval", "status", "price" }` |
-| PATCH | `/{id}/status` | `{ "id", "status": 0..5 }` → `204` |
-
-Код `ChangeAppointmentTime` (перенос) и `ChangeAppointmentOfferingPrice` (правка цены)
-есть в `Features/Appointments/`, но в роутер не зарегистрированы.
+| POST | `/` | `{ "date", "time", "offeringIds": [...] }` → `201 { "id", "date", "interval", "status", "price" }`; `userId` — из JWT |
+| POST | `/admin` | `{ "phone", "date", "time", "offeringIds" }` — мастер создаёт запись клиенту (Admin) |
+| PATCH | `/{id}/cancel` | отмена своей записи (User) |
+| PATCH | `/{id}/change-status` | `{ "id", "status": 0..5 }` → `204` (Admin) |
+| PATCH | `/{id}/change-time` | `{ "id", "date", "time" }` — перенос (Admin) |
+| PATCH | `/{AppointmentId}/offering/{OfferingId}/change-price` | `{ "value", "currency" }` (Admin) |
+| PATCH | `/{AppointmentId}/offering/{OfferingId}/change-duration` | `"01:30:00"` — мин. 10 минут (Admin) |
 
 ### Analytics — `api/analytics`
 

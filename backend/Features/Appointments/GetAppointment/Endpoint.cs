@@ -11,18 +11,23 @@ public static class Endpoint
         CancellationToken token
     )
     {
-        var response = await db.Appointments
+        var appointment = await db.Appointments
             .AsNoTracking()
-            .Where(a => a.Id == request.Id)
-            .Select(appointment => new GetAppointmentResponse(
-                appointment.Id,
-                appointment.Schedule.Date,
-                appointment.Interval,
-                appointment.UserId,
-                appointment.Status,
-                appointment.Price
-            ))
-            .FirstOrDefaultAsync(token);
-        return response == null ? Results.NotFound() : Results.Ok(response);
+            .Include(a => a.Schedule)
+            .Include(a => a.Offerings)
+            .FirstOrDefaultAsync(a => a.Id == request.Id, token);
+
+        if (appointment is null) return Results.NotFound();
+
+        var response = new GetAppointmentResponse(
+            appointment.Id,
+            appointment.Schedule.Date,
+            appointment.Interval,
+            appointment.UserId,
+            appointment.Status,
+            appointment.Price
+        );
+
+        return Results.Ok(response);
     }
 }

@@ -2,15 +2,27 @@
 
 import {createTheme} from "@mui/material/styles";
 
-export const cardShadow = "0 1px 2px rgba(26,26,26,0.05), 0 16px 40px -28px rgba(26,26,26,0.45)";
+export const cardShadow = "0 1px 2px rgba(42,28,28,0.05), 0 16px 40px -28px rgba(42,28,28,0.45)";
+export const accentInk = "#AE6D77";
+export const serviceZoneBorder = "rgba(201,138,147,0.6)";
+export const darkSurface = "#2A1C1C";
+
+export const cardSx = {
+    p: 2,
+    borderRadius: "20px",
+    border: 1,
+    borderColor: "divider",
+    bgcolor: "background.paper",
+    boxShadow: cardShadow,
+};
 
 const theme = createTheme({
     palette: {
-        primary: {main: "#191714", contrastText: "#FFFFFF"},
-        secondary: {main: "#A9835C", contrastText: "#FFFFFF"},
-        background: {default: "#EDE4D7", paper: "#FFFFFF"},
-        text: {primary: "#1B1916", secondary: "#6E655A"},
-        divider: "rgba(26,26,26,0.09)",
+        primary: {main: "#2A1C1C", contrastText: "#FFFFFF"},
+        secondary: {main: "#C98A93", contrastText: "#2A1C1C"},
+        background: {default: "#FFFFFF", paper: "#FFFFFF"},
+        text: {primary: "#241B1B", secondary: "#7A6A6A"},
+        divider: "rgba(42,28,28,0.10)",
     },
     shape: {borderRadius: 16},
     typography: {
@@ -26,10 +38,7 @@ const theme = createTheme({
         MuiCssBaseline: {
             styleOverrides: {
                 body: {
-                    backgroundColor: "#EDE4D7",
-                    backgroundImage:
-                        "radial-gradient(1200px 560px at 50% -10%, #FFFEFA 0%, #F5EEE4 45%, #E7DCCB 100%)",
-                    backgroundAttachment: "fixed",
+                    backgroundColor: "#FFFFFF",
                     minHeight: "100vh",
                     WebkitFontSmoothing: "antialiased",
                 },
@@ -39,23 +48,22 @@ const theme = createTheme({
             defaultProps: {elevation: 0},
             styleOverrides: {
                 root: {backgroundImage: "none"},
-                outlined: {borderColor: "rgba(26,26,26,0.09)"},
+                outlined: {borderColor: "rgba(42,28,28,0.10)"},
             },
         },
         MuiAppBar: {
             defaultProps: {elevation: 0},
             styleOverrides: {
                 root: {
-                    backgroundColor: "rgba(21,20,18,0.9)",
-                    backdropFilter: "blur(14px)",
-                    borderBottom: "1px solid rgba(255,255,255,0.08)",
+                    backgroundColor: "#000000",
+                    borderBottom: "1px solid rgba(255,255,255,0.10)",
                 },
             },
         },
         MuiButton: {
             styleOverrides: {
                 root: {borderRadius: 12, paddingInline: 18},
-                contained: {boxShadow: "0 12px 28px -16px rgba(25,23,20,0.85)"},
+                contained: {boxShadow: "0 12px 28px -16px rgba(42,28,28,0.7)"},
             },
         },
         MuiAlert: {styleOverrides: {root: {borderRadius: 14}}},

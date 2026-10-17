@@ -90,13 +90,22 @@ export type AppointmentDetailResponse = AppointmentResponse & {
     userId: string;
 };
 
+export type AdminAppointmentOffering = {
+    offeringId: string;
+    title: string;
+    price: Money;
+    duration: string;
+};
+
 export type AdminAppointmentResponse = {
     id: string;
     date: string;
     interval: TimeInterval;
     price: Money;
-    offeringsIds: string[];
+    offerings: AdminAppointmentOffering[];
     userId: string;
+    userName: string;
+    userPhone: string;
     status: AppointmentStatus;
 };
 
@@ -147,6 +156,13 @@ export type ChangeScheduleRequest = {
 };
 
 export type CreateAppointmentRequest = {
+    date: string;
+    time: string;
+    offeringIds: string[];
+};
+
+export type CreateAppointmentForUserRequest = {
+    phone: string;
     date: string;
     time: string;
     offeringIds: string[];

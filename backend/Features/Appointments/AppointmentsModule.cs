@@ -12,9 +12,11 @@ public static class AppointmentsModule
         group.MapGet("/all", GetAllAppointments.Endpoint.GetAllAppointmentsAsync).RequireAuthorization("Admin");
         group.MapGet("/user", GetUserAppointments.Endpoint.GetUserAppointmentsAsync);
         group.MapPost("/", CreateAppointment.Endpoint.CreateAppointmentAsync);
+        group.MapPost("/admin", CreateAppointmentForUser.Endpoint.CreateAppointmentForUserAsync).RequireAuthorization("Admin");
         group.MapPatch("{id}/cancel", CancelAppointment.Endpoint.CancelAppointmentAsync);
         group.MapPatch("{id}/change-time", ChangeAppointmentTime.Endpoint.ChangeAppointmentTimeAsync).RequireAuthorization("Admin");
         group.MapPatch("{id}/change-status", ChangeAppointmentStatus.Endpoint.ChangeAppointmentStatusAsync).RequireAuthorization("Admin");
         group.MapPatch("{AppointmentId}/offering/{OfferingId}/change-price", ChangeAppointmentOfferingPrice.Endpoint.ChangeAppointmentOfferingPriceAsync).RequireAuthorization("Admin");
+        group.MapPatch("{AppointmentId}/offering/{OfferingId}/change-duration", ChangeAppointmentOfferingDuration.Endpoint.ChangeAppointmentOfferingDurationAsync).RequireAuthorization("Admin");
     }
 }

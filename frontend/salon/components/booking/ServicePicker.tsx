@@ -3,7 +3,7 @@
 import {CheckCircle as CheckCircleIcon} from "@mui/icons-material";
 import {ButtonBase, Stack, Typography} from "@mui/material";
 import {durationToMinutes, formatCategory, formatDurationValue, formatPrice} from "@/lib/format";
-import {cardShadow} from "@/lib/theme";
+import {cardShadow, accentInk} from "@/lib/theme";
 import type {Category, OfferingResponse} from "@/lib/types";
 
 type Props = {
@@ -24,7 +24,7 @@ export default function ServicePicker({offerings, selectedIds, onToggle}: Props)
         <Stack spacing={2.5}>
             {groups.map(g => (
                 <Stack key={g.category} spacing={1.25}>
-                    <Typography variant="overline" sx={{color: "secondary.main", letterSpacing: "0.14em"}}>
+                    <Typography variant="overline" sx={{color: accentInk, letterSpacing: "0.14em"}}>
                         {formatCategory(g.category)}
                     </Typography>
                     {g.items.map(o => {
@@ -60,7 +60,7 @@ export default function ServicePicker({offerings, selectedIds, onToggle}: Props)
                                         </Typography>
                                         <CheckCircleIcon
                                             fontSize="small"
-                                            sx={{color: selected ? "secondary.main" : "rgba(26,26,26,0.15)"}}
+                                            sx={{color: selected ? accentInk : "rgba(36,27,27,0.15)"}}
                                         />
                                     </Stack>
                                 </Stack>

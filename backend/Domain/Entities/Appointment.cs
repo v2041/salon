@@ -1,4 +1,4 @@
-﻿using Domain.Enums;
+using Domain.Enums;
 using Domain.Exceptions;
 using Domain.Services;
 using Domain.ValueObjects;
@@ -80,8 +80,14 @@ public class Appointment
         Schedule = schedule;
     }
 
-    public void ChangeOfferingDuration(Guid offeringId, Money price)
+    public void ChangeOfferingDuration(Guid offeringId, TimeSpan duration)
     {
+        var offering = _offerings.FirstOrDefault(o => o.OfferingId == offeringId);
+        if (offering == null)
+            throw new BusinessException("Услуга не найдена");
+        if (duration <= TimeSpan.FromMinutes(Offering.MIN_DURATION_MINUTES))
+            throw new BusinessException($"Минимальная длительность услуги - {Offering.MIN_DURATION_MINUTES} минут.");
+        offering.ChangeDuration(duration);
     }
 
     public void Cancel()
