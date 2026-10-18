@@ -106,7 +106,7 @@ POST /api/offerings/
 
 GET /api/schedules/free-time?date=2026-08-10 - Свободные окна на день
 GET /api/schedules/available-dates?offeringIds=guid1,guid2 - Даты с доступным временем
-GET /api/schedules/ - Все расписания (будущие): id, date, isWorking, workInterval, breakInterval
+GET /api/schedules/ - Все расписания (будущие, по дате): id, date, isWorking, workInterval, breakInterval
 POST /api/schedules/ - Создать день (доступ: Admin); 409 { "detail": "День с такой датой уже существует." }
 PUT /api/schedules/ - Изменить день (доступ: Admin)
 
