@@ -1,9 +1,10 @@
 "use client";
 
-import {Alert, Button, Checkbox, Chip, CircularProgress, FormControlLabel, Paper, Stack, TextField, Typography} from "@mui/material";
+import {Alert, Button, Checkbox, Chip, CircularProgress, FormControlLabel, Paper, Stack, Typography} from "@mui/material";
 import {useEffect, useState} from "react";
 import {schedulesApi} from "@/lib/api";
 import DateField from "@/components/admin/DateField";
+import TimeField from "@/components/admin/TimeField";
 import {formatDayLabel, formatTimeOnly, parseRuDate, parseRuTime} from "@/lib/format";
 import {cardSx} from "@/lib/theme";
 import type {ScheduleResponse, TimeInterval} from "@/lib/types";
@@ -108,21 +109,15 @@ export default function ScheduleSection() {
                         disablePast
                     />
                     <Stack direction="row" spacing={2}>
-                        <TextField
+                        <TimeField
                             label="Начало"
                             value={form.workStart}
-                            onChange={e => setForm(f => ({...f, workStart: e.target.value}))}
-                            placeholder="чч:мм"
-                            slotProps={{inputLabel: {shrink: true}}}
-                            fullWidth
+                            onChange={value => setForm(f => ({...f, workStart: value}))}
                         />
-                        <TextField
+                        <TimeField
                             label="Конец"
                             value={form.workEnd}
-                            onChange={e => setForm(f => ({...f, workEnd: e.target.value}))}
-                            placeholder="чч:мм"
-                            slotProps={{inputLabel: {shrink: true}}}
-                            fullWidth
+                            onChange={value => setForm(f => ({...f, workEnd: value}))}
                         />
                     </Stack>
                     <FormControlLabel
@@ -136,21 +131,15 @@ export default function ScheduleSection() {
                     />
                     {form.breakOn && (
                         <Stack direction="row" spacing={2}>
-                            <TextField
+                            <TimeField
                                 label="Перерыв с"
                                 value={form.breakStart}
-                                onChange={e => setForm(f => ({...f, breakStart: e.target.value}))}
-                                placeholder="чч:мм"
-                                slotProps={{inputLabel: {shrink: true}}}
-                                fullWidth
+                                onChange={value => setForm(f => ({...f, breakStart: value}))}
                             />
-                            <TextField
+                            <TimeField
                                 label="Перерыв до"
                                 value={form.breakEnd}
-                                onChange={e => setForm(f => ({...f, breakEnd: e.target.value}))}
-                                placeholder="чч:мм"
-                                slotProps={{inputLabel: {shrink: true}}}
-                                fullWidth
+                                onChange={value => setForm(f => ({...f, breakEnd: value}))}
                             />
                         </Stack>
                     )}
