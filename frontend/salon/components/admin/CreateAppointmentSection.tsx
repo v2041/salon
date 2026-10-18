@@ -17,6 +17,7 @@ function Loader() {
 
 export default function CreateAppointmentSection() {
     const [phone, setPhone] = useState("");
+    const [firstName, setFirstName] = useState("");
     const [offerings, setOfferings] = useState<OfferingResponse[]>([]);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [dates, setDates] = useState<string[]>([]);
@@ -88,6 +89,7 @@ export default function CreateAppointmentSection() {
     }
 
     function selectDate(next: string) {
+        if (next === date) return;
         setDate(next);
         setTime(null);
         setIntervals([]);
@@ -102,6 +104,7 @@ export default function CreateAppointmentSection() {
         try {
             const res = await appointmentsApi.createForUser({
                 phone,
+                firstName: firstName.trim() || undefined,
                 date,
                 time: `${time}:00`,
                 offeringIds: selectedIds,
@@ -132,6 +135,14 @@ export default function CreateAppointmentSection() {
                 value={phone}
                 onChange={e => setPhone(e.target.value)}
                 placeholder="+79341234567"
+                fullWidth
+            />
+            <TextField
+                label="Имя клиента"
+                value={firstName}
+                onChange={e => setFirstName(e.target.value)}
+                placeholder="Для нового клиента"
+                helperText="Если телефон новый, система создаст карточку клиента"
                 fullWidth
             />
             <Paper sx={{...cardSx, p: 1.5, border: 3, borderColor: serviceZoneBorder}}>

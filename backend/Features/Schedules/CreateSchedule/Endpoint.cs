@@ -14,7 +14,11 @@ public static class Endpoint
     )
     {
         if (await db.Schedules.AnyAsync(s => s.Date == request.Date, token))
-            return Results.Conflict();
+            return Results.Problem(
+                statusCode: StatusCodes.Status409Conflict,
+                title: "Ошибка бизнес-логики",
+                detail: "День с такой датой уже существует."
+            );
         var schedule = Schedule.Create(request.Date, true, request.WorkInterval, request.BreakInterval);
         db.Schedules.Add(schedule);
         await db.SaveChangesAsync(token);

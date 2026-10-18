@@ -76,7 +76,7 @@ export type User = {
 
 export type OfferingResponse = Omit<Offering, "isActive">;
 
-export type ScheduleResponse = Omit<Schedule, "isWorking">;
+export type ScheduleResponse = Schedule;
 
 export type AppointmentResponse = {
     id: string;
@@ -163,6 +163,7 @@ export type CreateAppointmentRequest = {
 
 export type CreateAppointmentForUserRequest = {
     phone: string;
+    firstName?: string;
     date: string;
     time: string;
     offeringIds: string[];

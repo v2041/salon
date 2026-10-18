@@ -1,6 +1,6 @@
 "use client";
 
-import {Alert, Button, Checkbox, CircularProgress, FormControlLabel, Paper, Stack, TextField, Typography} from "@mui/material";
+import {Alert, Button, Checkbox, Chip, CircularProgress, FormControlLabel, Paper, Stack, TextField, Typography} from "@mui/material";
 import {useEffect, useState} from "react";
 import {schedulesApi} from "@/lib/api";
 import {formatDayLabel, formatTimeOnly} from "@/lib/format";
@@ -163,20 +163,32 @@ export default function ScheduleSection() {
                 {schedules.map(s => (
                     <Paper key={s.id} sx={cardSx}>
                         <Stack spacing={1}>
-                            <Typography variant="subtitle1" sx={{fontWeight: 650}}>
-                                {formatDayLabel(s.date)}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                {formatTimeOnly(s.workInterval.start)}–{formatTimeOnly(s.workInterval.end)}
-                                {s.breakInterval &&
-                                    ` · перерыв ${formatTimeOnly(s.breakInterval.start)}–${formatTimeOnly(s.breakInterval.end)}`}
-                            </Typography>
+                            <Stack direction="row" spacing={1} sx={{alignItems: "center"}}>
+                                <Typography variant="subtitle1" sx={{fontWeight: 650}}>
+                                    {formatDayLabel(s.date)}
+                                </Typography>
+                                <Chip
+                                    size="small"
+                                    label={s.isWorking ? "Рабочий" : "Выходной"}
+                                    color={s.isWorking ? "success" : "default"}
+                                    variant={s.isWorking ? "filled" : "outlined"}
+                                />
+                            </Stack>
+                            {s.isWorking ? (
+                                <Typography variant="body2" color="text.secondary">
+                                    {formatTimeOnly(s.workInterval.start)}–{formatTimeOnly(s.workInterval.end)}
+                                    {s.breakInterval &&
+                                        ` · перерыв ${formatTimeOnly(s.breakInterval.start)}–${formatTimeOnly(s.breakInterval.end)}`}
+                                </Typography>
+                            ) : (
+                                <Typography variant="body2" color="text.secondary">Запись недоступна</Typography>
+                            )}
                             <Stack direction="row" spacing={1}>
-                                <Button size="small" variant="outlined" disabled={busy} onClick={() => changeDay(s, true)}>
-                                    Рабочий
+                                <Button size="small" variant="outlined" disabled={busy || s.isWorking} onClick={() => changeDay(s, true)}>
+                                    Сделать рабочим
                                 </Button>
-                                <Button size="small" variant="outlined" color="error" disabled={busy} onClick={() => changeDay(s, false)}>
-                                    Выходной
+                                <Button size="small" variant="outlined" color="error" disabled={busy || !s.isWorking} onClick={() => changeDay(s, false)}>
+                                    Сделать выходным
                                 </Button>
                             </Stack>
                         </Stack>

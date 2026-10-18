@@ -56,8 +56,9 @@ GET /api/appointments/user - Записи пользователя (доступ
 POST /api/appointments/ - Создать запись (доступ: User)
   Тело (клиент): { "date": "2026-08-10", "time": "14:30:00", "offeringIds": ["guid"] }
 POST /api/appointments/admin - Создать запись клиенту по телефону (доступ: Admin)
-  Тело: { "phone": "+79341234567", "date": "2026-08-10", "time": "14:30:00", "offeringIds": ["guid"] }
-  Клиент не найден: 404 { "detail": "Клиент с таким телефоном не найден" }
+  Тело: { "phone": "+79341234567", "firstName": "Иван", "date": "2026-08-10", "time": "14:30:00", "offeringIds": ["guid"] }
+  Новый телефон: создаётся карточка клиента, "firstName" обязателен
+  Новый телефон без имени: 400 { "detail": "Клиент не зарегистрирован. Укажите имя, чтобы создать карточку." }
 PATCH /api/appointments/{id}/cancel - Отменить свою запись (доступ: User)
 PATCH /api/appointments/{id}/change-time - Перенести время (доступ: Admin)
   Тело: { "id": "guid", "date": "2026-08-10", "time": "16:00:00" }
@@ -105,8 +106,8 @@ POST /api/offerings/
 
 GET /api/schedules/free-time?date=2026-08-10 - Свободные окна на день
 GET /api/schedules/available-dates?offeringIds=guid1,guid2 - Даты с доступным временем
-GET /api/schedules/ - Все расписания (будущие)
-POST /api/schedules/ - Создать день (доступ: Admin)
+GET /api/schedules/ - Все расписания (будущие): id, date, isWorking, workInterval, breakInterval
+POST /api/schedules/ - Создать день (доступ: Admin); 409 { "detail": "День с такой датой уже существует." }
 PUT /api/schedules/ - Изменить день (доступ: Admin)
 
 Свободное время:

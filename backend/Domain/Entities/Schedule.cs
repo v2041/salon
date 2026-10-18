@@ -1,4 +1,4 @@
-﻿using Domain.Enums;
+using Domain.Enums;
 using Domain.Exceptions;
 using Domain.Services;
 using Domain.ValueObjects;
@@ -160,7 +160,7 @@ public class Schedule
 
     public void ChangeIsWorking(bool isWorking)
     {
-        if (_appointments.Any(a => a.Status is AppointmentStatus.Pending or AppointmentStatus.Confirmed))
+        if (!isWorking && _appointments.Any(a => a.Status is AppointmentStatus.Pending or AppointmentStatus.Confirmed))
             throw new BusinessException("Нельзя завершить рабочий день с назначенными записями.");
         IsWorking = isWorking;
     }

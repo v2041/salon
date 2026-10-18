@@ -112,6 +112,7 @@ export default function BookingPage() {
     }
 
     function selectDate(next: string) {
+        if (next === date) return;
         setDate(next);
         setTime(null);
         setIntervals([]);

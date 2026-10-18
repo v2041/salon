@@ -18,6 +18,7 @@ public static class Endpoint
             new GetScheduleResponse(
                 s.Id,
                 s.Date,
+                s.IsWorking,
                 s.WorkInterval,
                 s.BreakInterval
             )

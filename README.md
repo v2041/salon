@@ -127,8 +127,8 @@ dotnet test
 |---|---|---|
 | GET | `/free-time?date=2026-08-10` | `{ "freeIntervals": [{ "start": "10:00", "end": "12:00" }] }` через `TimelineBuilder` |
 | GET | `/available-dates?offeringIds=guid1,guid2` | `{ "dates": [...] }` — дни с окном ≥ суммарной длительности |
-| GET | `/` | будущие дни |
-| POST | `/` | `{ "date", "workInterval": {"start","end"}, "breakInterval?": {...} }` |
+| GET | `/` | будущие дни с `isWorking` |
+| POST | `/` | `{ "date", "workInterval": {"start","end"}, "breakInterval?": {...} }`; 409 с текстом — день уже существует |
 | PUT | `/` | `{ "id", "isWorking", "workInterval", "breakInterval?" }` |
 
 ### Appointments — `/api/appointments`
@@ -139,7 +139,7 @@ dotnet test
 | GET | `/all` | все записи: `userName`, `userPhone`, `offerings[{offeringId,title,price,duration}]` (Admin) |
 | GET | `/user` | записи текущего пользователя |
 | POST | `/` | `{ "date", "time", "offeringIds": [...] }` → `201 { "id", "date", "interval", "status", "price" }`; `userId` — из JWT |
-| POST | `/admin` | `{ "phone", "date", "time", "offeringIds" }` — мастер создаёт запись клиенту (Admin) |
+| POST | `/admin` | `{ "phone", "firstName?", "date", "time", "offeringIds" }` — мастер создаёт запись клиенту; новый телефон → карточка клиента (имя обязательно) |
 | PATCH | `/{id}/cancel` | отмена своей записи (User) |
 | PATCH | `/{id}/change-status` | `{ "id", "status": 0..5 }` → `204` (Admin) |
 | PATCH | `/{id}/change-time` | `{ "id", "date", "time" }` — перенос (Admin) |

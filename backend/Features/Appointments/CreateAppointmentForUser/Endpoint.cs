@@ -1,3 +1,4 @@
+using Domain.Entities;
 using Domain.Exceptions;
 using Domain.Services;
 using Domain.ValueObjects;
@@ -29,11 +30,18 @@ public static class Endpoint
             return Results.ValidationProblem(errors);
         }
 
+        var phone = request.Phone.Trim();
         var user = await db.Users
             .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Phone == request.Phone, token);
+            .FirstOrDefaultAsync(u => u.Phone == phone, token);
         if (user == null)
-            throw new NotFoundException("Клиент с таким телефоном не найден");
+        {
+            if (string.IsNullOrWhiteSpace(request.FirstName))
+                throw new BusinessException("Клиент не зарегистрирован. Укажите имя, чтобы создать карточку.");
+            var created = User.Create(request.FirstName.Trim(), null, phone, DateTime.UtcNow);
+            db.Users.Add(created);
+            user = created;
+        }
 
         var schedule = await db.Schedules
             .Include(s => s.Appointments)

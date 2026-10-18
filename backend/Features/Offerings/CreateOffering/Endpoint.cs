@@ -29,7 +29,11 @@ public static class Endpoint
         }
 
         if (await db.Offerings.AnyAsync(o => EF.Functions.ILike(o.Title, request.Title), token))
-            return Results.Conflict();
+            return Results.Problem(
+                statusCode: StatusCodes.Status409Conflict,
+                title: "Ошибка бизнес-логики",
+                detail: "Услуга с таким названием уже существует."
+            );
 
         var offering = Offering.Create(Money.FromDecimal(request.Price), request.Title, request.Description,
             request.Duration, request.Category);

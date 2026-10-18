@@ -1,4 +1,4 @@
-﻿using Domain.Entities;
+using Domain.Entities;
 using Domain.Exceptions;
 using Domain.ValueObjects;
 
@@ -6,6 +6,22 @@ namespace DomainTests.Entities;
 
 public class ScheduleTests
 {
+    private static Schedule CreateScheduleWithAppointment()
+    {
+        var schedule = Schedule.Create(
+            new DateOnly(2099, 1, 1),
+            true,
+            TimeInterval.Create(new TimeOnly(10, 0, 0), new TimeOnly(18, 0, 0)),
+            null
+        );
+        schedule.AddAppointment(
+            Guid.NewGuid(),
+            new TimeOnly(11, 0, 0),
+            [new AppointmentOfferingData(Guid.NewGuid(), Money.FromDecimal(500), TimeSpan.FromMinutes(30))]
+        );
+        return schedule;
+    }
+
     public class Create
     {
         [Theory]
@@ -139,5 +155,32 @@ public class ScheduleTests
 
     public class ChangeIsWorking
     {
+        [Fact]
+        public void ChangeIsWorking_WhenClosingDayWithActiveAppointments_ThrowsBusinessException()
+        {
+            var schedule = CreateScheduleWithAppointment();
+            Assert.Throws<BusinessException>(() => schedule.ChangeIsWorking(false));
+        }
+
+        [Fact]
+        public void ChangeIsWorking_WhenClosingDayWithoutAppointments_ChangesIsWorking()
+        {
+            var schedule = Schedule.Create(
+                new DateOnly(2099, 1, 1),
+                true,
+                TimeInterval.Create(new TimeOnly(10, 0, 0), new TimeOnly(18, 0, 0)),
+                null
+            );
+            schedule.ChangeIsWorking(false);
+            Assert.False(schedule.IsWorking);
+        }
+
+        [Fact]
+        public void ChangeIsWorking_WhenDayStaysWorkingWithAppointments_KeepsIsWorking()
+        {
+            var schedule = CreateScheduleWithAppointment();
+            schedule.ChangeIsWorking(true);
+            Assert.True(schedule.IsWorking);
+        }
     }
 }

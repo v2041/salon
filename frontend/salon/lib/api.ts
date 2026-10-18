@@ -59,8 +59,14 @@ export async function apiFetch<T>(
     const data = await res.json().catch(() => null);
 
     if (!res.ok) {
-        const message =
-            data?.message ?? data?.title ?? `Ошибка ${res.status}`;
+        const problem = data as {
+            detail?: string;
+            message?: string;
+            title?: string;
+            errors?: Record<string, string[]>;
+        } | null;
+        const firstError = problem?.errors ? Object.values(problem.errors)[0]?.[0] : undefined;
+        const message = problem?.detail ?? firstError ?? problem?.message ?? problem?.title ?? `Ошибка ${res.status}`;
         throw new ApiError(message, res.status);
     }
 
