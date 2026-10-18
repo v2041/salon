@@ -170,7 +170,7 @@ VerificationCode Phone, Code, ExpiresAt
 - ✅ Перенос времени — `PATCH /api/appointments/{id}/change-time` (Admin).
 - ✅ Правка цены — `PATCH /api/appointments/{AppointmentId}/offering/{OfferingId}/change-price` (Admin).
 - ✅ Правка длительности — `PATCH /api/appointments/{AppointmentId}/offering/{OfferingId}/change-duration` (Admin, 17.10.2026).
-- ✅ 18.10.2026: запись для нового телефона создаёт карточку клиента (`firstName` обязателен); 409 дней и услуг с текстом; `isWorking` в списке расписаний.
+- ✅ 18.10.2026: новый телефон в админ-записи → 404 «Клиент не зарегистрирован», мастер вводит имя и фамилию — карточка создаётся вместе с записью; 409 дней и услуг с текстом; `isWorking` в списке расписаний.
 - ✅ `POST /api/appointments/`: `userId` берётся из JWT-claims, из тела убран.
 - ✅ Авторизация по таблице 2.1 — проставлена, кроме бага change-time.
 - ✅ Отмена — отдельный `PATCH {id}/cancel` (User + проверка владельца); остальные переходы — `change-status` (Admin).

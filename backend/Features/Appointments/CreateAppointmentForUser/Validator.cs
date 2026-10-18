@@ -17,6 +17,11 @@ public class Validator : AbstractValidator<CreateAppointmentForUserRequest>
             .WithMessage("Максимальная длина имени - 50 символов")
             .When(x => !string.IsNullOrWhiteSpace(x.FirstName));
 
+        RuleFor(x => x.LastName)
+            .MaximumLength(50)
+            .WithMessage("Максимальная длина фамилии - 50 символов")
+            .When(x => !string.IsNullOrWhiteSpace(x.LastName));
+
         RuleFor(x => x.OfferingIds)
             .NotEmpty()
             .WithMessage("Список услуг обязателен")

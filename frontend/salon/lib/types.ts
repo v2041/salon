@@ -164,6 +164,7 @@ export type CreateAppointmentRequest = {
 export type CreateAppointmentForUserRequest = {
     phone: string;
     firstName?: string;
+    lastName?: string;
     date: string;
     time: string;
     offeringIds: string[];

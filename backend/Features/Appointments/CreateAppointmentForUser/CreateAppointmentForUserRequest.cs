@@ -5,5 +5,6 @@ public record CreateAppointmentForUserRequest(
     DateOnly Date,
     TimeOnly Time,
     List<Guid> OfferingIds,
-    string? FirstName
+    string? FirstName,
+    string? LastName
 );

@@ -139,7 +139,7 @@ dotnet test
 | GET | `/all` | все записи: `userName`, `userPhone`, `offerings[{offeringId,title,price,duration}]` (Admin) |
 | GET | `/user` | записи текущего пользователя |
 | POST | `/` | `{ "date", "time", "offeringIds": [...] }` → `201 { "id", "date", "interval", "status", "price" }`; `userId` — из JWT |
-| POST | `/admin` | `{ "phone", "firstName?", "date", "time", "offeringIds" }` — мастер создаёт запись клиенту; новый телефон → карточка клиента (имя обязательно) |
+| POST | `/admin` | `{ "phone", "firstName?", "lastName?", "date", "time", "offeringIds" }` — новый телефон → 404 «Клиент не зарегистрирован», повтор с именем создаёт карточку |
 | PATCH | `/{id}/cancel` | отмена своей записи (User) |
 | PATCH | `/{id}/change-status` | `{ "id", "status": 0..5 }` → `204` (Admin) |
 | PATCH | `/{id}/change-time` | `{ "id", "date", "time" }` — перенос (Admin) |

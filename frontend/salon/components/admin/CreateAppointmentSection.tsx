@@ -5,7 +5,7 @@ import {useEffect, useState} from "react";
 import Calendar from "@/components/booking/Calendar";
 import ServicePicker from "@/components/booking/ServicePicker";
 import TimeGrid from "@/components/booking/TimeGrid";
-import {appointmentsApi, offeringsApi, schedulesApi} from "@/lib/api";
+import {ApiError, appointmentsApi, offeringsApi, schedulesApi} from "@/lib/api";
 import {durationToMinutes, formatDayLabel, formatPrice, formatTimeOnly} from "@/lib/format";
 import {buildSlots} from "@/lib/slots";
 import {cardSx, serviceZoneBorder} from "@/lib/theme";
@@ -18,6 +18,8 @@ function Loader() {
 export default function CreateAppointmentSection() {
     const [phone, setPhone] = useState("");
     const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
+    const [needRegister, setNeedRegister] = useState(false);
     const [offerings, setOfferings] = useState<OfferingResponse[]>([]);
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [dates, setDates] = useState<string[]>([]);
@@ -105,6 +107,7 @@ export default function CreateAppointmentSection() {
             const res = await appointmentsApi.createForUser({
                 phone,
                 firstName: firstName.trim() || undefined,
+                lastName: lastName.trim() || undefined,
                 date,
                 time: `${time}:00`,
                 offeringIds: selectedIds,
@@ -119,8 +122,15 @@ export default function CreateAppointmentSection() {
             setDate(null);
             setTime(null);
             setIntervals([]);
+            setNeedRegister(false);
+            setFirstName("");
+            setLastName("");
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Не удалось создать запись");
+            if (err instanceof ApiError && err.status === 404 && err.message.includes("не зарегистрирован")) {
+                setNeedRegister(true);
+            } else {
+                setError(err instanceof Error ? err.message : "Не удалось создать запись");
+            }
         } finally {
             setSubmitting(false);
         }
@@ -137,14 +147,27 @@ export default function CreateAppointmentSection() {
                 placeholder="+79341234567"
                 fullWidth
             />
-            <TextField
-                label="Имя клиента"
-                value={firstName}
-                onChange={e => setFirstName(e.target.value)}
-                placeholder="Для нового клиента"
-                helperText="Если телефон новый, система создаст карточку клиента"
-                fullWidth
-            />
+            {needRegister && (
+                <>
+                    <Alert severity="info">
+                        Клиент с таким телефоном не зарегистрирован. Введите имя и фамилию — система создаст карточку клиента и запись.
+                    </Alert>
+                    <Stack direction="row" spacing={2}>
+                        <TextField
+                            label="Имя"
+                            value={firstName}
+                            onChange={e => setFirstName(e.target.value)}
+                            fullWidth
+                        />
+                        <TextField
+                            label="Фамилия"
+                            value={lastName}
+                            onChange={e => setLastName(e.target.value)}
+                            fullWidth
+                        />
+                    </Stack>
+                </>
+            )}
             <Paper sx={{...cardSx, p: 1.5, border: 3, borderColor: serviceZoneBorder}}>
                 <ServicePicker offerings={offerings} selectedIds={selectedIds} onToggle={toggle}/>
             </Paper>
@@ -162,10 +185,10 @@ export default function CreateAppointmentSection() {
             <Button
                 variant="contained"
                 size="large"
-                disabled={!phone || selectedIds.length === 0 || !date || !time || submitting}
+                disabled={!phone || selectedIds.length === 0 || !date || !time || submitting || (needRegister && !firstName.trim())}
                 onClick={submit}
             >
-                Создать запись
+                {needRegister ? "Зарегистрировать и создать" : "Создать запись"}
             </Button>
         </Stack>
     );

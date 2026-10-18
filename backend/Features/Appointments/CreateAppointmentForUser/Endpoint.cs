@@ -37,8 +37,8 @@ public static class Endpoint
         if (user == null)
         {
             if (string.IsNullOrWhiteSpace(request.FirstName))
-                throw new BusinessException("Клиент не зарегистрирован. Укажите имя, чтобы создать карточку.");
-            var created = User.Create(request.FirstName.Trim(), null, phone, DateTime.UtcNow);
+                throw new NotFoundException("Клиент не зарегистрирован");
+            var created = User.Create(request.FirstName.Trim(), request.LastName?.Trim(), phone, DateTime.UtcNow);
             db.Users.Add(created);
             user = created;
         }
