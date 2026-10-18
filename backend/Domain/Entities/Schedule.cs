@@ -7,6 +7,8 @@ namespace Domain.Entities;
 
 public class Schedule
 {
+    private static readonly TimeSpan MinimumWorkDuration = TimeSpan.FromHours(2);
+
     private Schedule()
     {
     }
@@ -55,7 +57,7 @@ public class Schedule
             throw new BusinessException("Заданное время перерыва не входит в рабочее время.");
         if (breakInterval?.Start == workInterval.Start || breakInterval?.End == workInterval.End)
             throw new BusinessException("Время перерыва не должно граничить с временем начала или конца работы.");
-        if (workInterval.Duration < TimeSpan.FromHours(2))
+        if (workInterval.Duration < MinimumWorkDuration)
             throw new BusinessException("Время работы должно быть не меньше двух часов.");
         return new Schedule(
             Guid.NewGuid(),
@@ -149,6 +151,8 @@ public class Schedule
 
     public void ChangeWorkInterval(TimeInterval newWorkInterval)
     {
+        if (newWorkInterval.Duration < MinimumWorkDuration)
+            throw new BusinessException("Время работы должно быть не меньше двух часов.");
         if (BreakInterval is not null && !BreakInterval.IsInside(newWorkInterval))
             throw new BusinessException("Заданное время перерыва не входит в рабочее время.");
         if (_appointments.Any(a =>

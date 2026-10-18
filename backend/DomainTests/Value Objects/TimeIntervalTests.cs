@@ -1,10 +1,30 @@
-﻿using Domain.Exceptions;
+﻿using System.Text.Json;
+using Domain.Exceptions;
 using Domain.ValueObjects;
 
 namespace DomainTests.Value_Objects;
 
 public class TimeIntervalTests
 {
+    public class Deserialization
+    {
+        [Fact]
+        public void Deserialize_WithValidTime_ReturnsTimeInterval()
+        {
+            var interval = JsonSerializer.Deserialize<TimeInterval>("{\"Start\":\"16:00:00\",\"End\":\"17:00:00\"}");
+            Assert.NotNull(interval);
+            Assert.Equal(new TimeOnly(16, 0, 0), interval.Start);
+            Assert.Equal(new TimeOnly(17, 0, 0), interval.End);
+        }
+
+        [Fact]
+        public void Deserialize_WhenStartAfterEnd_ThrowsBusinessException()
+        {
+            Assert.Throws<BusinessException>(() =>
+                JsonSerializer.Deserialize<TimeInterval>("{\"Start\":\"16:00:00\",\"End\":\"15:20:00\"}"));
+        }
+    }
+
     public class Create
     {
         [Fact]

@@ -147,10 +147,91 @@ public class ScheduleTests
 
     public class ChangeWorkInterval
     {
+        [Fact]
+        public void ChangeWorkInterval_WithValid_ChangesInterval()
+        {
+            var schedule = Schedule.Create(
+                new DateOnly(2099, 1, 1),
+                true,
+                TimeInterval.Create(new TimeOnly(10, 0, 0), new TimeOnly(18, 0, 0)),
+                null
+            );
+            var newWorkInterval = TimeInterval.Create(new TimeOnly(9, 0, 0), new TimeOnly(19, 0, 0));
+            schedule.ChangeWorkInterval(newWorkInterval);
+            Assert.Equal(newWorkInterval, schedule.WorkInterval);
+        }
+
+        [Fact]
+        public void ChangeWorkInterval_WhenTooShort_ThrowsBusinessException()
+        {
+            var schedule = Schedule.Create(
+                new DateOnly(2099, 1, 1),
+                true,
+                TimeInterval.Create(new TimeOnly(10, 0, 0), new TimeOnly(18, 0, 0)),
+                null
+            );
+            var newWorkInterval = TimeInterval.Create(new TimeOnly(10, 0, 0), new TimeOnly(11, 0, 0));
+            Assert.Throws<BusinessException>(() => schedule.ChangeWorkInterval(newWorkInterval));
+        }
+
+        [Fact]
+        public void ChangeWorkInterval_WhenBreakNotInside_ThrowsBusinessException()
+        {
+            var schedule = Schedule.Create(
+                new DateOnly(2099, 1, 1),
+                true,
+                TimeInterval.Create(new TimeOnly(10, 0, 0), new TimeOnly(18, 0, 0)),
+                TimeInterval.Create(new TimeOnly(13, 0, 0), new TimeOnly(14, 0, 0))
+            );
+            var newWorkInterval = TimeInterval.Create(new TimeOnly(13, 30, 0), new TimeOnly(19, 0, 0));
+            Assert.Throws<BusinessException>(() => schedule.ChangeWorkInterval(newWorkInterval));
+        }
+
+        [Fact]
+        public void ChangeWorkInterval_WhenAppointmentOutside_ThrowsBusinessException()
+        {
+            var schedule = CreateScheduleWithAppointment();
+            var newWorkInterval = TimeInterval.Create(new TimeOnly(12, 0, 0), new TimeOnly(18, 0, 0));
+            Assert.Throws<BusinessException>(() => schedule.ChangeWorkInterval(newWorkInterval));
+        }
     }
 
     public class ChangeBreakInterval
     {
+        [Fact]
+        public void ChangeBreakInterval_WithValid_ChangesBreak()
+        {
+            var schedule = Schedule.Create(
+                new DateOnly(2099, 1, 1),
+                true,
+                TimeInterval.Create(new TimeOnly(10, 0, 0), new TimeOnly(18, 0, 0)),
+                null
+            );
+            var breakInterval = TimeInterval.Create(new TimeOnly(15, 0, 0), new TimeOnly(16, 0, 0));
+            schedule.ChangeBreakInterval(breakInterval);
+            Assert.Equal(breakInterval, schedule.BreakInterval);
+        }
+
+        [Fact]
+        public void ChangeBreakInterval_WhenNotInside_ThrowsBusinessException()
+        {
+            var schedule = Schedule.Create(
+                new DateOnly(2099, 1, 1),
+                true,
+                TimeInterval.Create(new TimeOnly(10, 0, 0), new TimeOnly(18, 0, 0)),
+                null
+            );
+            var breakInterval = TimeInterval.Create(new TimeOnly(19, 0, 0), new TimeOnly(19, 30, 0));
+            Assert.Throws<BusinessException>(() => schedule.ChangeBreakInterval(breakInterval));
+        }
+
+        [Fact]
+        public void ChangeBreakInterval_WhenOverlapsAppointments_ThrowsBusinessException()
+        {
+            var schedule = CreateScheduleWithAppointment();
+            var breakInterval = TimeInterval.Create(new TimeOnly(11, 0, 0), new TimeOnly(11, 30, 0));
+            Assert.Throws<BusinessException>(() => schedule.ChangeBreakInterval(breakInterval));
+        }
     }
 
     public class ChangeIsWorking

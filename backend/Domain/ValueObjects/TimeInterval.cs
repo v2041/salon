@@ -12,6 +12,8 @@ public record TimeInterval
     [JsonConstructor]
     private TimeInterval(TimeOnly start, TimeOnly end)
     {
+        if (start >= end)
+            throw new BusinessException("Начало должно быть меньше конца");
         Start = start;
         End = end;
     }
@@ -21,9 +23,7 @@ public record TimeInterval
 
     public static TimeInterval Create(TimeOnly start, TimeOnly end)
     {
-        return start >= end
-            ? throw new BusinessException("Начало должно быть меньше конца")
-            : new TimeInterval(start, end);
+        return new TimeInterval(start, end);
     }
 
     public static TimeSpan IntervalsDuration(IEnumerable<TimeInterval> intervals)
