@@ -3,9 +3,9 @@
 import {Alert, Button, Checkbox, Chip, CircularProgress, FormControlLabel, Paper, Stack, TextField, Typography} from "@mui/material";
 import {useEffect, useState} from "react";
 import {schedulesApi} from "@/lib/api";
-import {formatDayLabel, formatTimeOnly} from "@/lib/format";
+import {formatDayLabel, formatTimeOnly, parseRuDate, parseRuTime} from "@/lib/format";
 import {cardSx} from "@/lib/theme";
-import type {ScheduleResponse} from "@/lib/types";
+import type {ScheduleResponse, TimeInterval} from "@/lib/types";
 
 type Form = {
     date: string;
@@ -44,14 +44,27 @@ export default function ScheduleSection() {
     }, []);
 
     async function create() {
+        const date = parseRuDate(form.date);
+        const workStart = parseRuTime(form.workStart);
+        const workEnd = parseRuTime(form.workEnd);
+        if (!date || !workStart || !workEnd) {
+            setError("Проверьте формат: дата — дд.мм.гггг, время — чч:мм");
+            return;
+        }
+        let breakInterval: TimeInterval | null = null;
+        if (form.breakOn) {
+            const breakStart = parseRuTime(form.breakStart);
+            const breakEnd = parseRuTime(form.breakEnd);
+            if (!breakStart || !breakEnd) {
+                setError("Проверьте формат времени перерыва — чч:мм");
+                return;
+            }
+            breakInterval = {start: breakStart, end: breakEnd};
+        }
         setBusy(true);
         setError(null);
         try {
-            await schedulesApi.create({
-                date: form.date,
-                workInterval: {start: form.workStart, end: form.workEnd},
-                breakInterval: form.breakOn ? {start: form.breakStart, end: form.breakEnd} : null,
-            });
+            await schedulesApi.create({date, workInterval: {start: workStart, end: workEnd}, breakInterval});
             setForm(f => ({...f, date: ""}));
             await load();
         } catch (err) {
@@ -89,26 +102,26 @@ export default function ScheduleSection() {
                     </Typography>
                     <TextField
                         label="Дата"
-                        type="date"
                         value={form.date}
                         onChange={e => setForm(f => ({...f, date: e.target.value}))}
+                        placeholder="31.12.2026"
                         slotProps={{inputLabel: {shrink: true}}}
                         fullWidth
                     />
                     <Stack direction="row" spacing={2}>
                         <TextField
                             label="Начало"
-                            type="time"
                             value={form.workStart}
                             onChange={e => setForm(f => ({...f, workStart: e.target.value}))}
+                            placeholder="чч:мм"
                             slotProps={{inputLabel: {shrink: true}}}
                             fullWidth
                         />
                         <TextField
                             label="Конец"
-                            type="time"
                             value={form.workEnd}
                             onChange={e => setForm(f => ({...f, workEnd: e.target.value}))}
+                            placeholder="чч:мм"
                             slotProps={{inputLabel: {shrink: true}}}
                             fullWidth
                         />
@@ -126,17 +139,17 @@ export default function ScheduleSection() {
                         <Stack direction="row" spacing={2}>
                             <TextField
                                 label="Перерыв с"
-                                type="time"
                                 value={form.breakStart}
                                 onChange={e => setForm(f => ({...f, breakStart: e.target.value}))}
+                                placeholder="чч:мм"
                                 slotProps={{inputLabel: {shrink: true}}}
                                 fullWidth
                             />
                             <TextField
                                 label="Перерыв до"
-                                type="time"
                                 value={form.breakEnd}
                                 onChange={e => setForm(f => ({...f, breakEnd: e.target.value}))}
+                                placeholder="чч:мм"
                                 slotProps={{inputLabel: {shrink: true}}}
                                 fullWidth
                             />

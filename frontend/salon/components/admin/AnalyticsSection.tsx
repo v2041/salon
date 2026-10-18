@@ -3,7 +3,7 @@
 import {Alert, Box, Button, CircularProgress, Paper, Stack, TextField, Typography} from "@mui/material";
 import {useState} from "react";
 import {analyticsApi} from "@/lib/api";
-import {formatPrice, toIsoDate} from "@/lib/format";
+import {formatPrice, formatRuDate, parseRuDate, toIsoDate} from "@/lib/format";
 import {cardSx} from "@/lib/theme";
 
 type Row = {name: string; count: number; price: number};
@@ -42,22 +42,28 @@ function Metric({label, value}: {label: string; value: string}) {
 }
 
 export default function AnalyticsSection() {
-    const [from, setFrom] = useState(defaultFrom);
-    const [to, setTo] = useState(() => toIsoDate(new Date()));
+    const [from, setFrom] = useState(() => formatRuDate(defaultFrom()));
+    const [to, setTo] = useState(() => formatRuDate(toIsoDate(new Date())));
     const [data, setData] = useState<Data | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     async function load() {
+        const fromIso = parseRuDate(from);
+        const toIso = parseRuDate(to);
+        if (!fromIso || !toIso) {
+            setError("Проверьте даты: формат дд.мм.гггг");
+            return;
+        }
         setLoading(true);
         setError(null);
         try {
             const [gain, averageCheck, noShow, workload, popular, best] = await Promise.all([
-                safe(analyticsApi.getGain(from, to)),
-                safe(analyticsApi.getAverageCheck(from, to)),
-                safe(analyticsApi.getNoShowRate(from, to)),
-                safe(analyticsApi.getWorkloadRate(from, to)),
-                safe(analyticsApi.getOfferingsByPopularity(from, to)),
+                safe(analyticsApi.getGain(fromIso, toIso)),
+                safe(analyticsApi.getAverageCheck(fromIso, toIso)),
+                safe(analyticsApi.getNoShowRate(fromIso, toIso)),
+                safe(analyticsApi.getWorkloadRate(fromIso, toIso)),
+                safe(analyticsApi.getOfferingsByPopularity(fromIso, toIso)),
                 safe(analyticsApi.getBestClients(5)),
             ]);
             setData({
@@ -83,17 +89,17 @@ export default function AnalyticsSection() {
                     <Stack direction="row" spacing={2}>
                         <TextField
                             label="С"
-                            type="date"
                             value={from}
                             onChange={e => setFrom(e.target.value)}
+                            placeholder="дд.мм.гггг"
                             slotProps={{inputLabel: {shrink: true}}}
                             fullWidth
                         />
                         <TextField
                             label="По"
-                            type="date"
                             value={to}
                             onChange={e => setTo(e.target.value)}
+                            placeholder="дд.мм.гггг"
                             slotProps={{inputLabel: {shrink: true}}}
                             fullWidth
                         />

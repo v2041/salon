@@ -58,7 +58,7 @@ POST /api/appointments/ - Создать запись (доступ: User)
 POST /api/appointments/admin - Создать запись клиенту по телефону (доступ: Admin)
   Тело: { "phone": "+79341234567", "firstName": "Иван", "lastName": "Иванов", "date": "2026-08-10", "time": "14:30:00", "offeringIds": ["guid"] }
   Новый телефон: 404 { "detail": "Клиент не зарегистрирован" } — фронт предлагает ввести имя и фамилию
-  Повторный запрос с "firstName": создаётся карточка клиента и запись
+  Повторный запрос с "firstName": создаётся карточка клиента и запись; "lastName" необязательна
 PATCH /api/appointments/{id}/cancel - Отменить свою запись (доступ: User)
 PATCH /api/appointments/{id}/change-time - Перенести время (доступ: Admin)
   Тело: { "id": "guid", "date": "2026-08-10", "time": "16:00:00" }

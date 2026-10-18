@@ -70,6 +70,31 @@ export function toIsoDate(d: Date) {
     return `${d.getFullYear()}-${m}-${day}`;
 }
 
+export function formatRuDate(iso: string) {
+    const [year, month, day] = iso.split("-");
+    return `${day}.${month}.${year}`;
+}
+
+export function parseRuDate(value: string): string | null {
+    const match = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(value.trim());
+    if (!match) return null;
+    const day = Number(match[1]);
+    const month = Number(match[2]);
+    const year = Number(match[3]);
+    const date = new Date(year, month - 1, day);
+    if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
+    return `${match[3]}-${match[2]}-${match[1]}`;
+}
+
+export function parseRuTime(value: string): string | null {
+    const match = /^(\d{1,2}):(\d{2})$/.exec(value.trim());
+    if (!match) return null;
+    const hours = Number(match[1]);
+    const minutes = Number(match[2]);
+    if (hours > 23 || minutes > 59) return null;
+    return `${String(hours).padStart(2, "0")}:${match[2]}`;
+}
+
 export function timeToMinutes(time: string) {
     const [h, m] = time.split(":").map(Number);
     return h * 60 + m;

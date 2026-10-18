@@ -185,7 +185,7 @@ export default function CreateAppointmentSection() {
                             fullWidth
                         />
                         <TextField
-                            label="Фамилия"
+                            label="Фамилия (необязательно)"
                             value={lastName}
                             onChange={e => setLastName(e.target.value)}
                             fullWidth
