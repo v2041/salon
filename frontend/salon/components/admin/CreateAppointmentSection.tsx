@@ -1,6 +1,6 @@
 "use client";
 
-import {Alert, Button, CircularProgress, Paper, Stack, TextField} from "@mui/material";
+import {Alert, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, Stack, TextField} from "@mui/material";
 import {useEffect, useState} from "react";
 import Calendar from "@/components/booking/Calendar";
 import ServicePicker from "@/components/booking/ServicePicker";
@@ -147,27 +147,6 @@ export default function CreateAppointmentSection() {
                 placeholder="+79341234567"
                 fullWidth
             />
-            {needRegister && (
-                <>
-                    <Alert severity="info">
-                        Клиент с таким телефоном не зарегистрирован. Введите имя и фамилию — система создаст карточку клиента и запись.
-                    </Alert>
-                    <Stack direction="row" spacing={2}>
-                        <TextField
-                            label="Имя"
-                            value={firstName}
-                            onChange={e => setFirstName(e.target.value)}
-                            fullWidth
-                        />
-                        <TextField
-                            label="Фамилия"
-                            value={lastName}
-                            onChange={e => setLastName(e.target.value)}
-                            fullWidth
-                        />
-                    </Stack>
-                </>
-            )}
             <Paper sx={{...cardSx, p: 1.5, border: 3, borderColor: serviceZoneBorder}}>
                 <ServicePicker offerings={offerings} selectedIds={selectedIds} onToggle={toggle}/>
             </Paper>
@@ -185,11 +164,45 @@ export default function CreateAppointmentSection() {
             <Button
                 variant="contained"
                 size="large"
-                disabled={!phone || selectedIds.length === 0 || !date || !time || submitting || (needRegister && !firstName.trim())}
+                disabled={!phone || selectedIds.length === 0 || !date || !time || submitting}
                 onClick={submit}
             >
-                {needRegister ? "Зарегистрировать и создать" : "Создать запись"}
+                Создать запись
             </Button>
+            <Dialog open={needRegister} onClose={() => setNeedRegister(false)} fullWidth maxWidth="xs">
+                <DialogTitle>Новый клиент</DialogTitle>
+                <DialogContent>
+                    <Stack spacing={2} sx={{pt: 1}}>
+                        <DialogContentText>
+                            Клиент с телефоном {phone} не зарегистрирован. Введите имя и фамилию — система создаст карточку клиента и запись.
+                        </DialogContentText>
+                        {error && <Alert severity="error">{error}</Alert>}
+                        <TextField
+                            label="Имя"
+                            value={firstName}
+                            onChange={e => setFirstName(e.target.value)}
+                            autoFocus
+                            fullWidth
+                        />
+                        <TextField
+                            label="Фамилия"
+                            value={lastName}
+                            onChange={e => setLastName(e.target.value)}
+                            fullWidth
+                        />
+                    </Stack>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setNeedRegister(false)}>Отмена</Button>
+                    <Button
+                        variant="contained"
+                        disabled={submitting || !firstName.trim()}
+                        onClick={submit}
+                    >
+                        Зарегистрировать и создать
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Stack>
     );
 }
