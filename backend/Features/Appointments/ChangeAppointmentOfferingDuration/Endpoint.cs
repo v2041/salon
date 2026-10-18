@@ -14,6 +14,9 @@ public static class Endpoint
     {
         var appointment = await db.Appointments
             .Include(a => a.Offerings)
+            .Include(a => a.Schedule)
+            .ThenInclude(s => s.Appointments)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(a => a.Id == request.AppointmentId, token);
         if (appointment == null)
             throw new NotFoundException("Запись не найдена");

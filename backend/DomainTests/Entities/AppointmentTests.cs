@@ -30,12 +30,29 @@ public class AppointmentTests
 
     public class ChangeOfferingDuration
     {
+        private static Schedule CreateSchedule(TimeInterval? breakInterval = null)
+        {
+            return Schedule.Create(
+                new DateOnly(2099, 1, 1),
+                true,
+                TimeInterval.Create(new TimeOnly(10, 0, 0), new TimeOnly(18, 0, 0)),
+                breakInterval);
+        }
+
         [Fact]
         public void ChangeOfferingDuration_WithValid_ChangesDuration()
         {
             var (appointment, offeringId) = CreateAppointment();
             appointment.ChangeOfferingDuration(offeringId, TimeSpan.FromHours(1));
             Assert.Equal(TimeSpan.FromHours(1), appointment.Offerings.Single().Duration);
+        }
+
+        [Fact]
+        public void ChangeOfferingDuration_WithValid_RecalculatesInterval()
+        {
+            var (appointment, offeringId) = CreateAppointment();
+            appointment.ChangeOfferingDuration(offeringId, TimeSpan.FromHours(1));
+            Assert.Equal(new TimeOnly(12, 0, 0), appointment.Interval.End);
         }
 
         [Fact]
@@ -55,6 +72,74 @@ public class AppointmentTests
             var (appointment, offeringId) = CreateAppointment();
             Assert.Throws<BusinessException>(() =>
                 appointment.ChangeOfferingDuration(offeringId, TimeSpan.FromMinutes(minutes)));
+        }
+
+        [Fact]
+        public void ChangeOfferingDuration_WhenOverlapsOtherAppointment_ThrowsBusinessException()
+        {
+            var schedule = CreateSchedule();
+            var offeringId = Guid.NewGuid();
+            var appointment = schedule.AddAppointment(
+                Guid.NewGuid(),
+                new TimeOnly(11, 0, 0),
+                [new AppointmentOfferingData(offeringId, Price, Duration)]);
+            schedule.AddAppointment(
+                Guid.NewGuid(),
+                new TimeOnly(12, 0, 0),
+                [new AppointmentOfferingData(Guid.NewGuid(), Price, Duration)]);
+
+            Assert.Throws<BusinessException>(() =>
+                appointment.ChangeOfferingDuration(offeringId, TimeSpan.FromMinutes(90)));
+            Assert.Equal(Duration, appointment.Offerings.Single().Duration);
+            Assert.Equal(new TimeOnly(11, 30, 0), appointment.Interval.End);
+        }
+
+        [Fact]
+        public void ChangeOfferingDuration_WhenOverlapsBreak_ThrowsBusinessException()
+        {
+            var schedule = CreateSchedule(
+                TimeInterval.Create(new TimeOnly(15, 0, 0), new TimeOnly(16, 0, 0)));
+            var offeringId = Guid.NewGuid();
+            var appointment = schedule.AddAppointment(
+                Guid.NewGuid(),
+                new TimeOnly(14, 0, 0),
+                [new AppointmentOfferingData(offeringId, Price, Duration)]);
+
+            Assert.Throws<BusinessException>(() =>
+                appointment.ChangeOfferingDuration(offeringId, TimeSpan.FromHours(2)));
+        }
+
+        [Fact]
+        public void ChangeOfferingDuration_WhenGoesPastWorkEnd_ThrowsBusinessException()
+        {
+            var schedule = CreateSchedule();
+            var offeringId = Guid.NewGuid();
+            var appointment = schedule.AddAppointment(
+                Guid.NewGuid(),
+                new TimeOnly(17, 0, 0),
+                [new AppointmentOfferingData(offeringId, Price, Duration)]);
+
+            Assert.Throws<BusinessException>(() =>
+                appointment.ChangeOfferingDuration(offeringId, TimeSpan.FromHours(2)));
+        }
+
+        [Fact]
+        public void ChangeOfferingDuration_WhenCanceledAppointmentOverlaps_ChangesInterval()
+        {
+            var schedule = CreateSchedule();
+            var offeringId = Guid.NewGuid();
+            var appointment = schedule.AddAppointment(
+                Guid.NewGuid(),
+                new TimeOnly(11, 0, 0),
+                [new AppointmentOfferingData(offeringId, Price, Duration)]);
+            var other = schedule.AddAppointment(
+                Guid.NewGuid(),
+                new TimeOnly(12, 0, 0),
+                [new AppointmentOfferingData(Guid.NewGuid(), Price, Duration)]);
+            other.Cancel();
+
+            appointment.ChangeOfferingDuration(offeringId, TimeSpan.FromMinutes(90));
+            Assert.Equal(new TimeOnly(12, 30, 0), appointment.Interval.End);
         }
     }
 

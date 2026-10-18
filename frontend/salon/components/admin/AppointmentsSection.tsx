@@ -208,6 +208,7 @@ export default function AppointmentsSection() {
 
     function openEdit(appointment: AdminAppointmentResponse, offering: AdminAppointmentOffering) {
         setEdit({appointment, offering});
+        setError(null);
         setEditPrice(String(offering.price.value));
         setEditMinutes(String(durationToMinutes(offering.duration)));
     }
@@ -223,17 +224,15 @@ export default function AppointmentsSection() {
         setBusyId(edit.appointment.id);
         setError(null);
         try {
-            await Promise.all([
-                appointmentsApi.changeOfferingPrice(edit.appointment.id, edit.offering.offeringId, {
-                    value: price,
-                    currency: edit.appointment.price.currency,
-                }),
-                appointmentsApi.changeOfferingDuration(
-                    edit.appointment.id,
-                    edit.offering.offeringId,
-                    toDurationString(minutes)
-                ),
-            ]);
+            await appointmentsApi.changeOfferingDuration(
+                edit.appointment.id,
+                edit.offering.offeringId,
+                toDurationString(minutes)
+            );
+            await appointmentsApi.changeOfferingPrice(edit.appointment.id, edit.offering.offeringId, {
+                value: price,
+                currency: edit.appointment.price.currency,
+            });
             setEdit(null);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Не удалось сохранить изменения");
@@ -287,6 +286,7 @@ export default function AppointmentsSection() {
                         <Typography variant="body2" color="text.secondary">
                             {edit?.offering.title}
                         </Typography>
+                        {error && <Alert severity="error">{error}</Alert>}
                         <TextField
                             label="Цена, ₽"
                             type="number"

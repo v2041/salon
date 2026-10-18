@@ -67,7 +67,7 @@ PATCH /api/appointments/{id}/change-status - Изменить статус (до
 PATCH /api/appointments/{AppointmentId}/offering/{OfferingId}/change-price - Изменить цену услуги в записи (доступ: Admin)
   Тело: { "value": 2500, "currency": "RUB" }
 PATCH /api/appointments/{AppointmentId}/offering/{OfferingId}/change-duration - Изменить длительность услуги в записи (доступ: Admin)
-  Тело: "01:30:00"
+  Тело: "01:30:00". Пересчитывает интервал записи, проверяет работу, перерыв и другие записи.
 
 Создание записи:
 POST /api/appointments/

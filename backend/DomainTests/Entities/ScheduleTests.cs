@@ -196,6 +196,59 @@ public class ScheduleTests
         }
     }
 
+    public class MoveAppointment
+    {
+        [Fact]
+        public void MoveAppointment_WithValid_MovesInterval()
+        {
+            var schedule = CreateScheduleWithAppointment();
+            var appointment = schedule.Appointments.Single();
+            schedule.MoveAppointment(appointment.Id, new TimeOnly(15, 0, 0));
+            Assert.Equal(new TimeOnly(15, 0, 0), appointment.Interval.Start);
+            Assert.Equal(new TimeOnly(15, 30, 0), appointment.Interval.End);
+        }
+
+        [Fact]
+        public void MoveAppointment_WhenNotFound_ThrowsBusinessException()
+        {
+            var schedule = CreateScheduleWithAppointment();
+            Assert.Throws<BusinessException>(() =>
+                schedule.MoveAppointment(Guid.NewGuid(), new TimeOnly(15, 0, 0)));
+        }
+
+        [Fact]
+        public void MoveAppointment_WhenOutsideWork_ThrowsBusinessException()
+        {
+            var schedule = CreateScheduleWithAppointment();
+            var appointment = schedule.Appointments.Single();
+            Assert.Throws<BusinessException>(() =>
+                schedule.MoveAppointment(appointment.Id, new TimeOnly(17, 45, 0)));
+        }
+
+        [Fact]
+        public void MoveAppointment_WhenOverlapsOtherAppointment_ThrowsBusinessException()
+        {
+            var schedule = CreateScheduleWithAppointment();
+            var appointment = schedule.Appointments.Single();
+            schedule.AddAppointment(
+                Guid.NewGuid(),
+                new TimeOnly(12, 0, 0),
+                [new AppointmentOfferingData(Guid.NewGuid(), Money.FromDecimal(500), TimeSpan.FromMinutes(30))]);
+            Assert.Throws<BusinessException>(() =>
+                schedule.MoveAppointment(appointment.Id, new TimeOnly(12, 10, 0)));
+        }
+
+        [Fact]
+        public void MoveAppointment_WhenOverlapsOwnOldInterval_MovesInterval()
+        {
+            var schedule = CreateScheduleWithAppointment();
+            var appointment = schedule.Appointments.Single();
+            schedule.MoveAppointment(appointment.Id, new TimeOnly(11, 15, 0));
+            Assert.Equal(new TimeOnly(11, 15, 0), appointment.Interval.Start);
+            Assert.Equal(new TimeOnly(11, 45, 0), appointment.Interval.End);
+        }
+    }
+
     public class ChangeBreakInterval
     {
         [Fact]

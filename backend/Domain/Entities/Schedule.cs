@@ -70,13 +70,19 @@ public class Schedule
 
     public void CheckAppointmentInterval(TimeInterval interval)
     {
-        if (DateTime.UtcNow > Date.ToDateTime(interval.Start))
+        EnsureAppointmentInterval(interval);
+    }
+
+    internal void EnsureAppointmentInterval(TimeInterval interval, Guid? exceptAppointmentId = null, bool checkPast = true)
+    {
+        if (checkPast && DateTime.UtcNow > Date.ToDateTime(interval.Start))
             throw new BusinessException("Нельзя создать запись в прошлом.");
         if (!interval.IsInside(WorkInterval))
             throw new BusinessException("Не рабочее время недоступно для записи.");
         if (BreakInterval != null && interval.IsOverlapping(BreakInterval))
             throw new BusinessException("Запись не должна занимать время перерыва.");
         if (_appointments.Any(a =>
+                a.Id != exceptAppointmentId &&
                 a.Interval.IsOverlapping(interval) &&
                 a.Status is AppointmentStatus.Confirmed or AppointmentStatus.Pending))
             throw new BusinessException("Запись не должна занимать время других записей.");
@@ -115,16 +121,7 @@ public class Schedule
         if (appointment is null)
             throw new BusinessException("Запись не найдена");
         var interval = TimeInterval.Create(startTime, startTime.Add(appointment.Interval.Duration));
-        if (DateTime.UtcNow > Date.ToDateTime(interval.Start))
-            throw new BusinessException("Нельзя создать запись в прошлом.");
-        if (!interval.IsInside(WorkInterval))
-            throw new BusinessException("Не рабочее время недоступно для записи.");
-        if (BreakInterval != null && interval.IsOverlapping(BreakInterval))
-            throw new BusinessException("Запись не должна занимать время перерыва.");
-        if (_appointments.Any(a =>
-                a.Interval.IsOverlapping(interval) &&
-                a.Status is AppointmentStatus.Confirmed or AppointmentStatus.Pending))
-            throw new BusinessException("Запись не должна занимать время других записей.");
+        EnsureAppointmentInterval(interval, appointment.Id);
         appointment.ChangeInterval(interval);
     }
 

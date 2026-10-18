@@ -144,7 +144,7 @@ dotnet test
 | PATCH | `/{id}/change-status` | `{ "id", "status": 0..5 }` → `204` (Admin) |
 | PATCH | `/{id}/change-time` | `{ "id", "date", "time" }` — перенос (Admin) |
 | PATCH | `/{AppointmentId}/offering/{OfferingId}/change-price` | `{ "value", "currency" }` (Admin) |
-| PATCH | `/{AppointmentId}/offering/{OfferingId}/change-duration` | `"01:30:00"` — мин. 10 минут (Admin) |
+| PATCH | `/{AppointmentId}/offering/{OfferingId}/change-duration` | `"01:30:00"` — мин. 10 минут (Admin); пересчитывает интервал записи и проверяет работу, перерыв, другие записи |
 
 ### Analytics — `api/analytics`
 

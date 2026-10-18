@@ -14,6 +14,12 @@ using Scalar.AspNetCore;
 using WebApi.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
+if (builder.Environment.IsDevelopment())
+{
+    builder.Logging.ClearProviders();
+    builder.Logging.AddConsole();
+    builder.Logging.AddDebug();
+}
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>

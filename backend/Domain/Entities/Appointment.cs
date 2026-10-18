@@ -87,7 +87,16 @@ public class Appointment
             throw new BusinessException("Услуга не найдена");
         if (duration <= TimeSpan.FromMinutes(Offering.MIN_DURATION_MINUTES))
             throw new BusinessException($"Минимальная длительность услуги - {Offering.MIN_DURATION_MINUTES} минут.");
+        var totalDuration = _offerings.Aggregate(
+            TimeSpan.Zero,
+            (current, o) => current + (o.OfferingId == offeringId ? duration : o.Duration));
+        var endTime = Interval.Start.Add(totalDuration);
+        if (endTime <= Interval.Start)
+            throw new BusinessException("Не рабочее время недоступно для записи.");
+        var newInterval = TimeInterval.Create(Interval.Start, endTime);
+        Schedule.EnsureAppointmentInterval(newInterval, Id, checkPast: false);
         offering.ChangeDuration(duration);
+        Interval = newInterval;
     }
 
     public void Cancel()

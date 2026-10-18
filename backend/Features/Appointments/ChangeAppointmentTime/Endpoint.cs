@@ -19,6 +19,7 @@ public static class Endpoint
             .Include(a => a.Offerings)
             .Include(a => a.Schedule)
             .ThenInclude(s => s.Appointments)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(a => a.Id == request.Id, token);
         if (appointment == null) throw new NotFoundException("Запись не найдена");
         if (appointment.Schedule.Date == request.Date)
