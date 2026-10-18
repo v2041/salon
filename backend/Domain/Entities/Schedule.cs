@@ -46,9 +46,9 @@ public class Schedule
         TimeInterval? breakInterval
     )
     {
-        if (date < DateOnly.FromDateTime(DateTime.UtcNow) ||
-            (date == DateOnly.FromDateTime(DateTime.UtcNow) &&
-             workInterval.Start < TimeOnly.FromDateTime(DateTime.UtcNow)))
+        if (date < DateOnly.FromDateTime(DateTime.Now) ||
+            (date == DateOnly.FromDateTime(DateTime.Now) &&
+             workInterval.Start < TimeOnly.FromDateTime(DateTime.Now)))
         {
             throw new BusinessException("Нельзя назначить рабочий день в прошлом.");
         }
@@ -75,7 +75,7 @@ public class Schedule
 
     internal void EnsureAppointmentInterval(TimeInterval interval, Guid? exceptAppointmentId = null, bool checkPast = true)
     {
-        if (checkPast && DateTime.UtcNow > Date.ToDateTime(interval.Start))
+        if (checkPast && DateTime.Now > Date.ToDateTime(interval.Start))
             throw new BusinessException("Нельзя создать запись в прошлом.");
         if (!interval.IsInside(WorkInterval))
             throw new BusinessException("Не рабочее время недоступно для записи.");

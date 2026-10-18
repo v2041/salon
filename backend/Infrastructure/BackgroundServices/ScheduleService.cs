@@ -17,7 +17,7 @@ public class ScheduleService(IServiceScopeFactory scopeFactory, ILogger<Schedule
                 using var scope = scopeFactory.CreateScope();
                 var db = scope.ServiceProvider.GetRequiredService<SalonDbContext>();
 
-                var today = DateOnly.FromDateTime(DateTime.UtcNow);
+                var today = DateOnly.FromDateTime(DateTime.Now);
                 var createBound = today.AddDays(14);
 
                 var schedules = await db.Schedules
