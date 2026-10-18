@@ -4,9 +4,10 @@ import {useState} from "react";
 import {toIsoDate} from "@/lib/format";
 
 type Props = {
-    availableDates: string[];
     selected: string | null;
     onSelect: (date: string) => void;
+    availableDates?: string[];
+    disablePast?: boolean;
 };
 
 const WEEKDAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
@@ -16,25 +17,28 @@ function parseIso(iso: string) {
     return new Date(y, m - 1, d);
 }
 
-export default function Calendar({availableDates, selected, onSelect}: Props) {
-    const sorted = [...availableDates].sort();
+function monthStart(iso: string) {
+    const d = parseIso(iso);
+    return new Date(d.getFullYear(), d.getMonth(), 1);
+}
+
+export default function Calendar({selected, onSelect, availableDates, disablePast = false}: Props) {
+    const hasList = availableDates !== undefined;
+    const sorted = hasList ? [...availableDates].sort() : [];
+
     const [month, setMonth] = useState(() => {
-        const d = parseIso(sorted[0]);
-        return new Date(d.getFullYear(), d.getMonth(), 1);
+        if (selected) return monthStart(selected);
+        if (sorted.length > 0) return monthStart(sorted[0]);
+        const now = new Date();
+        return new Date(now.getFullYear(), now.getMonth(), 1);
     });
 
-    if (sorted.length === 0) return null;
+    if (hasList && sorted.length === 0) return null;
 
-    const minMonth = (() => {
-        const d = parseIso(sorted[0]);
-        return new Date(d.getFullYear(), d.getMonth(), 1).getTime();
-    })();
-    const maxMonth = (() => {
-        const d = parseIso(sorted[sorted.length - 1]);
-        return new Date(d.getFullYear(), d.getMonth(), 1).getTime();
-    })();
-    const atMin = month.getTime() <= minMonth;
-    const atMax = month.getTime() >= maxMonth;
+    const minMonth = hasList ? monthStart(sorted[0]).getTime() : null;
+    const maxMonth = hasList ? monthStart(sorted[sorted.length - 1]).getTime() : null;
+    const atMin = minMonth !== null && month.getTime() <= minMonth;
+    const atMax = maxMonth !== null && month.getTime() >= maxMonth;
 
     function shiftMonth(delta: number) {
         setMonth(m => new Date(m.getFullYear(), m.getMonth() + delta, 1));
@@ -50,10 +54,16 @@ export default function Calendar({availableDates, selected, onSelect}: Props) {
     ];
     while (cells.length % 7 !== 0) cells.push(null);
 
-    const availableSet = new Set(availableDates);
+    const availableSet = hasList ? new Set(sorted) : null;
+    const todayIso = toIsoDate(new Date());
+
+    function isAvailable(iso: string) {
+        if (availableSet && !availableSet.has(iso)) return false;
+        return !(disablePast && iso < todayIso);
+    }
 
     function renderCell(iso: string) {
-        const available = availableSet.has(iso);
+        const available = isAvailable(iso);
         const isSelected = iso === selected;
         return (
             <Box

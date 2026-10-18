@@ -1,8 +1,9 @@
 "use client";
 
-import {Alert, Box, Button, CircularProgress, Paper, Stack, TextField, Typography} from "@mui/material";
+import {Alert, Box, Button, CircularProgress, Paper, Stack, Typography} from "@mui/material";
 import {useState} from "react";
 import {analyticsApi} from "@/lib/api";
+import DateField from "@/components/admin/DateField";
 import {formatPrice, formatRuDate, parseRuDate, toIsoDate} from "@/lib/format";
 import {cardSx} from "@/lib/theme";
 
@@ -87,21 +88,15 @@ export default function AnalyticsSection() {
             <Paper sx={cardSx}>
                 <Stack spacing={2}>
                     <Stack direction="row" spacing={2}>
-                        <TextField
+                        <DateField
                             label="С"
                             value={from}
-                            onChange={e => setFrom(e.target.value)}
-                            placeholder="дд.мм.гггг"
-                            slotProps={{inputLabel: {shrink: true}}}
-                            fullWidth
+                            onChange={setFrom}
                         />
-                        <TextField
+                        <DateField
                             label="По"
                             value={to}
-                            onChange={e => setTo(e.target.value)}
-                            placeholder="дд.мм.гггг"
-                            slotProps={{inputLabel: {shrink: true}}}
-                            fullWidth
+                            onChange={setTo}
                         />
                     </Stack>
                     <Button variant="contained" disabled={!from || !to || loading} onClick={load}>

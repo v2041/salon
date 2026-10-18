@@ -3,6 +3,7 @@
 import {Alert, Button, Checkbox, Chip, CircularProgress, FormControlLabel, Paper, Stack, TextField, Typography} from "@mui/material";
 import {useEffect, useState} from "react";
 import {schedulesApi} from "@/lib/api";
+import DateField from "@/components/admin/DateField";
 import {formatDayLabel, formatTimeOnly, parseRuDate, parseRuTime} from "@/lib/format";
 import {cardSx} from "@/lib/theme";
 import type {ScheduleResponse, TimeInterval} from "@/lib/types";
@@ -100,13 +101,11 @@ export default function ScheduleSection() {
                     <Typography variant="overline" sx={{color: "text.secondary", letterSpacing: "0.12em"}}>
                         Рабочий день
                     </Typography>
-                    <TextField
+                    <DateField
                         label="Дата"
                         value={form.date}
-                        onChange={e => setForm(f => ({...f, date: e.target.value}))}
-                        placeholder="31.12.2026"
-                        slotProps={{inputLabel: {shrink: true}}}
-                        fullWidth
+                        onChange={value => setForm(f => ({...f, date: value}))}
+                        disablePast
                     />
                     <Stack direction="row" spacing={2}>
                         <TextField
