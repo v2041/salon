@@ -141,6 +141,25 @@ public class AppointmentTests
             appointment.ChangeOfferingDuration(offeringId, TimeSpan.FromMinutes(90));
             Assert.Equal(new TimeOnly(12, 30, 0), appointment.Interval.End);
         }
+
+        [Fact]
+        public void ChangeOfferingDuration_WhenDayIsNotWorking_ChangesInterval()
+        {
+            var schedule = CreateSchedule();
+            var offeringId = Guid.NewGuid();
+            var appointment = schedule.AddAppointment(
+                Guid.NewGuid(),
+                new TimeOnly(11, 0, 0),
+                [new AppointmentOfferingData(offeringId, Price, Duration)]);
+            appointment.Confirm();
+            appointment.Miss();
+            schedule.ChangeIsWorking(false);
+
+            appointment.ChangeOfferingDuration(offeringId, TimeSpan.FromHours(1));
+
+            Assert.Equal(TimeSpan.FromHours(1), appointment.Offerings.Single().Duration);
+            Assert.Equal(new TimeOnly(12, 0, 0), appointment.Interval.End);
+        }
     }
 
     public class ChangeOfferingPrice

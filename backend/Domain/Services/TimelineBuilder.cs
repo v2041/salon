@@ -6,11 +6,6 @@ namespace Domain.Services;
 
 public static class TimelineBuilder
 {
-    public static TimeInterval BuildInterval(TimeOnly startTime, IEnumerable<Offering> offerings)
-    {
-        var duration = offerings.Aggregate(TimeSpan.Zero, (current, offering) => current + offering.Duration);
-        return TimeInterval.Create(startTime, startTime.Add(duration));
-    }
     public static TimeInterval BuildInterval(TimeOnly startTime, IEnumerable<AppointmentOfferingData> offerings)
     {
         var duration = offerings.Aggregate(TimeSpan.Zero, (current, offering) => current + offering.Duration);
@@ -26,15 +21,22 @@ public static class TimelineBuilder
             .OrderBy(i => i.Start);
     }
 
-    public static IEnumerable<TimeInterval> FindFreeIntervals(Schedule schedule)
+    public static IEnumerable<TimeInterval> FindFreeIntervals(Schedule schedule, DateTime? now = null)
     {
         if (!schedule.IsWorking)
             return [];
         var busyIntervals = FindBusyIntervals(schedule);
         var freeIntervals = new List<TimeInterval>();
-        var currentStart = schedule.Date == DateOnly.FromDateTime(DateTime.Now)
-            ? TimeOnly.FromDateTime(DateTime.Now)
-            : schedule.WorkInterval.Start;
+        var current = now ?? DateTime.Now;
+        var currentStart = schedule.WorkInterval.Start;
+        if (schedule.Date == DateOnly.FromDateTime(current) &&
+            schedule.WorkInterval.Start <= TimeOnly.FromDateTime(current))
+        {
+            var nowTime = TimeOnly.FromDateTime(current);
+            currentStart = new TimeOnly(nowTime.Hour, nowTime.Minute).AddMinutes(1);
+            if (currentStart <= nowTime)
+                return [];
+        }
 
         foreach (var busy in busyIntervals)
         {

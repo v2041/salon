@@ -27,14 +27,14 @@ public static class Endpoint
                 (offering, appointmentOfferings) => new
                 {
                     Name = offering.Title,
-                    PriceValue = offering.Price.Value,
+                    PriceValue = appointmentOfferings.Sum(ao => ao.Price.Value),
                     Count = appointmentOfferings.Count()
                 })
             .Where(x => x.Count > 0)
             .OrderByDescending(x => x.PriceValue)
             .ThenBy(x => x.Name)
             .ToListAsync(token);
-
+        
         var response = rows
             .Select(r => new GetOfferingsByGainResponse(
                 r.Name,

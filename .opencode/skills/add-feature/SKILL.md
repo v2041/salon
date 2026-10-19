@@ -39,7 +39,7 @@ dotnet test
 
 | Файл | Содержимое |
 |---|---|
-| `<Имя>Request.cs` | `record` с полями входа. В теле НЕТ `userId`/`phone` — они из JWT claims |
+| `<Имя>Request.cs` | `record` с полями входа. `userId` — только из JWT claims (FR-S2). Телефон в теле — лишь для auth-фич и админ-записи |
 | `<Имя>Response.cs` | `record` с тем, что уйдёт клиенту |
 | `Endpoint.cs` | `public static class Endpoint`, метод `...Async` с DI-параметрами |
 | `Validator.cs` | FluentValidation, `CascadeMode.Stop`, сообщения на русском (если нужна валидация) |
@@ -97,4 +97,4 @@ dotnet test
 - Бизнес-проверка в Endpoint вместо Domain.
 - Миграция без тестов домена.
 - Забыт `CancellationToken` в endpoint.
-- Готовая, но незарегистрированная фича (`ChangeAppointmentTime`, `ChangeOffering`) — сначала grep, вдруг уже написана: подключи, не дублируй.
+- Готовая, но незарегистрированная фича — сначала grep, вдруг уже написана: подключи, не дублируй.

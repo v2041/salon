@@ -91,6 +91,8 @@ public class Schedule
     public Appointment AddAppointment(Guid userId, TimeOnly startTime,
         List<AppointmentOfferingData> appointmentOfferingData)
     {
+        if (!IsWorking)
+            throw new BusinessException("Нельзя записаться на выходной день.");
         var interval = TimelineBuilder.BuildInterval(startTime, appointmentOfferingData);
         CheckAppointmentInterval(interval);
         var appointment = Appointment.Create(this, userId, appointmentOfferingData, interval);
@@ -100,6 +102,8 @@ public class Schedule
 
     public void AttachAppointment(Appointment appointment)
     {
+        if (!IsWorking)
+            throw new BusinessException("Нельзя записаться на выходной день.");
         CheckAppointmentInterval(appointment.Interval);
         _appointments.Add(appointment);
         appointment.ChangeSchedule(this);
@@ -121,7 +125,8 @@ public class Schedule
         if (appointment is null)
             throw new BusinessException("Запись не найдена");
         var interval = TimeInterval.Create(startTime, startTime.Add(appointment.Interval.Duration));
-        EnsureAppointmentInterval(interval, appointment.Id);
+        EnsureAppointmentInterval(interval, appointment.Id,
+            checkPast: appointment.Status is AppointmentStatus.Pending or AppointmentStatus.Confirmed);
         appointment.ChangeInterval(interval);
     }
 

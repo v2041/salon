@@ -55,13 +55,13 @@
 Пути `change-status` / `change-time` / `change-price` отличаются от §5 (§5 приведено к коду).
 
 - **Фоновый сервис `ScheduleService`:** автогенерация расписания на 14 дней вперёд (ежедневно 10:00–18:00, перерыв 15:00–15:20, воскресенье — выходной), повтор каждые ~100 с.
-- **Тесты:** xUnit по домену (Offering, Schedule, Money, TimeInterval).
+- **Тесты:** xUnit по домену (Offering, Schedule, Money, TimeInterval, Appointment, User, TimelineBuilder) — 97 тестов, 19.10.2026.
 
 ### 2.2 Frontend — есть
-- Каркас Next.js: `app/page.tsx` (заглушка), `(client)/offerings` (заглушка — витрины нет), `(client)/booking`, `(client)/my-appointments`.
-- Компоненты записи: `OfferingList`, `Calendar`, `TimeGrid`, `BookingSummaryBar`, `MyAppointmentsList`, `BottomNavigationBar`; утилиты `lib/format.ts`.
-- **Всё на мок-данных:** услуги/интервалы/даты в `booking/page.tsx` (`OFFERINGS`, `FREE_INTERVALS`, `AVAILABLE_DATES`), записи `APPOINTMENTS` в `MyAppointmentsList.tsx`. Submit — имитация `setTimeout`.
-- **`lib/api.ts` отсутствует, ни одного `fetch` к API нет.** Экранов входа (FR-A*) нет. Кнопки отмены записи (FR-B5) нет. Состояний error/empty нет.
+- Каркас Next.js: `app/page.tsx`, `(app)/booking`, `(app)/my-appointments`, `(app)/admin`; витрины `/offerings` нет (FR-V3).
+- Компоненты: `LoginScreen`, `booking/*` (`ServicePicker`, `Calendar`, `TimeGrid`), `MyAppointmentsList`, `admin/*` (расписание, записи, создание записи, аналитика); утилиты `lib/format.ts`.
+- Живой фронт: `lib/api.ts` (`offeringsApi`, `schedulesApi`, `appointmentsApi`, `authApi`, `analyticsApi`), `fetch(..., { credentials: "include" })`. Мок-данных нет (сверено 19.10.2026).
+- Экраны входа (FR-A*) есть. Кнопки отмены записи (FR-B5) и UI переноса времени (FR-M3) нет.
 
 ### 2.3 Функциональные куски — подключены, но с расхождениями
 - `ChangeAppointmentTime` → зарегистрирован как `PATCH /api/appointments/{id}/change-time` (Admin).
@@ -73,15 +73,15 @@
 **Критично:**
 1. **Роль Admin недостижима. — ✅ Исправлено 11.10.2026 (миграция `SeedAdminRole`).** Добавлен доменный метод `User.PromoteToAdmin()` (идемпотентный), сид `+79991234567` получает `Role=1`. `Create` по-прежнему всегда `Default` — регистрация не может создать Admin. После `dotnet ef database update` тестовый Admin работает.
 2. ✅ Исправлено ранее: `PATCH {id}/change-time` требует роль Admin (см. `AppointmentsModule.cs`).
-3. **CORS без `AllowCredentials()`** — cookie с JWT не будет уходить с `localhost:3000` → живой фронт невозможен (FR-B3 блокируется).
+3. **CORS без `AllowCredentials()`** — ✅ Исправлено ранее: `Program.cs` задаёт `AllowCredentials()` для origin'ов фронта.
 4. **`SendVerificationCode` не возвращает код в dev-режиме** — без доступа к БД авторизация непроходима (FR-A1).
 
 **Важно:**
 5. FR-B6 — нет транзакции/уникального ограничения при создании записи (гонка слотов).
 6. Неактивные услуги (`IsActive=false`) не фильтруются при создании записи и в `available-dates`.
 7. FR-B5 — 2-часовое правило отмены действует только для `Confirmed`, для `Pending` смягчено; кнопки отмены на фронте нет.
-8. FR-A4 (rate limiting) — не реализован; `/healthz` — не реализован.
-9. Тесты не покрывают `Appointment` (правило 2 часов), `TimelineBuilder`, `AppointmentTimeChanger`; пустые группы в `ScheduleTests`. Частично закрыто 17.10.2026: `AppointmentTests` — переходы статусов, правка цены и длительности.
+8. FR-A4 (rate limiting) — ✅ частично 19.10.2026: повторная отправка кода не чаще 1/мин, формат телефона `+7XXXXXXXXXX` проверяется; лимиты «≤ 5 кодов/час, ≤ 20 попыток/час» — нет; `/healthz` — не реализован.
+9. ✅ по большей части 19.10.2026: 97 тестов — `Appointment`, `TimelineBuilder`, `Schedule` (закрытый день, перенос). Осталось: правило отмены «2 часа» и `AppointmentTimeChanger`.
 10. Login/Register возвращают `BadRequest(string)` вместо `problem+json`; статус `Pending` в `change-status` → 404 вместо бизнес-ошибки.
 11. ~~Нестабильные сиды миграций~~ — ✅ частично 11.10.2026: сиды Users стабилизированы (фикс. Id + даты, миграция `SeedAdminRole`). Осталось: конфликт версий EF Core (10.0.4 vs 10.0.10) в Features.
 12. Фронт: краш `Calendar` при пустом списке дат; навигация через `href` вместо `next/link` (полные перезагрузки); мок-даты записей протухли; `useState` без `'use client'` в `OfferingList`/`Calendar`.
@@ -98,7 +98,7 @@
 | FR-A3 | Повторный вход существующего номера = логин (без дубля); новый номер = регистрация по имени/фамилии | P0 |
 | FR-A4 | Rate limiting: ≤ 5 кодов на номер в час, ≤ 20 попыток ввода кода в час | P1 |
 
-> Реализация отправки SMS: выбрать провайдера (SMS.ru / Telegram Bot API как fallback). До подключения — код отдаётся только в ответе для dev-режима.
+> Реализация отправки SMS: выбрать провайдера (SMS.ru / Telegram Bot API как fallback). До подключения код не отправляется; для dev-проверок он читается из таблицы `VerificationCodes`.
 
 ### 3.2 Витрина услуг (клиент)
 | ID | Требование | Приоритет |
@@ -161,7 +161,7 @@ VerificationCode Phone, Code, ExpiresAt
 1. `Offering.Category` (string/enum) + индекс; миграция EF Core.
 2. Уникальный индекс по `Phone` на `Users` (если ещё нет).
 3. `Appointment.CreatedAt`, `CompletedAt?` — для аналитики и аудита.
-4. Снимок цены и длительности в `AppointmentOffering` — только через доменные методы (есть); правка длительности не двигает `Appointment.Interval`.
+4. Снимок цены и длительности в `AppointmentOffering` — только через доменные методы (есть). Правка длительности пересчитывает `Appointment.Interval`. Метод проверяет рабочее время, перерыв и другие записи.
 
 ## 5. API — изменения к текущему (статус 11.10.2026)
 
@@ -173,17 +173,22 @@ VerificationCode Phone, Code, ExpiresAt
 - ✅ 18.10.2026: новый телефон в админ-записи → 404 «Клиент не зарегистрирован», мастер вводит имя и фамилию — карточка создаётся вместе с записью; 409 дней и услуг с текстом; `isWorking` в списке расписаний.
 - ✅ 18.10.2026: «сейчас» для слотов и проверки прошлого — местное время (`DateTime.Now`), а не UTC: запись на уже прошедшее время того же дня отклоняется.
 - ✅ `POST /api/appointments/`: `userId` берётся из JWT-claims, из тела убран.
-- ✅ Авторизация по таблице 2.1 — проставлена, кроме бага change-time.
+- ✅ Авторизация по таблице 2.1 — проставлена.
 - ✅ Отмена — отдельный `PATCH {id}/cancel` (User + проверка владельца); остальные переходы — `change-status` (Admin).
 - ✅ Аналитика: 8 endpoint'ов вместо пары summary/by-offering (см. §2.1).
 
+- ✅ 19.10.2026: `Schedule.AddAppointment` и `AttachAppointment` отклоняют запись в выходной день. Правка длительности и перенос в тот же день в выходной день проходят (там только исторические записи).
+- ✅ 19.10.2026: `TimelineBuilder` не отдаёт слоты до начала смены. Первый слот на сегодня — следующая минута.
+- ✅ 19.10.2026: 500-ответы не раскрывают детали исключения. Код подтверждения хранится в UTC. Повторная отправка — не чаще 1 раза в минуту. Срок JWT приведён к сроку cookie — 30 дней (`ExpiryMinutes`).
+- ✅ 19.10.2026: `offerings-gain` считает выручку по цене из записей (`AppointmentOffering.Price`), а не по текущему каталогу.
+
 **Осталось:**
 - `GET /healthz` (health check: БД).
-- FR-A4 rate limiting на auth и создание записей.
+- FR-A4 rate limiting: лимиты «≤ 5 кодов/час» и «≤ 20 попыток ввода/час» (троттлинг регенерации 1/мин уже есть, 19.10.2026).
 - FR-N1 разбивка по месяцам/услугам; FR-N2 всего/новых/повторных клиентов (§3.5).
-- Dev-режим send-code: возвращать код в ответе (сейчас только `expiresAt`, §2.4 п.4).
+- Dev-режим send-code: возвращать код в ответе (ответ даёт `expiresAt` и `isRegistered`, сам код — нет, §2.4 п.4).
 
-**Форматы:** JSON, даты ISO (`yyyy-MM-dd`, `HH:mm`), деньги `{ value, currency }`.
+**Форматы:** JSON, даты ISO (`yyyy-MM-dd`, `HH:mm`; в ответах время — `HH:mm:ss`), деньги `{ value, currency }`.
 Ошибки — `ExceptionHandlingMiddleware`: **фактически** BusinessException → 400, NotFound → 404,
 валидация → ValidationProblem; остальное → 500 (расхождение: код даёт 400 там, где §5 предлагал 409/422 —
 решение: оставить 400 как единый контракт, зафиксировано в README §4).
@@ -192,7 +197,7 @@ VerificationCode Phone, Code, ExpiresAt
 | Категория | Требование |
 |---|---|
 | Производительность | p95 < 300 мс для витрины/free-time/available-dates при ≤ 10k записей; free-time считать по доменному `TimelineBuilder` (уже есть) |
-| Безопасность | JWT в HttpOnly-cookie (есть); rate limiting на auth и создание записей; валидация телефона (+7, 10 цифн); секрет JWT из конфигурации/env; CORS только для фронтенда (сейчас localhost — параметризовать) |
+| Безопасность | JWT в HttpOnly-cookie (есть); rate limiting на auth и создание записей; валидация телефона (+7, 10 цифр; send-code проверяется, 19.10.2026); секрет JWT из конфигурации/env; CORS только для фронтенда (сейчас localhost — параметризовать) |
 | Наблюдаемость | Структурный логгер, health check, корреляция ошибок через middleware (есть) |
 | Тесты | Домен: покрытие текущих правил + новые (категория, перенос, смена цены); интеграционные: happy path записи и конфликты слотов |
 | UI | Mobile-first (MUI), RU-локализация дат/валюты, состояния загрузки/ошибки/пустых списков на всех экранах |
@@ -203,7 +208,7 @@ VerificationCode Phone, Code, ExpiresAt
 **Этап 0 — «Критичные баги ревью» (P0, новое 11.10.2026)**
 1. Исправить роль Admin в сидах (`User.Create` всегда Default) — иначе панель мастера недоступна (§2.4 п.1).
 2. ✅ Закрыть `change-time`: политика Admin (сделано ранее).
-3. CORS `AllowCredentials()` (§2.4 п.3) + dev-возврат кода в send-code (§2.4 п.4).
+3. ✅ CORS `AllowCredentials()` (§2.4 п.3). Осталось: dev-возврат кода в send-code (§2.4 п.4).
 
 **Этап 1 — «Клиентская часть живая» (P0)**
 4. SMS-провайдер + реальный send-code (FR-A1..A4).

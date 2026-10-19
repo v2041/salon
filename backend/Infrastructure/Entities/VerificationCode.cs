@@ -1,4 +1,6 @@
-﻿namespace Infrastructure.Entities;
+﻿using System.Security.Cryptography;
+
+namespace Infrastructure.Entities;
 
 public class VerificationCode
 {
@@ -15,13 +17,22 @@ public class VerificationCode
         CreatedAt = createdAt;
     }
 
-    public static VerificationCode Create(string phone, DateTime? dateTime = null)
+    public static VerificationCode Create(string phone)
     {
-        var now = dateTime ?? DateTime.UtcNow;
-        var code = GenerateCode();
+        var now = DateTime.UtcNow;
         var expiresAt = now.AddMinutes(5);
+        var code = GenerateCode();
         return new VerificationCode(phone, code, expiresAt, now);
     }
-    
-    private static string GenerateCode() => Random.Shared.Next(1000, 9999).ToString();
+
+    private static string GenerateCode() => RandomNumberGenerator.GetInt32(1000, 10000).ToString();
+
+    public void RegenerateCode()
+    {
+        var now = DateTime.UtcNow;
+        if (CreatedAt.AddMinutes(1) >= now) return;
+        CreatedAt = now;
+        ExpiresAt = now.AddMinutes(5);
+        Code = GenerateCode();
+    }
 }

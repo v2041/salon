@@ -35,7 +35,7 @@ public class ExceptionHandlingMiddleware(ILogger<ExceptionHandlingMiddleware> lo
             {
                 Title = title,
                 Status = status,
-                Detail = exception.Message,
+                Detail = status == StatusCodes.Status500InternalServerError ? "Внутренняя ошибка сервера" : exception.Message,
                 Instance = context.Request.Path
             };
             context.Response.StatusCode = status;

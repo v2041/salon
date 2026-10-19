@@ -143,6 +143,20 @@ public class ScheduleTests
             
             Assert.IsType<Appointment>(appointment);
         }
+
+        [Fact]
+        public void AddAppointment_WhenDayIsNotWorking_ThrowsBusinessException()
+        {
+            var date = new DateOnly(2099, 1, 1);
+            var workInterval = TimeInterval.Create(new TimeOnly(10, 0, 0), new TimeOnly(18, 0, 0));
+            var schedule = Schedule.Create(date, false, workInterval, null);
+            var appointmentOfferingData = new List<AppointmentOfferingData>
+            {
+                new(Guid.NewGuid(), Money.FromDecimal(500), TimeSpan.FromMinutes(30))
+            };
+            Assert.Throws<BusinessException>(() =>
+                schedule.AddAppointment(Guid.NewGuid(), new TimeOnly(11, 0, 0), appointmentOfferingData));
+        }
     }
 
     public class ChangeWorkInterval
@@ -246,6 +260,51 @@ public class ScheduleTests
             schedule.MoveAppointment(appointment.Id, new TimeOnly(11, 15, 0));
             Assert.Equal(new TimeOnly(11, 15, 0), appointment.Interval.Start);
             Assert.Equal(new TimeOnly(11, 45, 0), appointment.Interval.End);
+        }
+
+        [Fact]
+        public void MoveAppointment_WhenDayIsNotWorking_MovesInterval()
+        {
+            var schedule = CreateScheduleWithAppointment();
+            var appointment = schedule.Appointments.Single();
+            appointment.Cancel();
+            schedule.ChangeIsWorking(false);
+            schedule.MoveAppointment(appointment.Id, new TimeOnly(15, 0, 0));
+            Assert.Equal(new TimeOnly(15, 0, 0), appointment.Interval.Start);
+            Assert.Equal(new TimeOnly(15, 30, 0), appointment.Interval.End);
+        }
+    }
+
+    public class AttachAppointment
+    {
+        [Fact]
+        public void AttachAppointment_WhenTargetDayIsWorking_Attaches()
+        {
+            var sourceSchedule = CreateScheduleWithAppointment();
+            var targetSchedule = Schedule.Create(
+                new DateOnly(2099, 1, 2),
+                true,
+                TimeInterval.Create(new TimeOnly(10, 0, 0), new TimeOnly(18, 0, 0)),
+                null
+            );
+            var appointment = sourceSchedule.DetachAppointment(sourceSchedule.Appointments.Single().Id);
+            targetSchedule.AttachAppointment(appointment);
+            Assert.Empty(sourceSchedule.Appointments);
+            Assert.Same(appointment, targetSchedule.Appointments.Single());
+        }
+
+        [Fact]
+        public void AttachAppointment_WhenTargetDayIsNotWorking_ThrowsBusinessException()
+        {
+            var sourceSchedule = CreateScheduleWithAppointment();
+            var targetSchedule = Schedule.Create(
+                new DateOnly(2099, 1, 2),
+                false,
+                TimeInterval.Create(new TimeOnly(10, 0, 0), new TimeOnly(18, 0, 0)),
+                null
+            );
+            var appointment = sourceSchedule.DetachAppointment(sourceSchedule.Appointments.Single().Id);
+            Assert.Throws<BusinessException>(() => targetSchedule.AttachAppointment(appointment));
         }
     }
 

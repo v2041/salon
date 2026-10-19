@@ -18,7 +18,7 @@ public static class JwtTokenGenerator
             Issuer = jwt["Issuer"],
             Audience = jwt["Audience"],
             IssuedAt = now,
-            Expires = now.AddMinutes(int.Parse(jwt["ExpiryMinutes"] ?? "60")),
+            Expires = now.AddMinutes(int.Parse(jwt["ExpiryMinutes"] ?? "43200")),
             SigningCredentials = new SigningCredentials(
                 new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt["Key"]!)),
                 SecurityAlgorithms.HmacSha256),

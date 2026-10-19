@@ -11,7 +11,7 @@
 
 **Клиент:**
 
-- витрина услуг с группировкой по категориям
+- список активных услуг с категориями — внутри flow записи (отдельной витрины нет, FR-V3)
 - flow записи: услуги (можно несколько) → дата → время → подтверждение
 - «Мои записи» со статусами, отмена своей записи
 - вход/регистрация по телефону + SMS-код (cookie `some-cookies`, 30 дней)
@@ -26,7 +26,7 @@
 **Система:**
 
 - автогенерация расписания на 14 дней вперёд (10:00–18:00, перерыв 15:00–15:20, воскресенье — выходной)
-- доменные проверки: без записи в прошлом, без пересечений, без записи в перерыв
+- доменные проверки: без записи в прошлом, без пересечений, без записи в перерыв и выходной день
 - единый формат ошибок `application/problem+json` на русском
 
 ## 2. Структура репозитория
@@ -44,9 +44,9 @@ salon_project/
     DomainTests/           # xUnit-тесты домена
   frontend/
     salon/                 # Next.js-приложение
-      app/(client)/booking | offerings | my-appointments
-      components/booking/  # OfferingList, Calendar, TimeGrid, BookingSummaryBar
-      components/          # MyAppointmentsList, BottomNavigationBar
+      app/(app)/           # booking, my-appointments, admin
+      components/booking/  # ServicePicker, Calendar, TimeGrid
+      components/          # LoginScreen, MyAppointmentsList; components/admin/*
       lib/format.ts        # форматирование цен, дат, длительностей (ru-RU)
 ```
 
@@ -66,7 +66,7 @@ psql -U postgres -c "CREATE DATABASE salon;"
 # 2. Настроить backend/WebApi/appsettings.Development.json (в .gitignore):
 # {
 #   "ConnectionStrings": { "SalonDbContext": "User ID=postgres;Password=1234;Host=localhost;Port=5432;Database=salon;" },
-#   "Jwt": { "Issuer": "SalonApi", "Audience": "SalonApi", "Key": "<base64-ключ-32+байт>", "ExpiryMinutes": 60 }
+#   "Jwt": { "Issuer": "SalonApi", "Audience": "SalonApi", "Key": "<base64-ключ-32+байт>", "ExpiryMinutes": 43200 }
 # }
 
 cd C:\Projects\salon_project\backend
@@ -82,30 +82,30 @@ dotnet run --project WebApi
 cd C:\Projects\salon_project\frontend\salon
 npm install
 npm run dev
-# http://localhost:3000 → /offerings, /booking, /my-appointments
+# http://localhost:3000 → /booking, /my-appointments, /admin
 ```
 
-> Сейчас frontend работает на мок-данных (`booking/page.tsx`, `MyAppointmentsList.tsx`).
-> Для живого режима нужен `lib/api.ts` с `fetch(..., { credentials: "include" })` к `http://localhost:5164`.
+> Frontend работает на живом API: `lib/api.ts` с `fetch(..., { credentials: "include" })` к `http://localhost:5164`.
+> Отдельной витрины `/offerings` нет — список услуг встроен в `/booking`.
 
 ### Тесты
 
 ```powershell
 cd C:\Projects\salon_project\backend
 dotnet test
-# OfferingTests, ScheduleTests, MoneyTests, TimeIntervalTests
+# Offering, Schedule, Money, TimeInterval, Appointment, User, TimelineBuilder — 97 тестов
 ```
 
 ## 4. API
 
-База: `http://localhost:5164`. Даты `yyyy-MM-dd`, время `HH:mm`, деньги `{ "value": 3500, "currency": "RUB" }`.
+База: `http://localhost:5164`. Даты `yyyy-MM-dd`, время `HH:mm` (в ответах — `HH:mm:ss`), деньги `{ "value": 3500, "currency": "RUB" }`.
 Статусы записи: `0=Pending, 1=Confirmed, 2=Completed, 3=Canceled, 4=Missed, 5=Rejected`.
 
 ### Auth — `api/auth`
 
 | Метод | Путь | Тело / ответ |
 |---|---|---|
-| POST | `/send-code` | `{ "phone": "+79991234567" }` → `{ "expiresAt": "..." }`, код 4 цифры на 5 мин |
+| POST | `/send-code` | `{ "phone": "+79991234567" }` → `{ "expiresAt", "isRegistered" }`, код — 4 цифры на 5 мин; повторная отправка — не чаще 1 раза в минуту |
 | POST | `/register` | `{ "code", "phone", "firstName", "lastName" }` → cookie `some-cookies` |
 | POST | `/login` | `{ "code", "phone" }` → cookie `some-cookies` |
 
@@ -116,8 +116,8 @@ dotnet test
 | GET | `/api/offerings/` | все активные, публично |
 | GET | `/api/offerings/{id}` | одна услуга |
 | POST | `/api/offerings/` | `{ "price": 1500, "title", "description", "duration": "01:00:00", "category": 0 }` |
-| PUT | `/api/offerings/{id}` | частичное обновление, требует auth |
-| DELETE | `/api/offerings/{id}` | `IsActive=false`, требует auth |
+| PUT | `/api/offerings/{id}` | обновление услуги (передаются все поля), Admin |
+| DELETE | `/api/offerings/{id}` | `IsActive=false`, Admin |
 
 `Category: 0=Hair, 1=Nails, 2=Face, 3=Other`.
 
@@ -125,7 +125,7 @@ dotnet test
 
 | Метод | Путь | Примечание |
 |---|---|---|
-| GET | `/free-time?date=2026-08-10` | `{ "freeIntervals": [{ "start": "10:00", "end": "12:00" }] }` через `TimelineBuilder` |
+| GET | `/free-time?date=2026-08-10` | `{ "freeIntervals": [{ "start": "10:00:00", "end": "12:00:00" }] }` через `TimelineBuilder` |
 | GET | `/available-dates?offeringIds=guid1,guid2` | `{ "dates": [...] }` — дни с окном ≥ суммарной длительности |
 | GET | `/` | будущие дни с `isWorking` |
 | POST | `/` | `{ "date", "workInterval": {"start","end"}, "breakInterval?": {...} }`; 409 с текстом — день уже существует |
@@ -144,12 +144,12 @@ dotnet test
 | PATCH | `/{id}/change-status` | `{ "id", "status": 0..5 }` → `204` (Admin) |
 | PATCH | `/{id}/change-time` | `{ "id", "date", "time" }` — перенос (Admin) |
 | PATCH | `/{AppointmentId}/offering/{OfferingId}/change-price` | `{ "value", "currency" }` (Admin) |
-| PATCH | `/{AppointmentId}/offering/{OfferingId}/change-duration` | `"01:30:00"` — мин. 10 минут (Admin); пересчитывает интервал записи и проверяет работу, перерыв, другие записи |
+| PATCH | `/{AppointmentId}/offering/{OfferingId}/change-duration` | `"01:30:00"` — больше 10 минут (Admin). Пересчитывает интервал записи. Проверяет рабочее время, перерыв и другие записи |
 
 ### Analytics — `api/analytics`
 
 `GET /gain?from=&to=` — выручка по `Completed` за период.
-Также: `/offerings-popularity`, `/no-show-rate`, `/average-check`, `/workload-rate`, `/best-clients`.
+Также: `/offerings-popularity`, `/offerings-gain`, `/no-show-rate`, `/average-check`, `/average-hour-gain`, `/workload-rate`, `/best-clients`.
 
 ### Ошибки
 
@@ -162,15 +162,15 @@ dotnet test
 - `Offering{Price:Money, Title(≤50), Duration(>10 мин), IsActive, Category}`
 - `Schedule{Date(unique), IsWorking, WorkInterval(≥2ч), BreakInterval?(строго внутри, не впритык)}`
 - `Appointment{Interval, Status, Offerings[]}` + снимок цены/длительности в `AppointmentOffering`
-- Нельзя: запись в прошлом, вне рабочего времени, в перерыв, с пересечением `Pending|Confirmed`
+- Нельзя: запись в прошлом, вне рабочего времени, в перерыв, в выходной день, с пересечением `Pending|Confirmed`
 - `Cancel` из `Confirmed` — не позже чем за 2 часа; закрыть день — только без активных записей
 
 | Где | Ключ | Зачем |
 |---|---|---|
 | `appsettings.Development.json` | `ConnectionStrings:SalonDbContext` | строка Postgres (файл в `.gitignore`) |
-| | `Jwt:Issuer/Audience/Key/ExpiryMinutes` | подпись токена, сейчас 60 мин |
-| `Program.cs` | CORS `localhost:5173, localhost:3000` | для фронта; для cookie нужен `AllowCredentials()` |
-| cookie | `some-cookies`, `HttpOnly`, 30 дней | имя и TTL расходятся с JWT — выровнять в проде |
+| | `Jwt:Issuer/Audience/Key/ExpiryMinutes` | подпись токена; срок 30 дней (43200 мин), как у cookie |
+| `Program.cs` | CORS `localhost:5173, localhost:3000` | для фронта, `AllowCredentials()` включён |
+| cookie | `some-cookies`, `HttpOnly`, 30 дней | срок совпадает с JWT |
 
 ## 6. Деплой
 
@@ -198,12 +198,12 @@ ENTRYPOINT ["dotnet", "WebApi.dll"]
 
 ## 7. Статус и дальше
 
-Готово: домен + CRUD услуг/расписания/записей, auth по коду, gain-аналитика,
-фоновый `ScheduleService`, доменные тесты, клиентские экраны на моках.
+Готово: домен + CRUD услуг/расписания/записей, auth по коду, 8 endpoint'ов аналитики,
+фоновый `ScheduleService`, 97 доменных тестов, клиентские экраны и панель мастера на живом API.
 
-Дальше по `TZ.md`: починить префиксы `/api/auth`, `/api/analytics` и `RequireAdmin`,
-закрыть авторизацию (`userId` из JWT), подключить фронт к API, панель мастера,
-summary-аналитика + графики, rate-limit, `/healthz`, CI/CD.
+Дальше по `TZ.md`: SMS-провайдер (FR-A1), кнопка отмены записи (FR-B5), UI переноса
+времени (FR-M3), витрина услуги (FR-V3), rate-limit и `/healthz` (FR-A4), защита
+от гонок (FR-B6), графики аналитики (FR-N1/N2), CI/CD.
 
 Лицензия MIT. Контакт: makstara55@gmail.com, github.com/v2041.
 
