@@ -10,3 +10,8 @@
 **/AGENTS.md
 
 backend/WebApi/appsettings.Development.json
+
+.env
+.env.*
+!.env.example
+

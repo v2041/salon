@@ -197,11 +197,11 @@ VerificationCode Phone(ключ), Code, ExpiresAt, CreatedAt, AttemptsCount
 | Категория | Требование |
 |---|---|
 | Производительность | p95 < 300 мс для витрины/free-time/available-dates при ≤ 10k записей; free-time считать по доменному `TimelineBuilder` (уже есть) |
-| Безопасность | JWT в HttpOnly-cookie (есть); rate limiting на auth и создание записей; валидация телефона (+7, 10 цифр; send-code проверяется, 19.10.2026); секрет JWT из конфигурации/env; CORS только для фронтенда (сейчас localhost — параметризовать) |
+| Безопасность | JWT в HttpOnly-cookie (есть); rate limiting на auth и создание записей; валидация телефона (+7, 10 цифр; send-code проверяется, 19.10.2026); секрет JWT из конфигурации/env; CORS из `Cors:AllowedOrigins` (параметризован 19.10.2026) |
 | Наблюдаемость | Структурный логгер, health check, корреляция ошибок через middleware (есть) |
 | Тесты | Домен: покрытие текущих правил + новые (категория, перенос, смена цены); интеграционные: happy path записи и конфликты слотов |
 | UI | Mobile-first (MUI), RU-локализация дат/валюты, состояния загрузки/ошибки/пустых списков на всех экранах |
-| Деплой | VPS + systemd или Docker; миграции `dotnet ef database update` при старте; мин. требования 1 vCPU / 2 GB RAM (из README) |
+| Деплой | VPS + Docker Compose: Caddy (HTTPS, reverse proxy, порты 80/443) → frontend/API; миграции применяет сервис `migrate` перед стартом API; секреты в `.env`; мин. требования 1 vCPU / 2 GB RAM (из README) |
 
 ## 7. Этапы работ
 
@@ -224,7 +224,7 @@ VerificationCode Phone(ключ), Code, ExpiresAt, CreatedAt, AttemptsCount
 10. Экран мастера с графиками поверх 8 готовых endpoint'ов; закрыть FR-N1, FR-N2.
 
 **Этап 4 — «Продакшн» (P1–P2)**
-11. Rate limiting, `/healthz`, CI/CD (GitHub Actions: тесты → сборка → деплой), docker-compose для прода, бэкапы БД.
+11. Rate limiting, `/healthz`, CI/CD (GitHub Actions: тесты → сборка → деплой), бэкапы БД. ✅ 19.10.2026: docker-compose для прода (Caddy + HTTPS, сервис `migrate`).
 
 ## 8. Открытые вопросы (решить до старта этапа 1)
 1. Канал доставки кода: SMS-провайдер (какой?) или Telegram/VK? В README есть пункт «Интеграция с VK ID» — отменить в пользу phone+code?

@@ -57,7 +57,8 @@ salon_project/
 
 - .NET SDK 10;
 - PostgreSQL 15+;
-- Node.js 24 (проверено на 24.18.0) и npm.
+- Node.js 24 (проверено на 24.18.0) и npm;
+- Docker Desktop + WSL2 — только для запуска через `docker compose`.
 
 ## Установка и запуск
 
@@ -99,6 +100,34 @@ npm run dev
 ```
 
 http://localhost:3000 → `/booking`, `/my-appointments`, `/admin`. Все экраны работают с живым API (`lib/api.ts`, `fetch` с `credentials: "include"`). Мок-данных нет.
+
+## Запуск в Docker
+
+Стек: PostgreSQL 17, API (.NET 10), фронтенд (Node 24), Caddy (reverse proxy, HTTPS).
+
+1. Скопируйте `.env.example` в `.env` и задайте значения:
+   - `POSTGRES_PASSWORD` — пароль БД;
+   - `JWT_KEY` — случайная строка не короче 32 символов (`openssl rand -base64 48`);
+   - `PUBLIC_URL` — публичный адрес сайта: `https://salon.example.com` или `http://1.2.3.4`;
+   - `DOMAIN` — домен для Caddy: `salon.example.com` (авто-HTTPS) или `:80` (проверка по IP без TLS).
+
+2. Соберите и запустите:
+
+```powershell
+docker compose up --build -d
+```
+
+3. Миграции применяет сервис `migrate` перед стартом API. Сайт открывается по `PUBLIC_URL`.
+
+| Команда | Действие |
+|---|---|
+| `docker compose logs -f api` | Логи API |
+| `docker compose ps` | Состояние сервисов |
+| `docker compose down` | Остановить стек |
+| `docker compose up --build -d` | Пересобрать и обновить |
+| `docker compose exec db psql -U salon -d salon` | Консоль БД |
+
+Данные БД — volume `pgdata`, сертификаты Caddy — `caddy_data`. После смены `PUBLIC_URL` пересоберите фронтенд: `docker compose build frontend`.
 
 ## Скрипты frontend
 
