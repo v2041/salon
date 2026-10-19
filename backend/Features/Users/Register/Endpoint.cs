@@ -1,6 +1,7 @@
 ﻿using Domain.Entities;
 using Infrastructure.Authentication;
 using Infrastructure.Data;
+using Infrastructure.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,9 +20,24 @@ public static class Endpoint
         if (await db.Users.AnyAsync(u => u.Phone == request.Phone, token))
             return Results.BadRequest("Номер телефона уже зарегистрирован");
         var code = await db.VerificationCodes.FirstOrDefaultAsync(v =>
-            v.Phone == request.Phone && v.Code == request.Code && v.ExpiresAt > DateTime.UtcNow, token);
+            v.Phone == request.Phone, token);
         if (code is null)
             return Results.BadRequest("Неверный код");
+        var result = code.Verify(request.Code);
+        if (result == VerificationResult.Invalid
+            && !await VerificationCodeCounter.TryCountFailedAttemptAsync(db.VerificationCodes, request.Phone, token))
+        {
+            result = VerificationResult.Blocked;
+        }
+        if (result != VerificationResult.Valid)
+        {
+            return Results.BadRequest(result switch
+            {
+                VerificationResult.Blocked => "Вы превысили допустимое число попыток. Запросите новый код",
+                VerificationResult.Expired => "Код истёк. Запросите новый код",
+                _ => "Неверный код"
+            });
+        }
         var user = User.Create(request.FirstName, request.LastName, request.Phone, DateTime.UtcNow);
         db.VerificationCodes.Remove(code);
         db.Users.Add(user);

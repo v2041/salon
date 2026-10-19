@@ -55,7 +55,7 @@
 Пути `change-status` / `change-time` / `change-price` отличаются от §5 (§5 приведено к коду).
 
 - **Фоновый сервис `ScheduleService`:** автогенерация расписания на 14 дней вперёд (ежедневно 10:00–18:00, перерыв 15:00–15:20, воскресенье — выходной), повтор каждые ~100 с.
-- **Тесты:** xUnit по домену (Offering, Schedule, Money, TimeInterval, Appointment, User, TimelineBuilder) — 97 тестов, 19.10.2026.
+- **Тесты:** xUnit (Offering, Schedule, Money, TimeInterval, Appointment, User, TimelineBuilder, VerificationCode) — 105 тестов, 19.10.2026.
 
 ### 2.2 Frontend — есть
 - Каркас Next.js: `app/page.tsx`, `(app)/booking`, `(app)/my-appointments`, `(app)/admin`; витрины `/offerings` нет (FR-V3).
@@ -80,8 +80,8 @@
 5. FR-B6 — нет транзакции/уникального ограничения при создании записи (гонка слотов).
 6. Неактивные услуги (`IsActive=false`) не фильтруются при создании записи и в `available-dates`.
 7. FR-B5 — 2-часовое правило отмены действует только для `Confirmed`, для `Pending` смягчено; кнопки отмены на фронте нет.
-8. FR-A4 (rate limiting) — ✅ частично 19.10.2026: повторная отправка кода не чаще 1/мин, формат телефона `+7XXXXXXXXXX` проверяется; лимиты «≤ 5 кодов/час, ≤ 20 попыток/час» — нет; `/healthz` — не реализован.
-9. ✅ по большей части 19.10.2026: 97 тестов — `Appointment`, `TimelineBuilder`, `Schedule` (закрытый день, перенос). Осталось: правило отмены «2 часа» и `AppointmentTimeChanger`.
+8. FR-A4 (rate limiting) — ✅ частично 19.10.2026. Повторная отправка — не чаще 1 раза в минуту. Счётчик попыток на код — 5: блокировка в Login и Register. `send-code` проверяет формат телефона `+7XXXXXXXXXX`. Лимитов «≤ 5 кодов/час» и «≤ 20 попыток/час» нет. `/healthz` — не реализован.
+9. ✅ 19.10.2026: 105 тестов; покрыты `Appointment`, `TimelineBuilder`, `Schedule` (закрытый день, перенос). Нет тестов на правило отмены «2 часа» и `AppointmentTimeChanger`.
 10. Login/Register возвращают `BadRequest(string)` вместо `problem+json`; статус `Pending` в `change-status` → 404 вместо бизнес-ошибки.
 11. ~~Нестабильные сиды миграций~~ — ✅ частично 11.10.2026: сиды Users стабилизированы (фикс. Id + даты, миграция `SeedAdminRole`). Осталось: конфликт версий EF Core (10.0.4 vs 10.0.10) в Features.
 12. Фронт: краш `Calendar` при пустом списке дат; навигация через `href` вместо `next/link` (полные перезагрузки); мок-даты записей протухли; `useState` без `'use client'` в `OfferingList`/`Calendar`.
@@ -154,7 +154,7 @@ Offering        Id, Price(Money), Title(≤50), Description, Duration(>10min), I
 Schedule        Id, Date(уникальная), IsWorking, WorkInterval(TimeInterval), BreakInterval?(⊂ Work)
 Appointment     Id, ScheduleId, UserId, Interval, Status, Offerings[]
 AppointmentOffering  OfferingId, Price(снимок), Duration(снимок)
-VerificationCode Phone, Code, ExpiresAt
+VerificationCode Phone(ключ), Code, ExpiresAt, CreatedAt, AttemptsCount
 ```
 
 ### 4.2 Изменения
@@ -184,7 +184,7 @@ VerificationCode Phone, Code, ExpiresAt
 
 **Осталось:**
 - `GET /healthz` (health check: БД).
-- FR-A4 rate limiting: лимиты «≤ 5 кодов/час» и «≤ 20 попыток ввода/час» (троттлинг регенерации 1/мин уже есть, 19.10.2026).
+- FR-A4 rate limiting: лимиты «≤ 5 кодов/час» и «≤ 20 попыток ввода/час». Есть: повторная отправка — не чаще 1 раза в минуту, счётчик попыток на код — 5 (19.10.2026).
 - FR-N1 разбивка по месяцам/услугам; FR-N2 всего/новых/повторных клиентов (§3.5).
 - Dev-режим send-code: возвращать код в ответе (ответ даёт `expiresAt` и `isRegistered`, сам код — нет, §2.4 п.4).
 

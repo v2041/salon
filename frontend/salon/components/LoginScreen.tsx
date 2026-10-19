@@ -24,8 +24,8 @@ export default function LoginScreen() {
             const res = await authApi.sendCode({phone});
             setIsRegistered(res.isRegistered);
             setStep("code");
-        } catch {
-            setError("Не удалось отправить код");
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Не удалось отправить код");
         } finally {
             setLoading(false);
         }
@@ -38,8 +38,8 @@ export default function LoginScreen() {
             if (isRegistered) await authApi.login({phone, code});
             else await authApi.register({phone, code, firstName, lastName});
             await refresh();
-        } catch {
-            setError("Неверный номер телефона или код");
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Неверный номер телефона или код");
         } finally {
             setLoading(false);
         }

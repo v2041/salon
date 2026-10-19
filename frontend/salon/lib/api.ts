@@ -66,7 +66,10 @@ export async function apiFetch<T>(
             errors?: Record<string, string[]>;
         } | null;
         const firstError = problem?.errors ? Object.values(problem.errors)[0]?.[0] : undefined;
-        const message = problem?.detail ?? firstError ?? problem?.message ?? problem?.title ?? `Ошибка ${res.status}`;
+        const message =
+            typeof data === "string" && data
+                ? data
+                : problem?.detail ?? firstError ?? problem?.message ?? problem?.title ?? `Ошибка ${res.status}`;
         throw new ApiError(message, res.status);
     }
 

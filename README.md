@@ -17,7 +17,7 @@
 
 - поток записи: услуги (можно несколько) → дата → время → подтверждение. Список услуг встроен в поток, отдельной витрины нет (FR-V3 в планах);
 - «Мои записи»: статусы, отмена своей записи;
-- вход и регистрация по телефону с кодом подтверждения (4 цифры, TTL 5 минут, повтор — не чаще 1 раза в минуту). SMS-провайдер пока не подключён — код виден в базе данных.
+- вход и регистрация по телефону. Код — 4 цифры, действует 5 минут. Повторная отправка — не чаще 1 раза в минуту. Пять неверных попыток блокируют код. SMS-провайдер не подключён — код виден в базе данных.
 
 **Мастер**
 
@@ -116,7 +116,7 @@ cd backend
 dotnet test
 ```
 
-xUnit-тесты домена (`DomainTests`): `Offering`, `Schedule`, `Money`, `TimeInterval`, `Appointment`, `User`, `TimelineBuilder` — 97 тестов.
+xUnit-тесты (`DomainTests`): `Offering`, `Schedule`, `Money`, `TimeInterval`, `Appointment`, `User`, `TimelineBuilder`, `VerificationCode` — 105 тестов.
 
 ## API
 
@@ -134,6 +134,8 @@ xUnit-тесты домена (`DomainTests`): `Offering`, `Schedule`, `Money`, 
 | POST | `/send-code` | `{ "phone": "+79991234567" }` → `{ "expiresAt", "isRegistered" }` |
 | POST | `/register` | `{ "code", "phone", "firstName", "lastName" }` → cookie `some-cookies` |
 | POST | `/login` | `{ "code", "phone" }` → cookie `some-cookies` |
+
+Неверный или истёкший код → `400`. Пять неверных попыток блокируют код.
 
 ### Offerings — `/api/offerings`
 
