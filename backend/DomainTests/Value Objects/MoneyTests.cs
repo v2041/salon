@@ -26,9 +26,9 @@ public class MoneyTests
         [InlineData("")]
         [InlineData(" ")]
         public void FromDecimal_WithNullOrEmptyOrWhiteSpaceCurrency_ThrowsBusinessException(
-            string emptyOrNullOrWhiteSpaceCurrency)
+            string? emptyOrNullOrWhiteSpaceCurrency)
         {
-            Assert.Throws<BusinessException>(() => Money.FromDecimal(100, emptyOrNullOrWhiteSpaceCurrency));
+            Assert.Throws<BusinessException>(() => Money.FromDecimal(100, emptyOrNullOrWhiteSpaceCurrency!));
         }
         
         [Fact]

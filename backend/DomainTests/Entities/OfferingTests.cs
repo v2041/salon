@@ -39,13 +39,13 @@ public class OfferingTests
         [InlineData("title", null, 30)]
         [InlineData("title", "description", 0)]
         public void Create_WithInvalid_ThrowsBusinessException(
-            string title,
-            string description,
+            string? title,
+            string? description,
             int durationMinutes
         )
         {
             Assert.Throws<BusinessException>(() =>
-                Offering.Create(Money.FromDecimal(100), title, description, TimeSpan.FromMinutes(durationMinutes),
+                Offering.Create(Money.FromDecimal(100), title!, description!, TimeSpan.FromMinutes(durationMinutes),
                     Category.Hair));
         }
     }
@@ -137,9 +137,9 @@ public class OfferingTests
         [InlineData(null)]
         [InlineData("")]
         [InlineData(" ")]
-        public void ChangeDescription_WithNullOrEmptyOrWhiteSpaceDescription_ThrowsBusinessException(string description)
+        public void ChangeDescription_WithNullOrEmptyOrWhiteSpaceDescription_ThrowsBusinessException(string? description)
         {
-            Assert.Throws<BusinessException>(() => _offering.ChangeDescription(description));
+            Assert.Throws<BusinessException>(() => _offering.ChangeDescription(description!));
         }
     }
 

@@ -27,9 +27,9 @@ public class User
     }
 
     public Guid Id { get; }
-    public string FirstName { get; private set; }
+    public string FirstName { get; private set; } = null!;
     public string? LastName { get; private set; }
-    public string Phone { get; private set; }
+    public string Phone { get; private set; } = null!;
     public DateTime CreatedAt { get; private set; }
     public DateTime LastLoginAt { get; private set; }
     public UserRole Role { get; private set; }

@@ -31,7 +31,7 @@ public class Schedule
     public Guid Id { get; }
     public bool IsWorking { get; private set; }
     public DateOnly Date { get; private set; }
-    public TimeInterval WorkInterval { get; private set; }
+    public TimeInterval WorkInterval { get; private set; } = null!;
     public TimeInterval? BreakInterval { get; private set; }
 
     public IReadOnlyCollection<Appointment> Appointments

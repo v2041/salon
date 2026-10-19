@@ -7,7 +7,7 @@ public class AppointmentOffering
 {
     public Guid AppointmentId { get; }
     public Guid OfferingId { get; }
-    public Money Price { get; private set; }
+    public Money Price { get; private set; } = null!;
     public TimeSpan Duration { get; private set; }
 
     private AppointmentOffering()

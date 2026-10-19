@@ -40,7 +40,7 @@ public class ScheduleTests
                 TimeOnly.FromTimeSpan(TimeSpan.FromHours(workStartHours)),
                 TimeOnly.FromTimeSpan(TimeSpan.FromHours(WorkEndHours))
             );
-            var breakInterval = breakStartHours is null
+            var breakInterval = breakStartHours is null || breakEndHours is null
                 ? null
                 : TimeInterval.Create(
                     TimeOnly.FromTimeSpan(TimeSpan.FromHours(breakStartHours.Value)),

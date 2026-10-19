@@ -30,10 +30,10 @@ public class Appointment
     }
 
     public Guid Id { get; }
-    public Schedule Schedule { get; private set; }
+    public Schedule Schedule { get; private set; } = null!;
     public Guid ScheduleId { get; private set; }
     public Guid UserId { get; private set; }
-    public TimeInterval Interval { get; private set; }
+    public TimeInterval Interval { get; private set; } = null!;
     public AppointmentStatus Status { get; private set; }
     public Money Price => Money.FromDecimal(_offerings.Sum(o => o.Price.Value));
 

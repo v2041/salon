@@ -83,7 +83,7 @@
 8. FR-A4 (rate limiting) — ✅ частично 19.10.2026. Повторная отправка — не чаще 1 раза в минуту. Счётчик попыток на код — 5: блокировка в Login и Register. `send-code` проверяет формат телефона `+7XXXXXXXXXX`. Лимитов «≤ 5 кодов/час» и «≤ 20 попыток/час» нет. `/healthz` — не реализован.
 9. ✅ 19.10.2026: 105 тестов; покрыты `Appointment`, `TimelineBuilder`, `Schedule` (закрытый день, перенос). Нет тестов на правило отмены «2 часа» и `AppointmentTimeChanger`.
 10. Login/Register возвращают `BadRequest(string)` вместо `problem+json`; статус `Pending` в `change-status` → 404 вместо бизнес-ошибки.
-11. ~~Нестабильные сиды миграций~~ — ✅ частично 11.10.2026: сиды Users стабилизированы (фикс. Id + даты, миграция `SeedAdminRole`). Осталось: конфликт версий EF Core (10.0.4 vs 10.0.10) в Features.
+11. ~~Нестабильные сиды миграций~~ — ✅ 11.10.2026: сиды Users стабилизированы (фикс. Id + даты, миграция `SeedAdminRole`). ✅ 19.10.2026: конфликт версий EF Core (10.0.4 vs 10.0.10) устранён явной ссылкой `Microsoft.EntityFrameworkCore.Relational` 10.0.10. ✅ 19.10.2026: предупреждение NU1903 закрыто: `Microsoft.AspNetCore.OpenApi` 10.0.13 использует `Microsoft.OpenApi` 2.12.2.
 12. Фронт: краш `Calendar` при пустом списке дат; навигация через `href` вместо `next/link` (полные перезагрузки); мок-даты записей протухли; `useState` без `'use client'` в `OfferingList`/`Calendar`.
 
 **Мелочи:** опечатки в именах файлов аналитики (`GetOfferingsByPopulatiryResponse`); `Magic number bottom: 56`; `toLocaleDateString` вне `lib/format.ts`.
