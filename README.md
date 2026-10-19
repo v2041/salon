@@ -57,7 +57,7 @@ salon_project/
 
 - .NET SDK 10;
 - PostgreSQL 15+;
-- Node.js 20.9+ (проверено на 24.18.0) и npm.
+- Node.js 24 (проверено на 24.18.0) и npm.
 
 ## Установка и запуск
 
