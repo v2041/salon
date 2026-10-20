@@ -103,3 +103,7 @@ export function timeToMinutes(time: string) {
 export function minutesToTime(mins: number) {
     return `${String(Math.floor(mins / 60)).padStart(2, "0")}:${String(mins % 60).padStart(2, "0")}`;
 }
+
+export function minutesToDuration(mins: number) {
+    return `${minutesToTime(mins)}:00`;
+}

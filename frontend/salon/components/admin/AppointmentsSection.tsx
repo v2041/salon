@@ -3,7 +3,7 @@
 import {Alert, Button, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Paper, Select, Stack, TextField, Typography} from "@mui/material";
 import {useEffect, useState} from "react";
 import {appointmentsApi} from "@/lib/api";
-import {durationToMinutes, formatDayLabel, formatDurationValue, formatPrice, formatTimeOnly} from "@/lib/format";
+import {durationToMinutes, formatDayLabel, formatDurationValue, formatPrice, formatTimeOnly, minutesToDuration} from "@/lib/format";
 import {accentInk, cardSx} from "@/lib/theme";
 import {AppointmentStatus} from "@/lib/types";
 import type {AdminAppointmentOffering, AdminAppointmentResponse} from "@/lib/types";
@@ -45,12 +45,6 @@ const ACTIONS: Record<AppointmentStatus, Action[]> = {
 };
 
 type Filter = AppointmentStatus | "all";
-
-function toDurationString(minutes: number) {
-    const h = Math.floor(minutes / 60);
-    const m = minutes % 60;
-    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00`;
-}
 
 function startOf(a: AdminAppointmentResponse) {
     return new Date(`${a.date}T${a.interval.start}`);
@@ -227,7 +221,7 @@ export default function AppointmentsSection() {
             await appointmentsApi.changeOfferingDuration(
                 edit.appointment.id,
                 edit.offering.offeringId,
-                toDurationString(minutes)
+                minutesToDuration(minutes)
             );
             await appointmentsApi.changeOfferingPrice(edit.appointment.id, edit.offering.offeringId, {
                 value: price,

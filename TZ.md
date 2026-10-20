@@ -59,7 +59,7 @@
 
 ### 2.2 Frontend — есть
 - Каркас Next.js: `app/page.tsx`, `(app)/booking`, `(app)/my-appointments`, `(app)/admin`; витрины `/offerings` нет (FR-V3).
-- Компоненты: `LoginScreen`, `booking/*` (`ServicePicker`, `Calendar`, `TimeGrid`), `MyAppointmentsList`, `admin/*` (расписание, записи, создание записи, аналитика); утилиты `lib/format.ts`.
+- Компоненты: `LoginScreen`, `booking/*` (`ServicePicker`, `Calendar`, `TimeGrid`), `MyAppointmentsList`, `admin/*` (услуги, расписание, записи, создание записи, аналитика); утилиты `lib/format.ts`.
 - Живой фронт: `lib/api.ts` (`offeringsApi`, `schedulesApi`, `appointmentsApi`, `authApi`, `analyticsApi`), `fetch(..., { credentials: "include" })`. Мок-данных нет (сверено 19.10.2026).
 - Экраны входа (FR-A*) есть. Кнопки отмены записи (FR-B5) и UI переноса времени (FR-M3) нет.
 
@@ -216,7 +216,7 @@ VerificationCode Phone(ключ), Code, ExpiresAt, CreatedAt, AttemptsCount
 6. Авторизация endpoint'ов + роли + `userId` из токена (FR-S1..S3) — **сделано, кроме Этапа 0 п.1**.
 
 **Этап 2 — «Панель мастера» (P0)**
-7. UI: управление услугами (CRUD, категории).
+7. ✅ 20.10.2026: UI «Услуги» — создание, изменение, удаление (деактивация). Восстановление услуги не сделано: endpoint отсутствует (FR-M1 закрыт частично).
 8. UI: расписание (дни, перерывы, выходные).
 9. UI: календарь записей + смена статусов/времени/цен (features уже зарегистрированы). ✅ 17.10.2026: раздел «Записи» — статусы, цена, длительность. UI переноса времени не сделан.
 
