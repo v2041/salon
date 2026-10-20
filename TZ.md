@@ -55,7 +55,7 @@
 Пути `change-status` / `change-time` / `change-price` отличаются от §5 (§5 приведено к коду).
 
 - **Фоновый сервис `ScheduleService`:** автогенерация расписания на 14 дней вперёд (ежедневно 10:00–18:00, перерыв 15:00–15:20, воскресенье — выходной), повтор каждые ~100 с.
-- **Тесты:** xUnit (Offering, Schedule, Money, TimeInterval, Appointment, User, TimelineBuilder, VerificationCode) — 105 тестов, 19.10.2026.
+- **Тесты:** xUnit (Offering, Schedule, Money, TimeInterval, Appointment, User, TimelineBuilder, VerificationCode) — 110 тестов, 20.10.2026.
 
 ### 2.2 Frontend — есть
 - Каркас Next.js: `app/page.tsx`, `(app)/booking`, `(app)/my-appointments`, `(app)/admin`; витрины `/offerings` нет (FR-V3).
@@ -81,7 +81,7 @@
 6. Неактивные услуги (`IsActive=false`) не фильтруются при создании записи и в `available-dates`.
 7. FR-B5 — 2-часовое правило отмены действует только для `Confirmed`, для `Pending` смягчено; кнопки отмены на фронте нет.
 8. FR-A4 (rate limiting) — ✅ частично 19.10.2026. Повторная отправка — не чаще 1 раза в минуту. Счётчик попыток на код — 5: блокировка в Login и Register. `send-code` проверяет формат телефона `+7XXXXXXXXXX`. Лимитов «≤ 5 кодов/час» и «≤ 20 попыток/час» нет. `/healthz` — не реализован.
-9. ✅ 19.10.2026: 105 тестов; покрыты `Appointment`, `TimelineBuilder`, `Schedule` (закрытый день, перенос). Нет тестов на правило отмены «2 часа» и `AppointmentTimeChanger`.
+9. ✅ 20.10.2026: 110 тестов; покрыты `Appointment`, `TimelineBuilder`, `Schedule` (закрытый день, перенос, seed-режим `checkPast`). Нет тестов на правило отмены «2 часа» и `AppointmentTimeChanger`.
 10. Login/Register возвращают `BadRequest(string)` вместо `problem+json`; статус `Pending` в `change-status` → 404 вместо бизнес-ошибки.
 11. ~~Нестабильные сиды миграций~~ — ✅ 11.10.2026: сиды Users стабилизированы (фикс. Id + даты, миграция `SeedAdminRole`). ✅ 19.10.2026: конфликт версий EF Core (10.0.4 vs 10.0.10) устранён явной ссылкой `Microsoft.EntityFrameworkCore.Relational` 10.0.10. ✅ 19.10.2026: предупреждение NU1903 закрыто: `Microsoft.AspNetCore.OpenApi` 10.0.13 использует `Microsoft.OpenApi` 2.12.2.
 12. Фронт: краш `Calendar` при пустом списке дат; навигация через `href` вместо `next/link` (полные перезагрузки); мок-даты записей протухли; `useState` без `'use client'` в `OfferingList`/`Calendar`.
@@ -156,6 +156,8 @@ Appointment     Id, ScheduleId, UserId, Interval, Status, Offerings[]
 AppointmentOffering  OfferingId, Price(снимок), Duration(снимок)
 VerificationCode Phone(ключ), Code, ExpiresAt, CreatedAt, AttemptsCount
 ```
+
+Демо-стенд: `docker compose --profile demo run --rm --build seed` создает 60 клиентов, 22 услуги (19 активных), 142 дня и около 370 записей. Сид удаляет бизнес-данные; тестовые Admin и Client остаются. Порядок запуска — в README, раздел «Демо-данные для проверки».
 
 ### 4.2 Изменения
 1. `Offering.Category` (string/enum) + индекс; миграция EF Core.

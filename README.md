@@ -42,6 +42,7 @@ salon_project/
     Features/         # Appointments, Offerings, Schedules, Users, Analytics (vertical slices)
     Infrastructure/   # SalonDbContext, EF-конфигурации, миграции, JWT, ScheduleService
     WebApi/           # Program.cs, Middlewares, appsettings
+    Seeder/           # демо-данные для Docker-стенда
     DomainTests/      # xUnit-тесты домена
   frontend/
     salon/            # Next.js-приложение
@@ -129,6 +130,25 @@ docker compose up --build -d
 
 Данные БД — volume `pgdata`, сертификаты Caddy — `caddy_data`. После смены `PUBLIC_URL` пересоберите фронтенд: `docker compose build frontend`.
 
+### Демо-данные для проверки
+
+Сид `seed` создает демо-данные. Он добавляет 60 клиентов, 22 услуги (19 активных) и 142 дня расписания. Всего около 370 записей: 120 дней назад и 21 день вперёд.
+
+1. Остановите API, чтобы фоновый `ScheduleService` не менял расписание:
+```powershell
+docker compose stop api
+```
+2. Запустите сид:
+```powershell
+docker compose --profile demo run --rm --build seed
+```
+3. Запустите API:
+```powershell
+docker compose start api
+```
+
+Сид удаляет записи, услуги, расписания, клиентов и коды подтверждения. Тестовые Admin `+79991234567` и Client `+79341234567` остаются. Код входа — в таблице `VerificationCodes`. Сервис `seed` задает `ALLOW_DEMO_SEED=true` и флаг `--reset`. Без флага `--reset` сид останавливается, если в БД уже есть данные.
+
 ## Скрипты frontend
 
 | Команда | Действие |
@@ -145,7 +165,7 @@ cd backend
 dotnet test
 ```
 
-xUnit-тесты (`DomainTests`): `Offering`, `Schedule`, `Money`, `TimeInterval`, `Appointment`, `User`, `TimelineBuilder`, `VerificationCode` — 105 тестов.
+xUnit-тесты (`DomainTests`): `Offering`, `Schedule`, `Money`, `TimeInterval`, `Appointment`, `User`, `TimelineBuilder`, `VerificationCode` — 110 тестов.
 
 ## API
 

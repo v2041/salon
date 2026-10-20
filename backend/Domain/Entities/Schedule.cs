@@ -43,12 +43,13 @@ public class Schedule
         DateOnly date,
         bool isWorking,
         TimeInterval workInterval,
-        TimeInterval? breakInterval
+        TimeInterval? breakInterval,
+        bool checkPast = true
     )
     {
-        if (date < DateOnly.FromDateTime(DateTime.Now) ||
+        if (checkPast && (date < DateOnly.FromDateTime(DateTime.Now) ||
             (date == DateOnly.FromDateTime(DateTime.Now) &&
-             workInterval.Start < TimeOnly.FromDateTime(DateTime.Now)))
+             workInterval.Start < TimeOnly.FromDateTime(DateTime.Now))))
         {
             throw new BusinessException("Нельзя назначить рабочий день в прошлом.");
         }
@@ -89,12 +90,12 @@ public class Schedule
     }
 
     public Appointment AddAppointment(Guid userId, TimeOnly startTime,
-        List<AppointmentOfferingData> appointmentOfferingData)
+        List<AppointmentOfferingData> appointmentOfferingData, bool checkPast = true)
     {
         if (!IsWorking)
-            throw new BusinessException("Нельзя записаться на выходной день.");
+            throw new BusinessException("Нельзя записаться на нерабочий день.");
         var interval = TimelineBuilder.BuildInterval(startTime, appointmentOfferingData);
-        CheckAppointmentInterval(interval);
+        EnsureAppointmentInterval(interval, checkPast: checkPast);
         var appointment = Appointment.Create(this, userId, appointmentOfferingData, interval);
         _appointments.Add(appointment);
         return appointment;
@@ -103,7 +104,7 @@ public class Schedule
     public void AttachAppointment(Appointment appointment)
     {
         if (!IsWorking)
-            throw new BusinessException("Нельзя записаться на выходной день.");
+            throw new BusinessException("Нельзя записаться на нерабочий день.");
         CheckAppointmentInterval(appointment.Interval);
         _appointments.Add(appointment);
         appointment.ChangeSchedule(this);
@@ -151,8 +152,10 @@ public class Schedule
         BreakInterval = newBreakInterval;
     }
 
-    public void ChangeWorkInterval(TimeInterval newWorkInterval)
+    public void ChangeWorkInterval(TimeInterval newWorkInterval, bool checkPast = false)
     {
+        if (checkPast && DateTime.Now > Date.ToDateTime(newWorkInterval.Start))
+            throw new BusinessException("Нельзя создать рабочий день в прошлом.");
         if (newWorkInterval.Duration < MinimumWorkDuration)
             throw new BusinessException("Время работы должно быть не меньше двух часов.");
         if (BreakInterval is not null && !BreakInterval.IsInside(newWorkInterval))

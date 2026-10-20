@@ -113,6 +113,23 @@ public class ScheduleTests
             );
             Assert.Throws<BusinessException>(() => Schedule.Create(date, isWorking, workInterval, null));
         }
+
+        [Fact]
+        public void Create_WhenDateInPast_ThrowsBusinessException()
+        {
+            var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-1);
+            var workInterval = TimeInterval.Create(new TimeOnly(10, 0, 0), new TimeOnly(18, 0, 0));
+            Assert.Throws<BusinessException>(() => Schedule.Create(date, true, workInterval, null));
+        }
+
+        [Fact]
+        public void Create_WhenCheckPastFalse_AllowsPastDate()
+        {
+            var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-1);
+            var workInterval = TimeInterval.Create(new TimeOnly(10, 0, 0), new TimeOnly(18, 0, 0));
+            var schedule = Schedule.Create(date, true, workInterval, null, checkPast: false);
+            Assert.Equal(date, schedule.Date);
+        }
     }
 
     public class AddAppointment
@@ -156,6 +173,49 @@ public class ScheduleTests
             };
             Assert.Throws<BusinessException>(() =>
                 schedule.AddAppointment(Guid.NewGuid(), new TimeOnly(11, 0, 0), appointmentOfferingData));
+        }
+
+        [Fact]
+        public void AddAppointment_WhenCheckPastFalse_AllowsPastDate()
+        {
+            var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-1);
+            var schedule = Schedule.Create(
+                date,
+                true,
+                TimeInterval.Create(new TimeOnly(10, 0, 0), new TimeOnly(18, 0, 0)),
+                null,
+                checkPast: false
+            );
+            var data = new List<AppointmentOfferingData>
+            {
+                new(Guid.NewGuid(), Money.FromDecimal(500), TimeSpan.FromMinutes(30))
+            };
+            var appointment = schedule.AddAppointment(
+                Guid.NewGuid(),
+                new TimeOnly(11, 0, 0),
+                data,
+                checkPast: false
+            );
+            Assert.Same(appointment, schedule.Appointments.Single());
+        }
+
+        [Fact]
+        public void AddAppointment_WhenCheckPastTrueAndDateInPast_ThrowsBusinessException()
+        {
+            var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-1);
+            var schedule = Schedule.Create(
+                date,
+                true,
+                TimeInterval.Create(new TimeOnly(10, 0, 0), new TimeOnly(18, 0, 0)),
+                null,
+                checkPast: false
+            );
+            var data = new List<AppointmentOfferingData>
+            {
+                new(Guid.NewGuid(), Money.FromDecimal(500), TimeSpan.FromMinutes(30))
+            };
+            Assert.Throws<BusinessException>(() =>
+                schedule.AddAppointment(Guid.NewGuid(), new TimeOnly(11, 0, 0), data));
         }
     }
 
@@ -207,6 +267,21 @@ public class ScheduleTests
             var schedule = CreateScheduleWithAppointment();
             var newWorkInterval = TimeInterval.Create(new TimeOnly(12, 0, 0), new TimeOnly(18, 0, 0));
             Assert.Throws<BusinessException>(() => schedule.ChangeWorkInterval(newWorkInterval));
+        }
+
+        [Fact]
+        public void ChangeWorkInterval_WhenCheckPastTrueAndDateInPast_ThrowsBusinessException()
+        {
+            var date = DateOnly.FromDateTime(DateTime.Now).AddDays(-1);
+            var schedule = Schedule.Create(
+                date,
+                true,
+                TimeInterval.Create(new TimeOnly(10, 0, 0), new TimeOnly(18, 0, 0)),
+                null,
+                checkPast: false
+            );
+            var newWorkInterval = TimeInterval.Create(new TimeOnly(9, 0, 0), new TimeOnly(19, 0, 0));
+            Assert.Throws<BusinessException>(() => schedule.ChangeWorkInterval(newWorkInterval, checkPast: true));
         }
     }
 
