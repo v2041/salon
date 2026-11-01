@@ -1,4 +1,5 @@
-﻿using Infrastructure.Data;
+﻿using Domain.Exceptions;
+using Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,7 +18,8 @@ public static class Endpoint
             .Where(s => s.Id == request.Id)
             .FirstOrDefaultAsync(token);
 
-        if (schedule == null) return Results.NotFound();
+        if (schedule == null)
+            throw new NotFoundException("Рабочий день не найден");
 
         schedule.ChangeWorkInterval(request.WorkInterval);
         schedule.ChangeBreakInterval(request.BreakInterval);

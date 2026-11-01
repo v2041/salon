@@ -18,12 +18,14 @@ public static class Endpoint
     )
     {
         var value = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (value == null) return Results.NotFound();
+        if (value == null)
+            throw new NotFoundException("Пользователь не найден");
         var userId = Guid.Parse(value);
         var appointment = await db.Appointments
             .Include(a => a.Schedule)
             .FirstOrDefaultAsync(a => a.Id == request.Id && a.UserId == userId, token);
-        if (appointment is null) return Results.NotFound();
+        if (appointment is null)
+            throw new NotFoundException("Запись не найдена");
         appointment.Cancel();
         await db.SaveChangesAsync(token);
         return Results.NoContent();

@@ -1,5 +1,7 @@
 ﻿using Domain.Enums;
 using Domain.ValueObjects;
+using Features.Common;
+using FluentValidation;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,10 +11,15 @@ public static class Endpoint
 {
     public static async Task<IResult> GetBestClientsAsync(
         [AsParameters] GetBestClientRequest request,
+        IValidator<GetBestClientRequest> validator,
         SalonDbContext db,
         CancellationToken token
     )
     {
+        var validationResult = await validator.ValidateAsync(request, token);
+        if (!validationResult.IsValid)
+            return validationResult.ToValidationProblem();
+
         var rows = await db.Users
             .AsNoTracking()
             .Select(u => new

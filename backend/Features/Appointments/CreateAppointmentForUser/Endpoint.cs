@@ -2,6 +2,7 @@ using Domain.Entities;
 using Domain.Exceptions;
 using Domain.Services;
 using Domain.ValueObjects;
+using Features.Common;
 using FluentValidation;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
@@ -20,15 +21,7 @@ public static class Endpoint
     {
         var validationResult = await validator.ValidateAsync(request, token);
         if (!validationResult.IsValid)
-        {
-            var errors = validationResult.Errors
-                .GroupBy(e => e.PropertyName)
-                .ToDictionary(
-                    g => g.Key,
-                    g => g.Select(e => e.ErrorMessage).ToArray()
-                );
-            return Results.ValidationProblem(errors);
-        }
+            return validationResult.ToValidationProblem();
 
         var phone = request.Phone.Trim();
         var user = await db.Users

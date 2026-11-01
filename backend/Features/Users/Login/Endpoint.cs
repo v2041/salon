@@ -1,4 +1,5 @@
-﻿using Infrastructure.Authentication;
+﻿using Domain.Exceptions;
+using Infrastructure.Authentication;
 using Infrastructure.Data;
 using Infrastructure.Entities;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +20,7 @@ public static class Endpoint
         var code = await db.VerificationCodes.FirstOrDefaultAsync(x =>
             x.Phone == request.Phone, token);
         if (code == null)
-            return Results.BadRequest("Неверный номер телефона или код");
+            throw new BusinessException("Неверный номер телефона или код");
         var result = code.Verify(request.Code);
         if (result == VerificationResult.Invalid
             && !await VerificationCodeCounter.TryCountFailedAttemptAsync(db.VerificationCodes, request.Phone, token))
@@ -28,7 +29,7 @@ public static class Endpoint
         }
         if (result != VerificationResult.Valid)
         {
-            return Results.BadRequest(result switch
+            throw new BusinessException(result switch
             {
                 VerificationResult.Blocked => "Вы превысили допустимое число попыток. Запросите новый код",
                 VerificationResult.Expired => "Код истёк. Запросите новый код",
@@ -38,7 +39,7 @@ public static class Endpoint
 
         var user = await db.Users.FirstOrDefaultAsync(u => u.Phone == request.Phone, token);
         if (user == null)
-            return Results.BadRequest("Пользователь не найден");
+            throw new BusinessException("Пользователь не найден");
         db.VerificationCodes.Remove(code);
 
         user.MarkLoggedIn();

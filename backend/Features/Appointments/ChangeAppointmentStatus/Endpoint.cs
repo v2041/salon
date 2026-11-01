@@ -17,9 +17,12 @@ public static class Endpoint
         var appointment = await db.Appointments
             .Include(a => a.Schedule)
             .FirstOrDefaultAsync(a => a.Id == request.Id, token);
-        if (appointment is null) return Results.NotFound();
+        if (appointment is null)
+            throw new NotFoundException("Запись не найдена");
         switch (request.Status)
         {
+            case AppointmentStatus.Pending:
+                throw new BusinessException("Нельзя изменить статус на Pending");
             case AppointmentStatus.Confirmed:
                 appointment.Confirm();
                 break;
@@ -36,7 +39,7 @@ public static class Endpoint
                 appointment.Miss();
                 break;
             default:
-                throw new NotFoundException("Статус не найден");
+                throw new BusinessException("Статус не найден");
         }
         await db.SaveChangesAsync(token);
         return Results.NoContent();

@@ -1,4 +1,5 @@
-﻿using Domain.Services;
+﻿using Domain.Exceptions;
+using Domain.Services;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +18,8 @@ public static class Endpoint
             .Include(s => s.Appointments)
             .AsNoTracking()
             .FirstOrDefaultAsync(s => s.Date == request.Date, token);
-        if (schedule == null) return Results.NotFound();
+        if (schedule == null)
+            throw new NotFoundException("Рабочий день не найден");
 
         var response = new GetFreeTimeResponse(TimelineBuilder.FindFreeIntervals(schedule).ToList());
         return Results.Ok(response);

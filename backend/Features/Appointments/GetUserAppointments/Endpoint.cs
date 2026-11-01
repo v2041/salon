@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using Domain.Exceptions;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,7 +14,8 @@ public static class Endpoint
     )
     {
         var value = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (value == null) return Results.NotFound();
+        if (value == null)
+            throw new NotFoundException("Пользователь не найден");
         var userId = Guid.Parse(value);
 
         var appointments = await db.Appointments

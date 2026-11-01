@@ -35,12 +35,11 @@ public class ExceptionHandlingMiddleware(ILogger<ExceptionHandlingMiddleware> lo
             {
                 Title = title,
                 Status = status,
-                Detail = status == StatusCodes.Status500InternalServerError ? "Внутренняя ошибка сервера" : exception.Message,
+                Detail = status == StatusCodes.Status500InternalServerError ? null : exception.Message,
                 Instance = context.Request.Path
             };
             context.Response.StatusCode = status;
-            context.Response.ContentType = "application/problem+json";
-            await context.Response.WriteAsJsonAsync(problem, context.RequestAborted);
+            await Results.Problem(problem).ExecuteAsync(context);
         }
     }
 }
