@@ -14,6 +14,7 @@ public class SalonDbContext(DbContextOptions<SalonDbContext> options)
     public DbSet<User> Users { get; set; }
     
     public DbSet<VerificationCode> VerificationCodes { get; set; }
+    public DbSet<TelegramBinding> TelegramBindings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -23,6 +24,7 @@ public class SalonDbContext(DbContextOptions<SalonDbContext> options)
         modelBuilder.ApplyConfiguration(new ScheduleConfiguration());
         modelBuilder.ApplyConfiguration(new UserConfiguration());
         modelBuilder.ApplyConfiguration(new VerificationCodeConfiguration());
+        modelBuilder.ApplyConfiguration(new TelegramBindingConfiguration());
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken token = default)
