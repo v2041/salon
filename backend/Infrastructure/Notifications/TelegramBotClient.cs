@@ -8,7 +8,7 @@ namespace Infrastructure.Notifications;
 /// <c>SendMessageAsync</c> ограничен <see cref="SendMessageTimeoutSeconds"/> секундами,
 /// <c>GetUpdatesAsync</c> ждёт до <see cref="LongPollingTimeoutSeconds"/> секунд (long polling).
 /// </summary>
-public class TelegramBotClient(HttpClient httpClient, string token)
+public class TelegramBotClient(HttpClient httpClient, string token) : ITelegramMessageSender
 {
     public const string HttpClientName = "TelegramBot";
     public const int HttpClientTimeoutSeconds = 60;
