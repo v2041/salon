@@ -38,7 +38,21 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<SalonDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString(nameof(SalonDbContext)))
 );
-builder.Services.AddScoped<ICodeSender, FakeCodeSender>();
+var telegram = builder.Configuration.GetSection(TelegramOptions.SectionName);
+builder.Services.Configure<TelegramOptions>(telegram);
+if (builder.Environment.IsDevelopment() && string.IsNullOrWhiteSpace(telegram["Token"]))
+{
+    builder.Services.AddScoped<ICodeSender, FakeCodeSender>();
+}
+else
+{
+    builder.Services.AddHttpClient(TelegramBotClient.HttpClientName, client =>
+        client.Timeout = TimeSpan.FromSeconds(TelegramBotClient.HttpClientTimeoutSeconds));
+    builder.Services.AddTransient(sp => new TelegramBotClient(
+        sp.GetRequiredService<IHttpClientFactory>().CreateClient(TelegramBotClient.HttpClientName),
+        telegram["Token"]!));
+    builder.Services.AddScoped<ICodeSender, TelegramBotCodeSender>();
+}
 var jwt = builder.Configuration.GetSection("Jwt");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
