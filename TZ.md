@@ -61,7 +61,7 @@
 - Каркас Next.js: `app/page.tsx`, `(app)/booking`, `(app)/my-appointments`, `(app)/admin`; отдельная витрина `/offerings` не требуется.
 - Компоненты: `LoginScreen`, `booking/*` (`ServicePicker`, `Calendar`, `TimeGrid`), `MyAppointmentsList`, `admin/*` (услуги, расписание, записи, создание записи, аналитика); утилиты `lib/format.ts`.
 - Живой фронт: `lib/api.ts` (`offeringsApi`, `schedulesApi`, `appointmentsApi`, `authApi`, `analyticsApi`), `fetch(..., { credentials: "include" })`. Мок-данных нет (сверено 19.10.2026).
-- Экраны входа (FR-A*) есть. Кнопки отмены записи (FR-B5) и UI переноса времени (FR-M3) нет.
+- Экраны входа (FR-A*) есть. Кнопка отмены записи (FR-B5) есть. UI переноса времени (FR-M3) нет.
 
 ### 2.3 Функциональные куски — подключены, но с расхождениями
 - `ChangeAppointmentTime` → зарегистрирован как `PATCH /api/appointments/{id}/change-time` (Admin).
@@ -79,7 +79,7 @@
 **Важно:**
 5. FR-B6 — снят (01.11.2026): транзакции и уникальные ограничения не вводим, гонка слотов допустима.
 6. Неактивные услуги (`IsActive=false`) не фильтруются при создании записи и в `available-dates`.
-7. FR-B5 — так и надо: `Pending` отменяется без ограничений, 2 часа — только для `Confirmed`. Осталось: кнопка отмены на фронте.
+7. FR-B5 — ✅ 01.11.2026: кнопка отмены в «Мои записи»; `Pending` отменяется без ограничений, 2 часа — только для `Confirmed`.
 8. FR-A4 (rate limiting) — ✅ частично 19.10.2026. Повторная отправка — не чаще 1 раза в минуту. Счётчик попыток на код — 5: блокировка в Login и Register. `send-code` проверяет формат телефона `+7XXXXXXXXXX`. Лимитов «≤ 5 кодов/час» и «≤ 20 попыток/час» нет. `/healthz` — не реализован.
 9. ✅ 20.10.2026: 110 тестов; покрыты `Appointment`, `TimelineBuilder`, `Schedule` (закрытый день, перенос, seed-режим `checkPast`). Нет тестов на правило отмены «2 часа» и `AppointmentTimeChanger`.
 10. Login/Register возвращают `BadRequest(string)` вместо `problem+json`; статус `Pending` в `change-status` → 404 вместо бизнес-ошибки.
@@ -216,7 +216,7 @@ VerificationCode Phone(ключ), Code, ExpiresAt, CreatedAt, AttemptsCount
 
 **Этап 1 — «Клиентская часть живая» (P0)**
 4. SMS-провайдер + реальный send-code (FR-A1..A4).
-5. Подключить фронтенд к API: booking-flow (available-dates → free-time → create), мои записи, кнопка отмены (FR-B5); убрать все мок-данные.
+5. ✅ 01.11.2026: фронтенд подключён к API: booking-flow (available-dates → free-time → create), мои записи, кнопка отмены (FR-B5); мок-данных нет.
 6. Авторизация endpoint'ов + роли + `userId` из токена (FR-S1..S2) — **сделано, кроме Этапа 0 п.1**.
 
 **Этап 2 — «Панель мастера» (P0)**
