@@ -78,7 +78,18 @@ export type OfferingResponse = Omit<Offering, "isActive">;
 
 export type AdminOfferingResponse = Offering;
 
-export type ScheduleResponse = Schedule;
+export type ScheduleAppointmentItem = {
+    id: string;
+    interval: TimeInterval;
+    status: AppointmentStatus;
+    userId: string;
+    userName: string;
+    price: Money;
+};
+
+export type ScheduleResponse = Schedule & {
+    appointments: ScheduleAppointmentItem[];
+};
 
 export type AppointmentResponse = {
     id: string;

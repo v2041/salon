@@ -1,13 +1,14 @@
 "use client";
 
-import {Alert, Button, Checkbox, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, Paper, Stack, Typography} from "@mui/material";
+import {Alert, Button, ButtonBase, Checkbox, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControlLabel, Paper, Stack, Typography} from "@mui/material";
 import {useEffect, useState} from "react";
 import {schedulesApi} from "@/lib/api";
 import DateField from "@/components/admin/DateField";
 import TimeField from "@/components/admin/TimeField";
-import {formatDayLabel, formatTimeOnly, parseRuDate, parseRuTime} from "@/lib/format";
+import {formatDayLabel, formatDurationValue, formatPrice, formatTimeOnly, parseRuDate, parseRuTime, timeToMinutes} from "@/lib/format";
 import {cardSx} from "@/lib/theme";
-import type {ScheduleResponse, TimeInterval} from "@/lib/types";
+import {AppointmentStatus} from "@/lib/types";
+import type {ScheduleAppointmentItem, ScheduleResponse, TimeInterval} from "@/lib/types";
 
 type Form = {
     date: string;
@@ -37,6 +38,29 @@ type EditForm = {
 
 const EMPTY_EDIT: EditForm = {start: "10:00", end: "20:00", breakOn: false, breakStart: "13:00", breakEnd: "14:00"};
 
+const STATUS_META: Record<AppointmentStatus, {label: string; color: "warning" | "success" | "info" | "default" | "error"}> = {
+    [AppointmentStatus.Pending]: {label: "Ожидает", color: "warning"},
+    [AppointmentStatus.Confirmed]: {label: "Подтверждена", color: "success"},
+    [AppointmentStatus.Completed]: {label: "Завершена", color: "info"},
+    [AppointmentStatus.Canceled]: {label: "Отменена", color: "error"},
+    [AppointmentStatus.Missed]: {label: "Пропущена", color: "error"},
+    [AppointmentStatus.Rejected]: {label: "Отклонена", color: "error"},
+};
+
+function appointmentMinutes(appointment: ScheduleAppointmentItem) {
+    return timeToMinutes(appointment.interval.end) - timeToMinutes(appointment.interval.start);
+}
+
+function dayLoad(appointments: ScheduleAppointmentItem[]) {
+    const active = appointments.filter(a =>
+        a.status === AppointmentStatus.Pending || a.status === AppointmentStatus.Confirmed
+    );
+    return {
+        count: appointments.length,
+        busyMinutes: active.reduce((sum, a) => sum + appointmentMinutes(a), 0),
+    };
+}
+
 export default function ScheduleSection() {
     const [schedules, setSchedules] = useState<ScheduleResponse[]>([]);
     const [loading, setLoading] = useState(true);
@@ -45,6 +69,7 @@ export default function ScheduleSection() {
     const [form, setForm] = useState<Form>(EMPTY_FORM);
     const [editing, setEditing] = useState<ScheduleResponse | null>(null);
     const [editForm, setEditForm] = useState<EditForm>(EMPTY_EDIT);
+    const [selected, setSelected] = useState<{date: string; appointment: ScheduleAppointmentItem} | null>(null);
 
     function load() {
         return schedulesApi.getAll()
@@ -220,43 +245,83 @@ export default function ScheduleSection() {
                 {!loading && schedules.length === 0 && (
                     <Typography variant="body2" color="text.secondary">Расписания нет</Typography>
                 )}
-                {schedules.map(s => (
-                    <Paper key={s.id} sx={cardSx}>
-                        <Stack spacing={1}>
-                            <Stack direction="row" spacing={1} sx={{alignItems: "center"}}>
-                                <Typography variant="subtitle1" sx={{fontWeight: 650}}>
-                                    {formatDayLabel(s.date)}
-                                </Typography>
-                                <Chip
-                                    size="small"
-                                    label={s.isWorking ? "Рабочий" : "Выходной"}
-                                    color={s.isWorking ? "success" : "default"}
-                                    variant={s.isWorking ? "filled" : "outlined"}
-                                />
-                            </Stack>
-                            {s.isWorking ? (
+                {schedules.map(s => {
+                    const load = dayLoad(s.appointments);
+                    return (
+                        <Paper key={s.id} sx={cardSx}>
+                            <Stack spacing={1}>
+                                <Stack direction="row" spacing={1} sx={{alignItems: "center"}}>
+                                    <Typography variant="subtitle1" sx={{fontWeight: 650}}>
+                                        {formatDayLabel(s.date)}
+                                    </Typography>
+                                    <Chip
+                                        size="small"
+                                        label={s.isWorking ? "Рабочий" : "Выходной"}
+                                        color={s.isWorking ? "success" : "default"}
+                                        variant={s.isWorking ? "filled" : "outlined"}
+                                    />
+                                </Stack>
+                                {s.isWorking ? (
+                                    <Typography variant="body2" color="text.secondary">
+                                        {formatTimeOnly(s.workInterval.start)}–{formatTimeOnly(s.workInterval.end)}
+                                        {s.breakInterval &&
+                                            ` · перерыв ${formatTimeOnly(s.breakInterval.start)}–${formatTimeOnly(s.breakInterval.end)}`}
+                                    </Typography>
+                                ) : (
+                                    <Typography variant="body2" color="text.secondary">Запись недоступна</Typography>
+                                )}
                                 <Typography variant="body2" color="text.secondary">
-                                    {formatTimeOnly(s.workInterval.start)}–{formatTimeOnly(s.workInterval.end)}
-                                    {s.breakInterval &&
-                                        ` · перерыв ${formatTimeOnly(s.breakInterval.start)}–${formatTimeOnly(s.breakInterval.end)}`}
+                                    Записей: {load.count}
+                                    {load.busyMinutes > 0 && ` · занято ${formatDurationValue(load.busyMinutes)}`}
                                 </Typography>
-                            ) : (
-                                <Typography variant="body2" color="text.secondary">Запись недоступна</Typography>
-                            )}
-                            <Stack direction="row" spacing={1}>
-                                <Button size="small" variant="outlined" disabled={busy} onClick={() => openEdit(s)}>
-                                    Изменить
-                                </Button>
-                                <Button size="small" variant="outlined" disabled={busy || s.isWorking} onClick={() => changeDay(s, true)}>
-                                    Сделать рабочим
-                                </Button>
-                                <Button size="small" variant="outlined" color="error" disabled={busy || !s.isWorking} onClick={() => changeDay(s, false)}>
-                                    Сделать выходным
-                                </Button>
+                                <Stack spacing={0.75}>
+                                    {s.appointments.length === 0 && (
+                                        <Typography variant="body2" color="text.secondary">Записей нет</Typography>
+                                    )}
+                                    {s.appointments.map(a => {
+                                        const status = STATUS_META[a.status];
+                                        return (
+                                            <ButtonBase
+                                                key={a.id}
+                                                onClick={() => setSelected({date: s.date, appointment: a})}
+                                                sx={{
+                                                    width: "100%",
+                                                    justifyContent: "space-between",
+                                                    gap: 1,
+                                                    p: 1,
+                                                    borderRadius: 2,
+                                                    border: 1,
+                                                    borderColor: "divider",
+                                                }}
+                                            >
+                                                <Stack sx={{alignItems: "flex-start"}}>
+                                                    <Typography variant="body2" sx={{fontWeight: 600}}>
+                                                        {formatTimeOnly(a.interval.start)}–{formatTimeOnly(a.interval.end)} · {a.userName}
+                                                    </Typography>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        {formatPrice(a.price.value)}
+                                                    </Typography>
+                                                </Stack>
+                                                <Chip size="small" label={status.label} color={status.color} variant="outlined"/>
+                                            </ButtonBase>
+                                        );
+                                    })}
+                                </Stack>
+                                <Stack direction="row" spacing={1}>
+                                    <Button size="small" variant="outlined" disabled={busy} onClick={() => openEdit(s)}>
+                                        Изменить
+                                    </Button>
+                                    <Button size="small" variant="outlined" disabled={busy || s.isWorking} onClick={() => changeDay(s, true)}>
+                                        Сделать рабочим
+                                    </Button>
+                                    <Button size="small" variant="outlined" color="error" disabled={busy || !s.isWorking} onClick={() => changeDay(s, false)}>
+                                        Сделать выходным
+                                    </Button>
+                                </Stack>
                             </Stack>
-                        </Stack>
-                    </Paper>
-                ))}
+                        </Paper>
+                    );
+                })}
             </Stack>
             <Dialog open={Boolean(editing)} onClose={() => setEditing(null)} fullWidth maxWidth="xs">
                 <DialogTitle>Изменить день</DialogTitle>
@@ -308,6 +373,45 @@ export default function ScheduleSection() {
                 <DialogActions>
                     <Button onClick={() => setEditing(null)}>Отмена</Button>
                     <Button variant="contained" disabled={busy} onClick={saveEdit}>Сохранить</Button>
+                </DialogActions>
+            </Dialog>
+            <Dialog open={selected !== null} onClose={() => setSelected(null)} fullWidth maxWidth="xs">
+                <DialogTitle>Запись</DialogTitle>
+                <DialogContent>
+                    {selected && (
+                        <Stack spacing={1.5} sx={{pt: 1}}>
+                            <Stack direction="row" sx={{justifyContent: "space-between", alignItems: "center", gap: 1}}>
+                                <Typography variant="subtitle1" sx={{fontWeight: 650}}>
+                                    {formatDayLabel(selected.date)}
+                                </Typography>
+                                <Chip
+                                    size="small"
+                                    label={STATUS_META[selected.appointment.status].label}
+                                    color={STATUS_META[selected.appointment.status].color}
+                                    variant="outlined"
+                                />
+                            </Stack>
+                            <Typography variant="body2" color="text.secondary">
+                                {formatTimeOnly(selected.appointment.interval.start)}–{formatTimeOnly(selected.appointment.interval.end)}
+                                {" · "}
+                                {formatDurationValue(appointmentMinutes(selected.appointment))}
+                            </Typography>
+                            <Divider/>
+                            <Stack direction="row" sx={{justifyContent: "space-between", alignItems: "baseline", gap: 1}}>
+                                <Typography variant="body2" color="text.secondary">Клиент</Typography>
+                                <Typography variant="body2">{selected.appointment.userName}</Typography>
+                            </Stack>
+                            <Stack direction="row" sx={{justifyContent: "space-between", alignItems: "baseline", gap: 1}}>
+                                <Typography variant="body2" color="text.secondary">Стоимость</Typography>
+                                <Typography variant="subtitle1" sx={{fontWeight: 700}}>
+                                    {formatPrice(selected.appointment.price.value)}
+                                </Typography>
+                            </Stack>
+                        </Stack>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setSelected(null)}>Закрыть</Button>
                 </DialogActions>
             </Dialog>
         </Stack>
