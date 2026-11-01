@@ -87,8 +87,9 @@ public class VerificationCodeTests
             var createdAt = code.CreatedAt;
             var expiresAt = code.ExpiresAt;
 
-            code.RegenerateCode(code.CreatedAt.AddSeconds(30));
+            var regenerated = code.RegenerateCode(code.CreatedAt.AddSeconds(30));
 
+            Assert.False(regenerated);
             Assert.Equal(oldCode, code.Code);
             Assert.Equal(createdAt, code.CreatedAt);
             Assert.Equal(expiresAt, code.ExpiresAt);
@@ -103,8 +104,9 @@ public class VerificationCodeTests
             Assert.True(code.IsBlocked);
 
             var createdAt = code.CreatedAt;
-            code.RegenerateCode(createdAt.AddMinutes(1));
+            var regenerated = code.RegenerateCode(createdAt.AddMinutes(1));
 
+            Assert.True(regenerated);
             Assert.Equal(0, code.AttemptsCount);
             Assert.False(code.IsBlocked);
             Assert.Equal(createdAt.AddMinutes(1), code.CreatedAt);
