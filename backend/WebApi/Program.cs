@@ -33,6 +33,7 @@ builder.Services.AddCors(options =>
     });
 });
 builder.Services.AddValidatorsFromAssembly(typeof(AppointmentsModule).Assembly);
+builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 builder.Services.AddDbContext<SalonDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString(nameof(SalonDbContext)))
@@ -66,6 +67,7 @@ builder.Services.AddHostedService<ScheduleService>();
 var app = builder.Build();
 app.UseCors();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseStatusCodePages();
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -81,3 +83,5 @@ app.MapSchedulesEndpoints();
 app.MapUsersEndpoints();
 app.MapAnalyticsEndpoints();
 app.Run();
+
+public partial class Program { }
