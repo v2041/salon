@@ -2,5 +2,12 @@
 
 public record SendVerificationCodeResponse(
     DateTime ExpiresAt,
-    bool IsRegistered
-    );
+    bool IsRegistered,
+    string Status,
+    string? BindingUrl,
+    string? Code
+)
+{
+    public const string StatusSent = "sent";
+    public const string StatusBindingRequired = "binding_required";
+}

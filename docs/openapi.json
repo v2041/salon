@@ -543,7 +543,14 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendVerificationCodeResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -1110,6 +1117,40 @@
         "properties": {
           "phone": {
             "type": "string"
+          }
+        }
+      },
+      "SendVerificationCodeResponse": {
+        "required": [
+          "expiresAt",
+          "isRegistered",
+          "status",
+          "bindingUrl",
+          "code"
+        ],
+        "type": "object",
+        "properties": {
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isRegistered": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string"
+          },
+          "bindingUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "code": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
