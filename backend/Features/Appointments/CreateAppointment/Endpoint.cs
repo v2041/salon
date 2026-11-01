@@ -7,6 +7,7 @@ using FluentValidation;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace Features.Appointments.CreateAppointment;
 
@@ -42,6 +43,8 @@ public static class Endpoint
         
         if (offerings.Count != request.OfferingIds.Count)
             throw new NotFoundException("Одна или несколько услуг не найдены");
+        if (offerings.Any(o => !o.IsActive))
+            throw new BusinessException("Одна или несколько услуг недоступны для записи");
 
         var appointmentOfferingDataList = offerings
             .Select(o => new AppointmentOfferingData(o.Id, o.Price, o.Duration))
@@ -49,7 +52,16 @@ public static class Endpoint
         
         var appointment = schedule.AddAppointment(userId, request.Time, appointmentOfferingDataList);
 
-        await db.SaveChangesAsync(token);
+        await using var transaction = await db.Database.BeginTransactionAsync(token);
+        try
+        {
+            await db.SaveChangesAsync(token);
+            await transaction.CommitAsync(token);
+        }
+        catch (DbUpdateException exception) when (IsSlotConflict(exception))
+        {
+            throw new BusinessException("Время уже занято, выберите другое");
+        }
 
         var response = new CreateAppointmentResponse(
             appointment.Id,
@@ -60,4 +72,7 @@ public static class Endpoint
         );
         return Results.Created($"api/appointments/{appointment.Id}", response);
     }
+
+    private static bool IsSlotConflict(DbUpdateException exception)
+        => exception.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation };
 }
