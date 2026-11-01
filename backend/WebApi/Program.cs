@@ -7,6 +7,7 @@ using Features.Users;
 using FluentValidation;
 using Infrastructure.BackgroundServices;
 using Infrastructure.Data;
+using Infrastructure.Notifications;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -37,6 +38,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<SalonDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString(nameof(SalonDbContext)))
 );
+builder.Services.AddScoped<ICodeSender, FakeCodeSender>();
 var jwt = builder.Configuration.GetSection("Jwt");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
