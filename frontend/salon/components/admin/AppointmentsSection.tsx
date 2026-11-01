@@ -3,7 +3,9 @@
 import {Alert, Button, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Paper, Select, Stack, TextField, Typography} from "@mui/material";
 import {useEffect, useState} from "react";
 import {appointmentsApi} from "@/lib/api";
-import {durationToMinutes, formatDayLabel, formatDurationValue, formatPrice, formatTimeOnly, minutesToDuration} from "@/lib/format";
+import DateField from "@/components/admin/DateField";
+import TimeField from "@/components/admin/TimeField";
+import {durationToMinutes, formatDayLabel, formatDurationValue, formatPrice, formatRuDate, formatTimeOnly, minutesToDuration, parseRuDate, parseRuTime, toIsoDate} from "@/lib/format";
 import {accentInk, cardSx} from "@/lib/theme";
 import {AppointmentStatus} from "@/lib/types";
 import type {AdminAppointmentOffering, AdminAppointmentResponse} from "@/lib/types";
@@ -55,11 +57,13 @@ function AppointmentCard({
     busy,
     onStatus,
     onEdit,
+    onReschedule,
 }: {
     appointment: AdminAppointmentResponse;
     busy: boolean;
     onStatus: (id: string, status: AppointmentStatus) => void;
     onEdit: (appointment: AdminAppointmentResponse, offering: AdminAppointmentOffering) => void;
+    onReschedule: (appointment: AdminAppointmentResponse) => void;
 }) {
     const status = STATUS_META[appointment.status];
     return (
@@ -101,6 +105,11 @@ function AppointmentCard({
             </Stack>
             {ACTIONS[appointment.status].length > 0 && (
                 <Stack direction="row" sx={{mt: 1.5, flexWrap: "wrap", gap: 1}}>
+                    {(appointment.status === AppointmentStatus.Pending || appointment.status === AppointmentStatus.Confirmed) && (
+                        <Button size="small" variant="outlined" disabled={busy} onClick={() => onReschedule(appointment)}>
+                            Перенести
+                        </Button>
+                    )}
                     {ACTIONS[appointment.status].map(action => (
                         <Button
                             key={action.status}
@@ -125,12 +134,14 @@ function Section({
     busyId,
     onStatus,
     onEdit,
+    onReschedule,
 }: {
     title: string;
     appointments: AdminAppointmentResponse[];
     busyId: string | null;
     onStatus: (id: string, status: AppointmentStatus) => void;
     onEdit: (appointment: AdminAppointmentResponse, offering: AdminAppointmentOffering) => void;
+    onReschedule: (appointment: AdminAppointmentResponse) => void;
 }) {
     return (
         <Stack spacing={1.5}>
@@ -150,6 +161,7 @@ function Section({
                     busy={busyId === a.id}
                     onStatus={onStatus}
                     onEdit={onEdit}
+                    onReschedule={onReschedule}
                 />
             ))}
         </Stack>
@@ -162,9 +174,15 @@ export default function AppointmentsSection() {
     const [busyId, setBusyId] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [filter, setFilter] = useState<Filter>("all");
+    const [period, setPeriod] = useState<"all" | "day" | "week">("all");
+    const [periodDate, setPeriodDate] = useState(() => formatRuDate(toIsoDate(new Date())));
     const [edit, setEdit] = useState<{appointment: AdminAppointmentResponse; offering: AdminAppointmentOffering} | null>(null);
     const [editPrice, setEditPrice] = useState("");
     const [editMinutes, setEditMinutes] = useState("");
+    const [reschedule, setReschedule] = useState<AdminAppointmentResponse | null>(null);
+    const [rescheduleDate, setRescheduleDate] = useState("");
+    const [rescheduleTime, setRescheduleTime] = useState("10:00");
+    const [rescheduleError, setRescheduleError] = useState<string | null>(null);
 
     async function reload() {
         setAppointments(await appointmentsApi.getAll());
@@ -236,35 +254,94 @@ export default function AppointmentsSection() {
         }
     }
 
+    function openReschedule(appointment: AdminAppointmentResponse) {
+        setReschedule(appointment);
+        setRescheduleDate(formatRuDate(appointment.date));
+        setRescheduleTime(formatTimeOnly(appointment.interval.start));
+        setRescheduleError(null);
+    }
+
+    async function saveReschedule() {
+        if (!reschedule) return;
+        const date = parseRuDate(rescheduleDate);
+        const time = parseRuTime(rescheduleTime);
+        if (!date || !time) {
+            setRescheduleError("Проверьте формат даты и времени");
+            return;
+        }
+        setBusyId(reschedule.id);
+        setRescheduleError(null);
+        try {
+            await appointmentsApi.changeTime({id: reschedule.id, date, time: `${time}:00`});
+            setReschedule(null);
+            await reload();
+        } catch (err) {
+            setRescheduleError(err instanceof Error ? err.message : "Не удалось перенести запись");
+        } finally {
+            setBusyId(null);
+        }
+    }
+
+    function inPeriod(appointment: AdminAppointmentResponse) {
+        if (period === "all") return true;
+        const iso = parseRuDate(periodDate);
+        if (!iso) return true;
+        if (period === "day") return appointment.date === iso;
+        const base = new Date(`${iso}T00:00:00`);
+        const mondayOffset = (base.getDay() + 6) % 7;
+        const monday = new Date(base);
+        monday.setDate(base.getDate() - mondayOffset);
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        const value = new Date(`${appointment.date}T00:00:00`);
+        return value >= monday && value <= sunday;
+    }
+
     if (loading) {
         return <Stack sx={{alignItems: "center", py: 2}}><CircularProgress size={22}/></Stack>;
     }
 
     const now = new Date();
-    const filtered = filter === "all" ? appointments : appointments.filter(a => a.status === filter);
+    const filtered = appointments.filter(a => (filter === "all" || a.status === filter) && inPeriod(a));
     const upcoming = filtered.filter(a => startOf(a) > now).sort((a, b) => +startOf(a) - +startOf(b));
     const past = filtered.filter(a => startOf(a) <= now).sort((a, b) => +startOf(b) - +startOf(a));
 
     return (
         <Stack spacing={3}>
             {error && <Alert severity="error">{error}</Alert>}
-            <Select
-                size="small"
-                value={filter}
-                onChange={e => setFilter(e.target.value as Filter)}
-                sx={{alignSelf: "flex-start", minWidth: 200, borderRadius: 2}}
-            >
-                <MenuItem value="all">Все статусы</MenuItem>
-                {STATUS_ORDER.map(status => (
-                    <MenuItem key={status} value={status}>{STATUS_META[status].label}</MenuItem>
-                ))}
-            </Select>
+            <Stack direction={{xs: "column", sm: "row"}} spacing={2} sx={{alignItems: {sm: "center"}, flexWrap: "wrap"}}>
+                <Select
+                    size="small"
+                    value={period}
+                    onChange={e => setPeriod(e.target.value as "all" | "day" | "week")}
+                    sx={{minWidth: 160, borderRadius: 2}}
+                >
+                    <MenuItem value="all">Весь период</MenuItem>
+                    <MenuItem value="day">День</MenuItem>
+                    <MenuItem value="week">Неделя</MenuItem>
+                </Select>
+                {period !== "all" && (
+                    <DateField label="Дата" value={periodDate} onChange={setPeriodDate}/>
+                )}
+                <Select
+                    size="small"
+                    value={filter}
+                    onChange={e => setFilter(e.target.value as Filter)}
+                    sx={{minWidth: 200, borderRadius: 2}}
+                >
+                    <MenuItem value="all">Все статусы</MenuItem>
+                    {STATUS_ORDER.map(status => (
+                        <MenuItem key={status} value={status}>{STATUS_META[status].label}</MenuItem>
+                    ))}
+                </Select>
+            </Stack>
             <Section
                 title="Предстоящие"
                 appointments={upcoming}
                 busyId={busyId}
                 onStatus={changeStatus}
                 onEdit={openEdit}
+                onReschedule={openReschedule}
             />
             <Section
                 title="Прошедшие"
@@ -272,6 +349,7 @@ export default function AppointmentsSection() {
                 busyId={busyId}
                 onStatus={changeStatus}
                 onEdit={openEdit}
+                onReschedule={openReschedule}
             />
             <Dialog open={edit !== null} onClose={() => setEdit(null)} fullWidth maxWidth="xs">
                 <DialogTitle>Изменить услугу</DialogTitle>
@@ -301,6 +379,27 @@ export default function AppointmentsSection() {
                     <Button onClick={() => setEdit(null)}>Отмена</Button>
                     <Button variant="contained" disabled={busyId !== null} onClick={saveEdit}>
                         Сохранить
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            <Dialog open={reschedule !== null} onClose={() => setReschedule(null)} fullWidth maxWidth="xs">
+                <DialogTitle>Перенести запись</DialogTitle>
+                <DialogContent>
+                    <Stack spacing={2} sx={{pt: 1}}>
+                        {reschedule && (
+                            <Typography variant="body2" color="text.secondary">
+                                {reschedule.userName} · {formatDayLabel(reschedule.date)}
+                            </Typography>
+                        )}
+                        {rescheduleError && <Alert severity="error">{rescheduleError}</Alert>}
+                        <DateField label="Новая дата" value={rescheduleDate} onChange={setRescheduleDate}/>
+                        <TimeField label="Новое время" value={rescheduleTime} onChange={setRescheduleTime}/>
+                    </Stack>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setReschedule(null)}>Отмена</Button>
+                    <Button variant="contained" disabled={busyId !== null} onClick={saveReschedule}>
+                        Перенести
                     </Button>
                 </DialogActions>
             </Dialog>

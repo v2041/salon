@@ -3,6 +3,7 @@ using Domain.Enums;
 using Domain.ValueObjects;
 using Infrastructure.Authentication;
 using Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -99,6 +100,27 @@ public abstract class HttpTestBase(WebApiFixture fixture) : IAsyncLifetime
             db.Schedules.Add(schedule);
             await db.SaveChangesAsync();
             return schedule;
+        });
+    }
+
+    protected Task<Appointment> SeedAppointmentAsync(
+        Guid scheduleId,
+        Guid userId,
+        Offering offering,
+        TimeOnly start)
+    {
+        return WithDbAsync(async db =>
+        {
+            var schedule = await db.Schedules
+                .Include(s => s.Appointments)
+                .FirstAsync(s => s.Id == scheduleId);
+            var data = new List<AppointmentOfferingData>
+            {
+                new(offering.Id, offering.Price, offering.Duration)
+            };
+            var appointment = schedule.AddAppointment(userId, start, data, checkPast: false);
+            await db.SaveChangesAsync();
+            return appointment;
         });
     }
 }
