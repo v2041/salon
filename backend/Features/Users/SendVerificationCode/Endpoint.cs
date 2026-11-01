@@ -37,7 +37,8 @@ public static class Endpoint
         if (existing is not null)
         {
             if (!existing.RegenerateCode())
-                return Results.Ok(CreateSentResponse(existing, isRegistered, environment));
+                return Results.Ok(CreateResponse(
+                    existing, isRegistered, SendVerificationCodeResponse.StatusSent, null, environment));
             code = existing;
         }
         else
@@ -49,29 +50,27 @@ public static class Endpoint
         var result = await sender.SendAsync(request.Phone, code.Code, token);
         if (!result.Delivered)
         {
-            return Results.Ok(new SendVerificationCodeResponse(
-                code.ExpiresAt,
-                isRegistered,
-                SendVerificationCodeResponse.StatusBindingRequired,
-                result.BindingUrl,
-                environment.IsDevelopment() ? code.Code : null
-            ));
+            return Results.Ok(CreateResponse(
+                code, isRegistered, SendVerificationCodeResponse.StatusBindingRequired, result.BindingUrl, environment));
         }
 
         await db.SaveChangesAsync(token);
-        return Results.Ok(CreateSentResponse(code, isRegistered, environment));
+        return Results.Ok(CreateResponse(
+            code, isRegistered, SendVerificationCodeResponse.StatusSent, null, environment));
     }
 
-    private static SendVerificationCodeResponse CreateSentResponse(
+    private static SendVerificationCodeResponse CreateResponse(
         VerificationCode code,
         bool isRegistered,
+        string status,
+        string? bindingUrl,
         IHostEnvironment environment
     ) =>
         new(
             code.ExpiresAt,
             isRegistered,
-            SendVerificationCodeResponse.StatusSent,
-            null,
+            status,
+            bindingUrl,
             environment.IsDevelopment() ? code.Code : null
         );
 }
