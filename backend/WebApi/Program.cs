@@ -88,6 +88,27 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 }
 
+app.MapGet("/healthz", async (SalonDbContext db, CancellationToken cancellationToken) =>
+{
+    try
+    {
+        if (await db.Database.CanConnectAsync(cancellationToken))
+        {
+            return Results.Ok();
+        }
+    }
+    catch (Exception)
+    {
+        return Results.Problem(
+            statusCode: StatusCodes.Status503ServiceUnavailable,
+            title: "Сервис недоступен");
+    }
+
+    return Results.Problem(
+        statusCode: StatusCodes.Status503ServiceUnavailable,
+        title: "Сервис недоступен");
+});
+
 app.MapAppointmentsEndpoints();
 app.MapOfferingsEndpoints();
 app.MapSchedulesEndpoints();

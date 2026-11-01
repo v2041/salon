@@ -10,7 +10,8 @@ using Microsoft.Extensions.Hosting;
 
 namespace WebApiTests.Infrastructure;
 
-public sealed class WebApiFactory(string connectionString) : WebApplicationFactory<Program>
+public sealed class WebApiFactory(string connectionString, bool applyMigrations = true)
+    : WebApplicationFactory<Program>
 {
     private const string JwtKey = "salon-tests-signing-key-at-least-32-chars";
 
@@ -44,8 +45,12 @@ public sealed class WebApiFactory(string connectionString) : WebApplicationFacto
     protected override IHost CreateHost(IHostBuilder builder)
     {
         var host = base.CreateHost(builder);
-        using var scope = host.Services.CreateScope();
-        scope.ServiceProvider.GetRequiredService<SalonDbContext>().Database.Migrate();
+        if (applyMigrations)
+        {
+            using var scope = host.Services.CreateScope();
+            scope.ServiceProvider.GetRequiredService<SalonDbContext>().Database.Migrate();
+        }
+
         return host;
     }
 
