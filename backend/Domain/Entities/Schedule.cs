@@ -85,13 +85,13 @@ public class Schedule
     }
 
     public Appointment AddAppointment(Guid userId, TimeOnly startTime,
-        List<AppointmentOfferingData> appointmentOfferingData, bool checkPast = true)
+        List<AppointmentOfferingData> appointmentOfferingData, bool checkPast = true, DateTime? createdAt = null)
     {
         if (!IsWorking)
             throw new BusinessException("Нельзя записаться на нерабочий день.");
         var interval = TimelineBuilder.BuildInterval(startTime, appointmentOfferingData);
         EnsureAppointmentInterval(interval, checkPast: checkPast);
-        var appointment = Appointment.Create(this, userId, appointmentOfferingData, interval);
+        var appointment = Appointment.Create(this, userId, appointmentOfferingData, interval, createdAt);
         _appointments.Add(appointment);
         return appointment;
     }

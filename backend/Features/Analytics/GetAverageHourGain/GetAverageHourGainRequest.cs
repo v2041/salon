@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace Features.Analytics.AverageHourGain;
+namespace Features.Analytics.GetAverageHourGain;
 
 public record GetAverageHourGainRequest(
     [FromQuery] DateOnly From,

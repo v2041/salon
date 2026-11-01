@@ -19,7 +19,8 @@ public class Appointment
         Guid userId,
         IEnumerable<AppointmentOffering> offerings,
         TimeInterval interval,
-        AppointmentStatus status
+        AppointmentStatus status,
+        DateTime createdAt
     )
     {
         Id = id;
@@ -29,6 +30,7 @@ public class Appointment
         _offerings = offerings.ToList();
         Interval = interval;
         Status = status;
+        CreatedAt = createdAt;
     }
 
     public Guid Id { get; }
@@ -37,6 +39,8 @@ public class Appointment
     public Guid UserId { get; private set; }
     public TimeInterval Interval { get; private set; } = null!;
     public AppointmentStatus Status { get; private set; }
+    public DateTime CreatedAt { get; private set; }
+    public DateTime? CompletedAt { get; private set; }
     public Money Price => Money.FromDecimal(_offerings.Sum(o => o.Price.Value));
 
     private readonly List<AppointmentOffering> _offerings = [];
@@ -46,7 +50,8 @@ public class Appointment
         Schedule schedule,
         Guid userId,
         List<AppointmentOfferingData> appointmentOfferingData,
-        TimeInterval interval
+        TimeInterval interval,
+        DateTime? createdAt = null
     )
     {
         if (appointmentOfferingData.Count == 0)
@@ -60,7 +65,8 @@ public class Appointment
             userId,
             offerings,
             interval,
-            AppointmentStatus.Pending
+            AppointmentStatus.Pending,
+            createdAt ?? DateTime.UtcNow
         );
     }
 
@@ -136,5 +142,6 @@ public class Appointment
         if (Status != AppointmentStatus.Confirmed)
             throw new BusinessException("Действие недоступно для текущего статуса записи");
         Status = AppointmentStatus.Completed;
+        CompletedAt = DateTime.UtcNow;
     }
 }

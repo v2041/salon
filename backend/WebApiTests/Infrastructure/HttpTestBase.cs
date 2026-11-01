@@ -110,17 +110,54 @@ public abstract class HttpTestBase(WebApiFixture fixture) : IAsyncLifetime
         Guid userId,
         Offering offering,
         TimeOnly start)
+        => SeedAppointmentAsync(scheduleId, userId, [offering], start);
+
+    protected Task<Appointment> SeedAppointmentAsync(
+        Guid scheduleId,
+        Guid userId,
+        IReadOnlyList<Offering> offerings,
+        TimeOnly start,
+        DateTime? createdAt = null)
     {
         return WithDbAsync(async db =>
         {
             var schedule = await db.Schedules
                 .Include(s => s.Appointments)
                 .FirstAsync(s => s.Id == scheduleId);
-            var data = new List<AppointmentOfferingData>
-            {
-                new(offering.Id, offering.Price, offering.Duration)
-            };
-            var appointment = schedule.AddAppointment(userId, start, data, checkPast: false);
+            var data = offerings
+                .Select(o => new AppointmentOfferingData(o.Id, o.Price, o.Duration))
+                .ToList();
+            var appointment = schedule.AddAppointment(
+                userId,
+                start,
+                data,
+                checkPast: false,
+                createdAt: createdAt);
+            await db.SaveChangesAsync();
+            return appointment;
+        });
+    }
+
+    protected Task<Appointment> CompleteAppointmentAsync(Guid appointmentId)
+    {
+        return WithDbAsync(async db =>
+        {
+            var appointment = await db.Appointments.FirstAsync(a => a.Id == appointmentId);
+            appointment.Confirm();
+            appointment.Complete();
+            await db.SaveChangesAsync();
+            return appointment;
+        });
+    }
+
+    protected Task<Appointment> ChangeStatusAsync(Guid appointmentId, Action<Appointment> change)
+    {
+        return WithDbAsync(async db =>
+        {
+            var appointment = await db.Appointments
+                .Include(a => a.Schedule)
+                .FirstAsync(a => a.Id == appointmentId);
+            change(appointment);
             await db.SaveChangesAsync();
             return appointment;
         });

@@ -18,8 +18,7 @@ public static class Endpoint
             .AsNoTracking()
             .Where(a => a.Status == AppointmentStatus.Completed && a.Schedule.Date >= request.From &&
                         a.Schedule.Date <= request.To)
-            .SelectMany(a => a.Offerings)
-            .Select(ao => (decimal?)ao.Price.Value)
+            .Select(a => (decimal?)a.Offerings.Sum(o => o.Price.Value))
             .AverageAsync(token) ?? 0m;
         var response = new GetAverageCheckResponse(Money.FromDecimal(average));
         return Results.Ok(response);

@@ -1,6 +1,5 @@
 ﻿using Domain.Enums;
 using Domain.ValueObjects;
-using Features.Analytics.GetOfferingsByPopularity;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 

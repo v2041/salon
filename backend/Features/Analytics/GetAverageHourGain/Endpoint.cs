@@ -1,7 +1,5 @@
-﻿using System.Collections.Immutable;
-using Domain.Enums;
+﻿using Domain.Enums;
 using Domain.ValueObjects;
-using Features.Analytics.AverageHourGain;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 

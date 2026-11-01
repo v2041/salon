@@ -1,5 +1,4 @@
 ﻿using Domain.Enums;
-using Domain.Exceptions;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,9 +12,9 @@ public static class Endpoint
         CancellationToken token
     )
     {
-        var data = await db.Schedules
-            .Where(s => s.Date >= request.From && s.Date <= request.To)
-            .SelectMany(s => s.Appointments)
+        var data = await db.Appointments
+            .AsNoTracking()
+            .Where(a => a.Schedule.Date >= request.From && a.Schedule.Date <= request.To)
             .GroupBy(a => 1)
             .Select(g => new
             {
@@ -23,11 +22,10 @@ public static class Endpoint
                 noShowCount = g.Count(a => a.Status == AppointmentStatus.Missed)
             })
             .FirstOrDefaultAsync(token);
-        if (data == null)
-            throw new NotFoundException("Данные не найдены");
-        var response = new GetNoShowRateResponse(data.completedCount + data.noShowCount > 0
-            ? (double)data.noShowCount / (data.completedCount + data.noShowCount)
-            : 0);
+        var rate = data is null || data.completedCount + data.noShowCount == 0
+            ? 0
+            : (double)data.noShowCount / (data.completedCount + data.noShowCount);
+        var response = new GetNoShowRateResponse(rate);
         return Results.Ok(response);
     }
 }
