@@ -246,3 +246,27 @@ export type BestClientResponse = {
     phoneNumber: string;
     spent: Money;
 };
+
+export type MonthlyGainResponse = {
+    month: string;
+    gain: Money;
+};
+
+export type GainByMonthResponse = {
+    months: MonthlyGainResponse[];
+};
+
+export type ClientsResponse = {
+    total: number;
+    new: number;
+    returning: number;
+};
+
+export type LossesResponse = {
+    canceled: number;
+    canceledRate: number;
+    rejected: number;
+    rejectedRate: number;
+    missed: number;
+    missedRate: number;
+};

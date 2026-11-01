@@ -11,14 +11,17 @@
     type ChangeAppointmentTimeRequest,
     type ChangeOfferingRequest,
     type ChangeScheduleRequest,
+    type ClientsResponse,
     type CreateAppointmentForUserRequest,
     type CreateAppointmentRequest,
     type CreateOfferingRequest,
     type CreateScheduleRequest,
     type CurrentUser,
     type FreeTimeResponse,
+    type GainByMonthResponse,
     type GainResponse,
     type LoginRequest,
+    type LossesResponse,
     type Money,
     type OfferingResponse,
     type OfferingsStatResponse,
@@ -160,6 +163,12 @@ export const authApi = {
 export const analyticsApi = {
     getGain: (from: string, to: string) =>
         apiFetch<GainResponse>(`/api/analytics/gain${query({ from, to })}`),
+    getGainByMonth: (from: string, to: string) =>
+        apiFetch<GainByMonthResponse>(`/api/analytics/gain-by-month${query({ from, to })}`),
+    getClients: (from: string, to: string) =>
+        apiFetch<ClientsResponse>(`/api/analytics/clients${query({ from, to })}`),
+    getLosses: (from: string, to: string) =>
+        apiFetch<LossesResponse>(`/api/analytics/losses${query({ from, to })}`),
     getOfferingsByPopularity: (from: string, to: string) =>
         apiFetch<OfferingsStatResponse[]>(`/api/analytics/offerings-popularity${query({ from, to })}`),
     getOfferingsByGain: (from: string, to: string) =>

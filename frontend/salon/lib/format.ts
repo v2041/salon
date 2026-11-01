@@ -75,6 +75,12 @@ export function formatRuDate(iso: string) {
     return `${day}.${month}.${year}`;
 }
 
+export function formatMonthLabel(month: string) {
+    const [year, value] = month.split("-").map(Number);
+    const date = new Date(year, value - 1, 1);
+    return date.toLocaleDateString("ru-RU", {month: "long", year: "numeric"});
+}
+
 export function parseRuDate(value: string): string | null {
     const match = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(value.trim());
     if (!match) return null;
