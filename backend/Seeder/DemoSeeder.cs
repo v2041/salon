@@ -296,7 +296,8 @@ public static class DemoSeeder
             }
             else if (roll < 0.89)
             {
-                appointment.Cancel();
+                var start = appointment.Schedule.Date.ToDateTime(appointment.Interval.Start);
+                appointment.Cancel(new HistoricalTimeProvider(start.AddHours(-3)));
             }
             else if (roll < 0.95)
             {
@@ -312,6 +313,12 @@ public static class DemoSeeder
 
         if (random.NextDouble() < (offset == 0 ? 0.5 : 0.4))
             appointment.Confirm();
+    }
+
+    private sealed class HistoricalTimeProvider(DateTime localNow) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => new(DateTime.SpecifyKind(localNow, DateTimeKind.Utc));
+        public override TimeZoneInfo LocalTimeZone => TimeZoneInfo.Utc;
     }
 
     private static TimeOnly RoundToFive(TimeOnly time)

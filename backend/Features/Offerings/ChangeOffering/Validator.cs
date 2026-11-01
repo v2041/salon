@@ -24,8 +24,8 @@ public class Validator : AbstractValidator<ChangeOfferingRequest>
             .WithMessage("Описание не должно быть пустым.");
 
         RuleFor(x => x.Duration)
-            .GreaterThan(TimeSpan.FromMinutes(Offering.MIN_DURATION_MINUTES))
-            .WithMessage($"Минимальная длительность услуги - {Offering.MIN_DURATION_MINUTES} минут.");
+            .GreaterThan(Offering.MIN_DURATION)
+            .WithMessage(Offering.MIN_DURATION_MESSAGE);
 
         RuleFor(x => x.Price)
             .GreaterThanOrEqualTo(0)

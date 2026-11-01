@@ -7,6 +7,8 @@ namespace Domain.Entities;
 
 public class Appointment
 {
+    private static readonly TimeSpan CancelLeadTime = TimeSpan.FromHours(2);
+
     private Appointment()
     {
     }
@@ -85,27 +87,24 @@ public class Appointment
         var offering = _offerings.FirstOrDefault(o => o.OfferingId == offeringId);
         if (offering == null)
             throw new BusinessException("Услуга не найдена");
-        if (duration <= TimeSpan.FromMinutes(Offering.MIN_DURATION_MINUTES))
-            throw new BusinessException($"Минимальная длительность услуги - {Offering.MIN_DURATION_MINUTES} минут.");
+        Offering.EnsureDuration(duration);
         var totalDuration = _offerings.Aggregate(
             TimeSpan.Zero,
             (current, o) => current + (o.OfferingId == offeringId ? duration : o.Duration));
-        var endTime = Interval.Start.Add(totalDuration);
-        if (endTime <= Interval.Start)
-            throw new BusinessException("Не рабочее время недоступно для записи.");
-        var newInterval = TimeInterval.Create(Interval.Start, endTime);
+        var newInterval = TimeInterval.Create(Interval.Start, totalDuration);
         Schedule.EnsureAppointmentInterval(newInterval, Id, checkPast: false);
         offering.ChangeDuration(duration);
         Interval = newInterval;
     }
 
-    public void Cancel()
+    public void Cancel(TimeProvider? timeProvider = null)
     {
         if (Status != AppointmentStatus.Pending && Status != AppointmentStatus.Confirmed)
             throw new BusinessException("Действие недоступно для текущего статуса записи");
 
-        if (Status == AppointmentStatus.Confirmed &&
-            (Schedule.Date.ToDateTime(Interval.Start) - DateTime.Now).TotalHours < 2)
+        var now = (timeProvider ?? TimeProvider.System).GetLocalNow().DateTime;
+        var start = Schedule.Date.ToDateTime(Interval.Start);
+        if (start - now < CancelLeadTime)
             throw new BusinessException("Нельзя отменить запись менее чем за 2 часа до начала");
 
         Status = AppointmentStatus.Canceled;

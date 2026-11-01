@@ -26,6 +26,15 @@ public record TimeInterval
         return new TimeInterval(start, end);
     }
 
+    public static TimeInterval Create(TimeOnly start, TimeSpan duration)
+    {
+        if (duration <= TimeSpan.Zero || duration >= TimeSpan.FromDays(1))
+            throw new BusinessException("Интервал не должен выходить за пределы суток.");
+        if (start.Ticks + duration.Ticks >= TimeSpan.TicksPerDay)
+            throw new BusinessException("Интервал не должен выходить за пределы суток.");
+        return new TimeInterval(start, new TimeOnly(start.Ticks + duration.Ticks));
+    }
+
     public static TimeSpan IntervalsDuration(IEnumerable<TimeInterval> intervals)
         => intervals.Aggregate(TimeSpan.Zero, (current, interval) => current + interval.Duration);
 

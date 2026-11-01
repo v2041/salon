@@ -14,7 +14,9 @@ public static class Endpoint
         CancellationToken token
     )
     {
-        var appointment = await db.Appointments.FirstOrDefaultAsync(a => a.Id == request.Id, token);
+        var appointment = await db.Appointments
+            .Include(a => a.Schedule)
+            .FirstOrDefaultAsync(a => a.Id == request.Id, token);
         if (appointment is null) return Results.NotFound();
         switch (request.Status)
         {

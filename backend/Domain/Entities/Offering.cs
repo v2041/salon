@@ -8,6 +8,8 @@ public class Offering
 {
     public const int MAX_TITLE_LENGTH = 50;
     public const int MIN_DURATION_MINUTES = 10;
+    public static readonly string MIN_DURATION_MESSAGE = $"Минимальная длительность услуги - {MIN_DURATION_MINUTES} минут.";
+    public static readonly TimeSpan MIN_DURATION = TimeSpan.FromMinutes(MIN_DURATION_MINUTES);
 
     private Offering()
     {
@@ -42,8 +44,7 @@ public class Offering
 
     public static Offering Create(Money price, string title, string description, TimeSpan duration, Category category)
     {
-        if (duration <= TimeSpan.FromMinutes(MIN_DURATION_MINUTES))
-            throw new BusinessException($"Минимальная длительность услуги - {MIN_DURATION_MINUTES} минут.");
+        EnsureDuration(duration);
         if (string.IsNullOrWhiteSpace(title))
             throw new BusinessException("Название не должно быть пустым.");
         if (string.IsNullOrWhiteSpace(description))
@@ -64,9 +65,14 @@ public class Offering
 
     public void ChangeDuration(TimeSpan newDuration)
     {
-        if (newDuration <= TimeSpan.FromMinutes(MIN_DURATION_MINUTES))
-            throw new BusinessException($"Минимальная длительность услуги - {MIN_DURATION_MINUTES} минут.");
+        EnsureDuration(newDuration);
         Duration = newDuration;
+    }
+
+    public static void EnsureDuration(TimeSpan duration)
+    {
+        if (duration <= MIN_DURATION)
+            throw new BusinessException(MIN_DURATION_MESSAGE);
     }
 
     public void ChangeDescription(string newDescription)
