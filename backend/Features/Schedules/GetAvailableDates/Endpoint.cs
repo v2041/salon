@@ -21,15 +21,14 @@ public static class Endpoint
         if (!validationResult.IsValid)
             return validationResult.ToValidationProblem();
 
-        var durations = await db.Offerings
+        var offerings = await db.Offerings
             .AsNoTracking()
-            .Where(o => request.OfferingIds.Contains(o.Id))
-            .Distinct()
-            .Select(o => o.Duration)
+            .Where(o => request.OfferingIds.Contains(o.Id) && o.IsActive)
+            .Select(o => new { o.Id, o.Duration })
             .ToListAsync(token);
-        if (durations.Count != request.OfferingIds.Count)
+        if (offerings.Count != request.OfferingIds.Count)
             throw new NotFoundException("Одна или несколько услуг не найдены");
-        var duration = durations.Aggregate(TimeSpan.Zero, (current, s) => current + s);
+        var duration = offerings.Aggregate(TimeSpan.Zero, (current, o) => current + o.Duration);
 
         var schedules = await db.Schedules
             .Include(s => s.Appointments)

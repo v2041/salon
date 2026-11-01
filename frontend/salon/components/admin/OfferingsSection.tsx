@@ -20,7 +20,7 @@ import {useEffect, useState} from "react";
 import {offeringsApi} from "@/lib/api";
 import {durationToMinutes, formatCategory, formatDurationValue, formatPrice, minutesToDuration} from "@/lib/format";
 import {cardSx} from "@/lib/theme";
-import {Category, type OfferingResponse} from "@/lib/types";
+import {Category, type AdminOfferingResponse} from "@/lib/types";
 
 const CATEGORIES = [Category.Hair, Category.Nails, Category.Face, Category.Other] as const;
 
@@ -40,7 +40,7 @@ const EMPTY_FORM: Form = {
     category: Category.Hair,
 };
 
-function fromOffering(offering: OfferingResponse): Form {
+function fromOffering(offering: AdminOfferingResponse): Form {
     return {
         title: offering.title,
         description: offering.description,
@@ -72,19 +72,19 @@ function toRequest(form: Form) {
 }
 
 export default function OfferingsSection() {
-    const [offerings, setOfferings] = useState<OfferingResponse[]>([]);
+    const [offerings, setOfferings] = useState<AdminOfferingResponse[]>([]);
     const [loading, setLoading] = useState(true);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [editError, setEditError] = useState<string | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const [form, setForm] = useState<Form>(EMPTY_FORM);
-    const [editing, setEditing] = useState<OfferingResponse | null>(null);
+    const [editing, setEditing] = useState<AdminOfferingResponse | null>(null);
     const [editForm, setEditForm] = useState<Form>(EMPTY_FORM);
-    const [deleting, setDeleting] = useState<OfferingResponse | null>(null);
+    const [deleting, setDeleting] = useState<AdminOfferingResponse | null>(null);
 
     function load() {
-        return offeringsApi.getAll()
+        return offeringsApi.getAllAdmin()
             .then(setOfferings)
             .catch(() => setError("Не удалось загрузить услуги"))
             .finally(() => setLoading(false));
@@ -113,7 +113,7 @@ export default function OfferingsSection() {
         }
     }
 
-    function openEdit(offering: OfferingResponse) {
+    function openEdit(offering: AdminOfferingResponse) {
         setEditError(null);
         setEditing(offering);
         setEditForm(fromOffering(offering));
@@ -159,6 +159,19 @@ export default function OfferingsSection() {
             await load();
         } catch (err) {
             setDeleteError(err instanceof Error ? err.message : "Не удалось удалить услугу");
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    async function restore(offering: AdminOfferingResponse) {
+        setBusy(true);
+        setError(null);
+        try {
+            await offeringsApi.restore(offering.id);
+            await load();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Не удалось восстановить услугу");
         } finally {
             setBusy(false);
         }
@@ -234,7 +247,7 @@ export default function OfferingsSection() {
 
             <Stack spacing={1.5}>
                 <Typography variant="overline" sx={{color: "text.secondary", letterSpacing: "0.12em"}}>
-                    Активные услуги
+                    Услуги
                 </Typography>
                 {loading && <Stack sx={{alignItems: "center", py: 2}}><CircularProgress size={22}/></Stack>}
                 {!loading && !error && offerings.length === 0 && (
@@ -248,6 +261,9 @@ export default function OfferingsSection() {
                                     {offering.title}
                                 </Typography>
                                 <Chip size="small" label={formatCategory(offering.category)}/>
+                                {!offering.isActive && (
+                                    <Chip size="small" label="Снята с витрины" variant="outlined"/>
+                                )}
                             </Stack>
                             <Typography variant="body2" color="text.secondary">
                                 {offering.description}
@@ -261,6 +277,17 @@ export default function OfferingsSection() {
                                 <Button size="small" variant="outlined" disabled={busy} onClick={() => openEdit(offering)}>
                                     Изменить
                                 </Button>
+                                {!offering.isActive && (
+                                    <Button
+                                        size="small"
+                                        variant="outlined"
+                                        color="success"
+                                        disabled={busy}
+                                        onClick={() => restore(offering)}
+                                    >
+                                        Восстановить
+                                    </Button>
+                                )}
                                 <Button
                                     size="small"
                                     variant="outlined"

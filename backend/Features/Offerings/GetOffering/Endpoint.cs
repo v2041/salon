@@ -21,7 +21,7 @@ public static class Endpoint
 
         var response = await db.Offerings
             .AsNoTracking()
-            .Where(o => o.Id == request.Id)
+            .Where(o => o.Id == request.Id && o.IsActive)
             .Select(o => new GetOfferingResponse(
                 o.Id,
                 o.Title,

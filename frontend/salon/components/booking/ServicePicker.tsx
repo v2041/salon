@@ -2,6 +2,7 @@
 
 import {CheckCircle as CheckCircleIcon} from "@mui/icons-material";
 import {ButtonBase, Stack, Typography} from "@mui/material";
+import Link from "next/link";
 import {durationToMinutes, formatCategory, formatDurationValue, formatPrice} from "@/lib/format";
 import {cardShadow, accentInk} from "@/lib/theme";
 import type {Category, OfferingResponse} from "@/lib/types";
@@ -30,41 +31,51 @@ export default function ServicePicker({offerings, selectedIds, onToggle}: Props)
                     {g.items.map(o => {
                         const selected = selectedIds.includes(o.id);
                         return (
-                            <ButtonBase
-                                key={o.id}
-                                onClick={() => onToggle(o.id)}
-                                sx={{
-                                    display: "block",
-                                    width: "100%",
-                                    textAlign: "left",
-                                    p: 2,
-                                    borderRadius: "18px",
-                                    border: 1,
-                                    borderColor: selected ? "primary.main" : "divider",
-                                    bgcolor: "background.paper",
-                                    boxShadow: selected ? cardShadow : "none",
-                                    transition: "border-color .2s, box-shadow .2s, transform .2s",
-                                    "&:active": {transform: "scale(0.995)"},
-                                }}
-                            >
-                                <Stack direction="row" spacing={2} sx={{alignItems: "center"}}>
-                                    <Stack spacing={0.25} sx={{flex: 1, minWidth: 0}}>
-                                        <Typography variant="subtitle1" sx={{fontWeight: 650}}>{o.title}</Typography>
-                                        <Typography variant="body2" color="text.secondary">
-                                            {formatDurationValue(durationToMinutes(o.duration))}
-                                        </Typography>
+                            <Stack key={o.id} spacing={0.25}>
+                                <ButtonBase
+                                    onClick={() => onToggle(o.id)}
+                                    sx={{
+                                        display: "block",
+                                        width: "100%",
+                                        textAlign: "left",
+                                        p: 2,
+                                        borderRadius: "18px",
+                                        border: 1,
+                                        borderColor: selected ? "primary.main" : "divider",
+                                        bgcolor: "background.paper",
+                                        boxShadow: selected ? cardShadow : "none",
+                                        transition: "border-color .2s, box-shadow .2s, transform .2s",
+                                        "&:active": {transform: "scale(0.995)"},
+                                    }}
+                                >
+                                    <Stack direction="row" spacing={2} sx={{alignItems: "center"}}>
+                                        <Stack spacing={0.25} sx={{flex: 1, minWidth: 0}}>
+                                            <Typography variant="subtitle1" sx={{fontWeight: 650}}>{o.title}</Typography>
+                                            <Typography variant="body2" color="text.secondary">
+                                                {o.description}
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                {formatDurationValue(durationToMinutes(o.duration))}
+                                            </Typography>
+                                        </Stack>
+                                        <Stack spacing={0.5} sx={{alignItems: "flex-end"}}>
+                                            <Typography variant="subtitle1" sx={{fontWeight: 700, whiteSpace: "nowrap"}}>
+                                                {formatPrice(o.price.value)}
+                                            </Typography>
+                                            <CheckCircleIcon
+                                                fontSize="small"
+                                                sx={{color: selected ? accentInk : "rgba(36,27,27,0.15)"}}
+                                            />
+                                        </Stack>
                                     </Stack>
-                                    <Stack spacing={0.5} sx={{alignItems: "flex-end"}}>
-                                        <Typography variant="subtitle1" sx={{fontWeight: 700, whiteSpace: "nowrap"}}>
-                                            {formatPrice(o.price.value)}
-                                        </Typography>
-                                        <CheckCircleIcon
-                                            fontSize="small"
-                                            sx={{color: selected ? accentInk : "rgba(36,27,27,0.15)"}}
-                                        />
-                                    </Stack>
-                                </Stack>
-                            </ButtonBase>
+                                </ButtonBase>
+                                <Link
+                                    href={`/offerings/${o.id}`}
+                                    style={{alignSelf: "flex-start", fontSize: 13, paddingLeft: 8}}
+                                >
+                                    Подробнее
+                                </Link>
+                            </Stack>
                         );
                     })}
                 </Stack>

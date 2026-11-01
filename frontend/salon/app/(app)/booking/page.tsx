@@ -2,7 +2,8 @@
 
 import {CheckCircle as CheckCircleIcon, Place as PlaceIcon, Phone as PhoneIcon} from "@mui/icons-material";
 import {Alert, Box, Button, CircularProgress, Paper, Stack, Typography} from "@mui/material";
-import {useEffect, useState} from "react";
+import {Suspense, useEffect, useState} from "react";
+import {useSearchParams} from "next/navigation";
 import Calendar from "@/components/booking/Calendar";
 import ServicePicker from "@/components/booking/ServicePicker";
 import TimeGrid from "@/components/booking/TimeGrid";
@@ -52,10 +53,20 @@ function StepDots({step}: {step: "services" | "time"}) {
 type Booked = {date: string; start: string; end: string; price: Money};
 
 export default function BookingPage() {
+    return (
+        <Suspense fallback={<Loader/>}>
+            <BookingContent/>
+        </Suspense>
+    );
+}
+
+function BookingContent() {
+    const searchParams = useSearchParams();
+    const preselectedId = searchParams.get("offeringId");
     const [offerings, setOfferings] = useState<OfferingResponse[]>([]);
     const [offeringsLoading, setOfferingsLoading] = useState(true);
     const [step, setStep] = useState<"services" | "time">("services");
-    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [selectedIds, setSelectedIds] = useState<string[]>(() => preselectedId ? [preselectedId] : []);
     const [dates, setDates] = useState<string[]>([]);
     const [datesLoading, setDatesLoading] = useState(false);
     const [date, setDate] = useState<string | null>(null);
@@ -201,7 +212,7 @@ export default function BookingPage() {
                             <Button
                                 variant="contained"
                                 color="secondary"
-                                disabled={selectedIds.length === 0}
+                                disabled={selected.length === 0}
                                 onClick={goToTime}
                             >
                                 Далее

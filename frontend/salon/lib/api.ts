@@ -1,5 +1,6 @@
 ﻿import {
     type AdminAppointmentResponse,
+    type AdminOfferingResponse,
     type AppointmentDetailResponse,
     type AppointmentResponse,
     AppointmentStatus,
@@ -95,12 +96,14 @@ function json(body: unknown): RequestInit {
 
 export const offeringsApi = {
     getAll: () => apiFetch<OfferingResponse[]>("/api/offerings/"),
+    getAllAdmin: () => apiFetch<AdminOfferingResponse[]>("/api/offerings/all"),
     get: (id: string) => apiFetch<OfferingResponse>(`/api/offerings/${id}`),
     create: (request: CreateOfferingRequest) =>
         apiFetch<OfferingResponse>("/api/offerings/", { method: "POST", ...json(request) }),
     change: (id: string, request: ChangeOfferingRequest) =>
         apiFetch<OfferingResponse>(`/api/offerings/${id}${query({ ...request })}`, { method: "PUT" }),
     remove: (id: string) => apiFetch<void>(`/api/offerings/${id}`, { method: "DELETE" }),
+    restore: (id: string) => apiFetch<void>(`/api/offerings/${id}/restore`, { method: "PATCH" }),
 };
 
 export const schedulesApi = {

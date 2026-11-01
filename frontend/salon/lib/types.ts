@@ -76,6 +76,8 @@ export type User = {
 
 export type OfferingResponse = Omit<Offering, "isActive">;
 
+export type AdminOfferingResponse = Offering;
+
 export type ScheduleResponse = Schedule;
 
 export type AppointmentResponse = {
