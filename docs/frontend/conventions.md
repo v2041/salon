@@ -7,9 +7,10 @@ Next.js 16 App Router, React 19, TypeScript strict, MUI 9. UI mobile-first. Node
 - `app/(app)/booking` — запись.
 - `app/(app)/my-appointments` — записи клиента.
 - `app/(app)/admin` — админка.
+- `app/(app)/offerings/[id]` — страница услуги.
 - `app/page.tsx` — вход.
 
-Витрины `/offerings` нет. Не добавляйте статические мок-данные.
+Списка-витрины `/offerings` нет. Не добавляйте статические мок-данные.
 
 ## Компоненты
 

@@ -67,6 +67,7 @@ builder.Services.AddAuthorizationBuilder()
 builder.Services.AddHostedService<ScheduleService>();
 var app = builder.Build();
 app.UseCors();
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseStatusCodePages(async statusCodeContext =>
 {
     var context = statusCodeContext.HttpContext;
@@ -79,7 +80,6 @@ app.UseStatusCodePages(async statusCodeContext =>
     await Results.Problem(statusCode: context.Response.StatusCode, title: title)
         .ExecuteAsync(context);
 });
-app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 

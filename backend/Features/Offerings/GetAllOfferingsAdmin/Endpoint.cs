@@ -28,13 +28,3 @@ public static class Endpoint
         return Results.Ok(response);
     }
 }
-
-public record GetAllOfferingsAdminResponse(
-    Guid Id,
-    string Title,
-    string Description,
-    Money Price,
-    TimeSpan Duration,
-    Category Category,
-    bool IsActive
-);

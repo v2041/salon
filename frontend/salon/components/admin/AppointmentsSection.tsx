@@ -7,17 +7,9 @@ import DateField from "@/components/admin/DateField";
 import TimeField from "@/components/admin/TimeField";
 import {durationToMinutes, formatDayLabel, formatDurationValue, formatPrice, formatRuDate, formatTimeOnly, minutesToDuration, parseRuDate, parseRuTime, toIsoDate} from "@/lib/format";
 import {accentInk, cardSx} from "@/lib/theme";
+import {STATUS_META} from "@/lib/status";
 import {AppointmentStatus} from "@/lib/types";
 import type {AdminAppointmentOffering, AdminAppointmentResponse} from "@/lib/types";
-
-const STATUS_META: Record<AppointmentStatus, {label: string; color: "warning" | "success" | "info" | "default" | "error"}> = {
-    [AppointmentStatus.Pending]: {label: "Ожидает", color: "warning"},
-    [AppointmentStatus.Confirmed]: {label: "Подтверждена", color: "success"},
-    [AppointmentStatus.Completed]: {label: "Завершена", color: "info"},
-    [AppointmentStatus.Canceled]: {label: "Отменена", color: "error"},
-    [AppointmentStatus.Missed]: {label: "Пропущена", color: "error"},
-    [AppointmentStatus.Rejected]: {label: "Отклонена", color: "error"},
-};
 
 const STATUS_ORDER = [
     AppointmentStatus.Pending,

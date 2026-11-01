@@ -7,6 +7,7 @@ import DateField from "@/components/admin/DateField";
 import TimeField from "@/components/admin/TimeField";
 import {formatDayLabel, formatDurationValue, formatPrice, formatTimeOnly, parseRuDate, parseRuTime, timeToMinutes} from "@/lib/format";
 import {cardSx} from "@/lib/theme";
+import {STATUS_META} from "@/lib/status";
 import {AppointmentStatus} from "@/lib/types";
 import type {ScheduleAppointmentItem, ScheduleResponse, TimeInterval} from "@/lib/types";
 
@@ -37,15 +38,6 @@ type EditForm = {
 };
 
 const EMPTY_EDIT: EditForm = {start: "10:00", end: "20:00", breakOn: false, breakStart: "13:00", breakEnd: "14:00"};
-
-const STATUS_META: Record<AppointmentStatus, {label: string; color: "warning" | "success" | "info" | "default" | "error"}> = {
-    [AppointmentStatus.Pending]: {label: "Ожидает", color: "warning"},
-    [AppointmentStatus.Confirmed]: {label: "Подтверждена", color: "success"},
-    [AppointmentStatus.Completed]: {label: "Завершена", color: "info"},
-    [AppointmentStatus.Canceled]: {label: "Отменена", color: "error"},
-    [AppointmentStatus.Missed]: {label: "Пропущена", color: "error"},
-    [AppointmentStatus.Rejected]: {label: "Отклонена", color: "error"},
-};
 
 function appointmentMinutes(appointment: ScheduleAppointmentItem) {
     return timeToMinutes(appointment.interval.end) - timeToMinutes(appointment.interval.start);

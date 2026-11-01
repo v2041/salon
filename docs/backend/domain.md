@@ -8,7 +8,7 @@
 - `ValueObjects/` — Value Objects.
 - `Enums/` — enum'ы.
 - `Services/` — статические доменные сервисы.
-- `Exceptions/` — `BusinessException`, `NotFoundException`.
+- `Exceptions/` — `BusinessException`, `NotFoundException`, `RateLimitException`.
 
 ## Сущности
 

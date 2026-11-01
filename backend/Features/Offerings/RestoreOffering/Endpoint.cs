@@ -22,5 +22,3 @@ public static class Endpoint
         return Results.NoContent();
     }
 }
-
-public record RestoreOfferingRequest(Guid Id);

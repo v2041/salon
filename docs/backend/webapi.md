@@ -13,7 +13,7 @@
 Порядок middleware:
 
 ```text
-UseCors → ExceptionHandlingMiddleware → UseAuthentication → UseAuthorization
+UseCors → ExceptionHandlingMiddleware → UseStatusCodePages → UseAuthentication → UseAuthorization
 ```
 
 ## Auth
@@ -31,6 +31,7 @@ UseCors → ExceptionHandlingMiddleware → UseAuthentication → UseAuthorizati
 
 - `BusinessException` → 400, `exception.Message`.
 - `NotFoundException` → 404, `exception.Message`.
+- `RateLimitException` → 429, `exception.Message`.
 - `JsonException`/`BadHttpRequestException` → 400.
 - Иное → 500 и `logger.LogError`.
 

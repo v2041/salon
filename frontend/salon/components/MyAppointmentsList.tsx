@@ -6,17 +6,9 @@ import {useEffect, useState} from "react";
 import {appointmentsApi} from "@/lib/api";
 import {formatDayLabel, formatDurationValue, formatPrice, formatTimeOnly, timeToMinutes} from "@/lib/format";
 import {accentInk, cardSx} from "@/lib/theme";
+import {STATUS_META} from "@/lib/status";
 import {AppointmentStatus} from "@/lib/types";
 import type {UserAppointmentResponse} from "@/lib/types";
-
-const STATUS_META: Record<AppointmentStatus, {label: string; color: "warning" | "success" | "default" | "error"}> = {
-    [AppointmentStatus.Pending]: {label: "Ожидает", color: "warning"},
-    [AppointmentStatus.Confirmed]: {label: "Подтверждена", color: "success"},
-    [AppointmentStatus.Completed]: {label: "Завершена", color: "default"},
-    [AppointmentStatus.Canceled]: {label: "Отменена", color: "error"},
-    [AppointmentStatus.Missed]: {label: "Пропущена", color: "error"},
-    [AppointmentStatus.Rejected]: {label: "Отклонена", color: "error"},
-};
 
 function startOf(a: UserAppointmentResponse) {    return new Date(`${a.date}T${a.interval.start}`);
 }

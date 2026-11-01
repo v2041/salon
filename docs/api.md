@@ -29,6 +29,7 @@
 - Валидация: `Results.ValidationProblem` → 400.
 - `BusinessException` → 400.
 - `NotFoundException` → 404.
+- `RateLimitException` → 429.
 - Дубликат: `Results.Conflict` → 409.
 - Успех: `Created` (201), `Ok` (200), `NoContent` (204).
 

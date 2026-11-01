@@ -73,16 +73,11 @@ public class VerificationCode
     public bool TryResend(DateTime? now = null)
     {
         var current = now ?? DateTime.UtcNow;
-        if (current - SendWindowStart >= Window)
-        {
-            SendWindowStart = current;
-            SendsInWindow = 0;
-        }
-
-        if (SendsInWindow >= MAX_SENDS_PER_HOUR)
+        if (!TryRegister(SendsInWindow, SendWindowStart, MAX_SENDS_PER_HOUR, current, out var count, out var start))
             return false;
 
-        SendsInWindow++;
+        SendsInWindow = count;
+        SendWindowStart = start;
         CreatedAt = current;
         ExpiresAt = current.AddMinutes(5);
         Code = GenerateCode();
@@ -93,16 +88,37 @@ public class VerificationCode
     public bool TryRegisterAttempt(DateTime? now = null)
     {
         var current = now ?? DateTime.UtcNow;
-        if (current - AttemptsWindowStart >= Window)
-        {
-            AttemptsWindowStart = current;
-            AttemptsInWindow = 0;
-        }
-
-        if (AttemptsInWindow >= MAX_ATTEMPTS_PER_HOUR)
+        if (!TryRegister(AttemptsInWindow, AttemptsWindowStart, MAX_ATTEMPTS_PER_HOUR, current, out var count, out var start))
             return false;
 
-        AttemptsInWindow++;
+        AttemptsInWindow = count;
+        AttemptsWindowStart = start;
+        return true;
+    }
+
+    private static bool TryRegister(
+        int count,
+        DateTime windowStart,
+        int limit,
+        DateTime now,
+        out int nextCount,
+        out DateTime nextStart)
+    {
+        if (now - windowStart >= Window)
+        {
+            nextStart = now;
+            nextCount = 0;
+        }
+        else
+        {
+            nextStart = windowStart;
+            nextCount = count;
+        }
+
+        if (nextCount >= limit)
+            return false;
+
+        nextCount++;
         return true;
     }
 }

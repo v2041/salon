@@ -1,7 +1,5 @@
 using Domain.Entities;
 using Domain.Exceptions;
-using Domain.Services;
-using Domain.ValueObjects;
 using Features.Common;
 using FluentValidation;
 using Infrastructure.Data;
@@ -43,21 +41,13 @@ public static class Endpoint
         if (schedule == null)
             throw new NotFoundException("Рабочий день не найден");
 
-        var offerings = await db.Offerings
-            .AsNoTracking()
-            .Where(o => request.OfferingIds.Contains(o.Id))
-            .ToListAsync(token);
-
-        if (offerings.Count != request.OfferingIds.Count)
-            throw new NotFoundException("Одна или несколько услуг не найдены");
-
-        var appointmentOfferingDataList = offerings
-            .Select(o => new AppointmentOfferingData(o.Id, o.Price, o.Duration))
-            .ToList();
-
-        var appointment = schedule.AddAppointment(user.Id, request.Time, appointmentOfferingDataList);
-
-        await db.SaveChangesAsync(token);
+        var appointment = await AppointmentCreator.CreateAsync(
+            db,
+            schedule,
+            user.Id,
+            request.Time,
+            request.OfferingIds,
+            token);
 
         var response = new CreateAppointment.CreateAppointmentResponse(
             appointment.Id,
