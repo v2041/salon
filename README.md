@@ -15,21 +15,23 @@
 
 **Клиент**
 
-- поток записи: услуги (можно несколько) → дата → время → подтверждение. Список услуг встроен в поток, отдельной витрины нет (FR-V3 в планах);
-- «Мои записи»: статусы, отмена своей записи;
-- вход и регистрация по телефону. Код — 4 цифры, действует 5 минут. Повторная отправка — не чаще 1 раза в минуту. Пять неверных попыток блокируют код. SMS-провайдер не подключён — код виден в базе данных.
+- поток записи: услуги (можно несколько) → дата → время → подтверждение. Услуги можно выбрать в потоке или на странице услуги `/offerings/{id}`;
+- «Мои записи»: статусы, отмена своей записи в статусах `Pending` и `Confirmed` не позднее чем за 2 часа;
+- вход и регистрация по телефону. Код — 4 цифры, действует 5 минут. Повторная отправка заменяет старый код. Лимиты: 5 кодов в час и 20 попыток в час. Пять неверных попыток блокируют код. SMS-провайдер не подключён; в `Development` код приходит в ответе `send-code`.
 
 **Мастер**
 
-- CRUD услуг: цена, длительность, название, описание, категория, деактивация;
-- расписание: рабочие дни, перерывы, выходные;
-- записи: подтверждение, отклонение, завершение, пропуск, отмена, перенос времени, правка цены и длительности;
-- аналитика: выручка, средний чек, загрузка, популярность услуг, no-show, топ клиентов.
+- CRUD услуг: цена, длительность, название, описание, категория, деактивация и восстановление;
+- расписание: рабочие дни, перерывы, выходные; день показан вместе с записями;
+- записи: подтверждение, отклонение, завершение, пропуск, отмена, перенос времени, правка цены и длительности; фильтры по периоду и статусу;
+- аналитика: выручка (всего и по месяцам), средний чек, загрузка, популярность услуг, no-show, отмены/отказы/пропуски, клиенты (всего/новые/повторные), топ клиентов.
 
 **Система**
 
 - автогенерация расписания на 14 дней вперёд (10:00–18:00, перерыв 15:00–15:20, воскресенье — выходной);
 - доменные проверки: нет записи в прошлом, нет пересечений, нет записи в перерыв и выходной день;
+- защита от гонок: уникальный индекс по слоту, конфликт даёт `400`;
+- `GET /healthz` проверяет подключение к БД и отдаёт `200` или `503`;
 - единый формат ошибок `application/problem+json` на русском языке.
 
 ## Структура репозитория
@@ -44,11 +46,12 @@ salon_project/
     WebApi/           # Program.cs, Middlewares, appsettings
     Seeder/           # демо-данные для Docker-стенда
     DomainTests/      # xUnit-тесты домена
+    WebApiTests/      # интеграционные HTTP-тесты (WebApplicationFactory + Testcontainers)
   frontend/
     salon/            # Next.js-приложение
-      app/(app)/      # booking, my-appointments, admin
-      components/     # booking/*, admin/*, LoginScreen, MyAppointmentsList
-      lib/            # api.ts, auth.tsx, format.ts, slots.ts, types.ts, theme.ts
+      app/(app)/      # booking, my-appointments, admin, offerings/[id]
+      components/     # booking/*, admin/*, LoginScreen, MyAppointmentsList, ThemeRegistry
+      lib/            # api.ts, auth.tsx, format.ts, slots.ts, types.ts, theme.ts, useBookingFlow.ts
   TZ.md               # техзадание
 ```
 
@@ -165,7 +168,8 @@ cd backend
 dotnet test
 ```
 
-xUnit-тесты (`DomainTests`): `Offering`, `Schedule`, `Money`, `TimeInterval`, `Appointment`, `User`, `TimelineBuilder`, `VerificationCode` — 110 тестов.
+- `DomainTests` — xUnit-тесты домена: `Offering`, `Schedule`, `Money`, `TimeInterval`, `Appointment`, `User`, `TimelineBuilder`, `VerificationCode`.
+- `WebApiTests` — интеграционные HTTP-тесты на `WebApplicationFactory` и PostgreSQL через Testcontainers. Для запуска нужен Docker.
 
 ## API
 
@@ -180,21 +184,28 @@ xUnit-тесты (`DomainTests`): `Offering`, `Schedule`, `Money`, `TimeInterval
 
 | Метод | Путь | Тело / ответ |
 |---|---|---|
-| POST | `/send-code` | `{ "phone": "+79991234567" }` → `{ "expiresAt", "isRegistered" }` |
+| POST | `/send-code` | `{ "phone": "+79991234567" }` → `{ "expiresAt", "isRegistered", "code"? }` |
 | POST | `/register` | `{ "code", "phone", "firstName", "lastName" }` → cookie `some-cookies` |
 | POST | `/login` | `{ "code", "phone" }` → cookie `some-cookies` |
+| POST | `/logout` | удаляет cookie `some-cookies` |
+| GET | `/me` | текущий пользователь |
 
+Поле `code` приходит только в `Development`. Повторная отправка заменяет старый код.
 Неверный или истёкший код → `400`. Пять неверных попыток блокируют код.
+Лимиты: 5 кодов в час и 20 попыток в час → `429`.
+Телефон из `AdminPhone` получает роль Admin при регистрации.
 
 ### Offerings — `/api/offerings`
 
 | Метод | Путь | Примечание |
 |---|---|---|
 | GET | `/api/offerings/` | все активные, публично |
-| GET | `/api/offerings/{id}` | одна услуга |
+| GET | `/api/offerings/all` | все услуги, включая неактивные (Admin) |
+| GET | `/api/offerings/{id}` | одна активная услуга; неактивная или неизвестная → `404` |
 | POST | `/api/offerings/` | `{ "price": 1500, "title", "description", "duration": "01:00:00", "category": 0 }`, Admin |
 | PUT | `/api/offerings/{id}` | обновление (передаются все поля), Admin |
 | DELETE | `/api/offerings/{id}` | `IsActive=false`, Admin |
+| PATCH | `/api/offerings/{id}/restore` | `IsActive=true`, Admin |
 
 ### Schedules — `/api/schedules`
 
@@ -202,7 +213,7 @@ xUnit-тесты (`DomainTests`): `Offering`, `Schedule`, `Money`, `TimeInterval
 |---|---|---|
 | GET | `/free-time?date=2026-08-10` | свободные интервалы дня: `{ "freeIntervals": [...] }` |
 | GET | `/available-dates?offeringIds=guid1,guid2` | дни с окном не меньше суммарной длительности |
-| GET | `/` | будущие дни с `isWorking` |
+| GET | `/` | будущие дни с `isWorking` и записями (Admin) |
 | POST | `/` | `{ "date", "workInterval": { "start", "end" }, "breakInterval?": {...} }`; 409, если день уже есть |
 | PUT | `/` | `{ "id", "isWorking", "workInterval", "breakInterval?" }` |
 
@@ -223,27 +234,44 @@ xUnit-тесты (`DomainTests`): `Offering`, `Schedule`, `Money`, `TimeInterval
 
 ### Analytics — `api/analytics`
 
-`GET /gain?from=&to=` — выручка по `Completed` за период.
-Также: `/offerings-popularity`, `/offerings-gain`, `/no-show-rate`, `/average-check`, `/average-hour-gain`, `/workload-rate`, `/best-clients`.
+Все эндпоинты требуют роль Admin.
+
+| Путь | Примечание |
+|---|---|
+| `/gain?from=&to=` | выручка по `Completed` за период |
+| `/gain-by-month?from=&to=` | выручка по месяцам (N1) |
+| `/offerings-gain` | выручка по услугам (N1) |
+| `/offerings-popularity` | популярность услуг |
+| `/average-check` | средний чек по записям |
+| `/average-hour-gain` | средняя выручка в час |
+| `/workload-rate` | загрузка |
+| `/no-show-rate` | доля пропусков; пустой период → `0` |
+| `/clients?from=&to=` | всего, новые и повторные клиенты (N2) |
+| `/losses?from=&to=` | отмены, отказы, пропуски — количество и процент (N4) |
+| `/best-clients?limit=` | топ клиентов; `limit ≥ 1` |
 
 ### Ошибки
 
 `ExceptionHandlingMiddleware` → `application/problem+json`:
-`BusinessException → 400`, `NotFoundException → 404`, `Json/BadRequest → 400`, остальное → `500` без деталей.
+`BusinessException → 400`, `NotFoundException → 404`, `RateLimitException → 429`,
+`Json/BadRequest → 400`, остальное → `500` без деталей.
+Ответы без тела (`401`, `403`, `404`, `429`) тоже получают `application/problem+json`.
+Служебный эндпоинт `GET /healthz` не требует авторизации и отдаёт `200` или `503`.
 
 ## Домен и правила
 
 - `User{Phone(unique), Role: Default|Admin}`; тестовые доступы: Admin `+79991234567`, Client `+79341234567`.
 - `Offering{Price: Money, Title(≤50), Duration(>10 мин), IsActive, Category}`.
 - `Schedule{Date(unique), IsWorking, WorkInterval(≥2ч), BreakInterval?(строго внутри, не впритык)}`.
-- `Appointment{Interval, Status, Offerings[]}`; цена и длительность фиксируются в `AppointmentOffering` на момент записи.
+- `Appointment{Interval, Status, Offerings[], CreatedAt, CompletedAt?}`; цена и длительность фиксируются в `AppointmentOffering` на момент записи.
 - Нельзя: запись в прошлом, вне рабочего времени, в перерыв, в выходной день, с пересечением `Pending|Confirmed`.
-- Отмена из `Confirmed` — не позже чем за 2 часа. Закрыть день можно только без активных записей.
+- Отмена из `Pending` и `Confirmed` — не позже чем за 2 часа. Закрыть день можно только без активных записей.
 
 | Где | Ключ | Зачем |
 |---|---|---|
 | `appsettings.Development.json` | `ConnectionStrings:SalonDbContext` | строка подключения PostgreSQL (файл в `.gitignore`) |
 | `appsettings.Development.json` | `Jwt:Issuer`, `Jwt:Audience`, `Jwt:Key`, `Jwt:ExpiryMinutes` | параметры токена; срок 30 дней, как у cookie |
+| `appsettings.json` | `AdminPhone` | телефон, который получает роль Admin при регистрации |
 | `WebApi/Program.cs` | CORS: `localhost:5173`, `localhost:3000` | для фронтенда, `AllowCredentials()` включён |
 | cookie | `some-cookies`, `HttpOnly`, 30 дней | сессия клиента и мастера |
 
