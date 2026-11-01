@@ -6,7 +6,7 @@ namespace Infrastructure.Notifications;
 
 /// <summary>
 /// Обрабатывает обновления Telegram без HTTP: /start, контакт, прочее сообщение.
-/// Контакт принимается, только если он принадлежит отправителю.
+/// Бот принимает контакт, только если его отправил владелец.
 /// Повторный контакт обновляет chat_id (привязка идемпотентна).
 /// </summary>
 public class TelegramUpdateHandler(SalonDbContext db, ITelegramMessageSender sender)
