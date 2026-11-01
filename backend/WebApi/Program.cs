@@ -40,7 +40,9 @@ builder.Services.AddDbContext<SalonDbContext>(options =>
 );
 var telegram = builder.Configuration.GetSection(TelegramOptions.SectionName);
 builder.Services.Configure<TelegramOptions>(telegram);
-if (builder.Environment.IsDevelopment() && string.IsNullOrWhiteSpace(telegram["Token"]))
+var telegramToken = telegram["Token"];
+var hasTelegramToken = !string.IsNullOrWhiteSpace(telegramToken);
+if (builder.Environment.IsDevelopment() && !hasTelegramToken)
 {
     builder.Services.AddScoped<ICodeSender, FakeCodeSender>();
 }
@@ -50,8 +52,15 @@ else
         client.Timeout = TimeSpan.FromSeconds(TelegramBotClient.HttpClientTimeoutSeconds));
     builder.Services.AddTransient(sp => new TelegramBotClient(
         sp.GetRequiredService<IHttpClientFactory>().CreateClient(TelegramBotClient.HttpClientName),
-        telegram["Token"]!));
+        telegramToken!));
     builder.Services.AddScoped<ICodeSender, TelegramBotCodeSender>();
+    if (hasTelegramToken)
+    {
+        builder.Services.AddTransient<ITelegramMessageSender>(sp =>
+            sp.GetRequiredService<TelegramBotClient>());
+        builder.Services.AddScoped<TelegramUpdateHandler>();
+        builder.Services.AddHostedService<TelegramUpdatesService>();
+    }
 }
 var jwt = builder.Configuration.GetSection("Jwt");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
