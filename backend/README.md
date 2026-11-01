@@ -120,9 +120,11 @@ GET /api/schedules/available-dates?offeringIds=guid1,guid2
 
 ### Аутентификация
 
-POST /api/auth/send-code - Отправить код подтверждения
+POST /api/auth/send-code - Отправить код входа в Telegram
   Тело: { "phone": "+79991234567" }
-  Ответ: { "expiresAt": "2026-08-10T10:05:00", "isRegistered": true }
+  Ответ: { "expiresAt": "2026-08-10T10:05:00", "isRegistered": true, "status": "sent", "bindingUrl": null }
+  Номер не привязан: status "binding_required" и ссылка bindingUrl.
+  В Development без токена бота ответ содержит code.
 POST /api/auth/login - Вход по телефону + код
   Тело: { "phone": "+79991234567", "code": "1234" }
 POST /api/auth/register - Регистрация нового клиента
@@ -194,7 +196,7 @@ ENTRYPOINT ["dotnet", "Salon.API.dll"]
 [x] Обработка ошибок через Middleware
 [x] Тесты для доменной модели
 [ ] JWT аутентификация
-[ ] Интеграция с VK ID
+[x] Интеграция с VK ID — не нужна: вход по phone+code через Telegram-бот (TZ §8.1)
 [ ] Rate Limiting
 [ ] Health Checks
 [ ] Docker-compose для прода
