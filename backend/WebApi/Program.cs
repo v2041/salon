@@ -65,6 +65,18 @@ builder.Services.AddAuthorizationBuilder()
 builder.Services.AddHostedService<ScheduleService>();
 var app = builder.Build();
 app.UseCors();
+app.UseStatusCodePages(async statusCodeContext =>
+{
+    var context = statusCodeContext.HttpContext;
+    var title = context.Response.StatusCode switch
+    {
+        StatusCodes.Status404NotFound => "Данные не найдены",
+        StatusCodes.Status429TooManyRequests => "Слишком много запросов",
+        _ => "Ошибка запроса"
+    };
+    await Results.Problem(statusCode: context.Response.StatusCode, title: title)
+        .ExecuteAsync(context);
+});
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();

@@ -1,4 +1,5 @@
-﻿using Infrastructure.Data;
+﻿using Domain.Exceptions;
+using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace Features.Appointments.GetAppointment;
@@ -17,7 +18,8 @@ public static class Endpoint
             .Include(a => a.Offerings)
             .FirstOrDefaultAsync(a => a.Id == request.Id, token);
 
-        if (appointment is null) return Results.NotFound();
+        if (appointment is null)
+            throw new NotFoundException("Запись не найдена");
 
         var response = new GetAppointmentResponse(
             appointment.Id,

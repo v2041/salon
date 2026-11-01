@@ -1,4 +1,5 @@
 ﻿using Domain.Enums;
+using Domain.Exceptions;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,7 +23,8 @@ public static class Endpoint
                 noShowCount = g.Count(a => a.Status == AppointmentStatus.Missed)
             })
             .FirstOrDefaultAsync(token);
-        if (data == null) return Results.NotFound();
+        if (data == null)
+            throw new NotFoundException("Данные не найдены");
         var response = new GetNoShowRateResponse(data.completedCount + data.noShowCount > 0
             ? (double)data.noShowCount / (data.completedCount + data.noShowCount)
             : 0);

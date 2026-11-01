@@ -1,4 +1,5 @@
 ﻿using Domain.Entities;
+using Domain.Exceptions;
 using Infrastructure.Authentication;
 using Infrastructure.Data;
 using Infrastructure.Entities;
@@ -18,11 +19,11 @@ public static class Endpoint
     )
     {
         if (await db.Users.AnyAsync(u => u.Phone == request.Phone, token))
-            return Results.BadRequest("Номер телефона уже зарегистрирован");
+            throw new BusinessException("Номер телефона уже зарегистрирован");
         var code = await db.VerificationCodes.FirstOrDefaultAsync(v =>
             v.Phone == request.Phone, token);
         if (code is null)
-            return Results.BadRequest("Неверный код");
+            throw new BusinessException("Неверный код");
         var result = code.Verify(request.Code);
         if (result == VerificationResult.Invalid
             && !await VerificationCodeCounter.TryCountFailedAttemptAsync(db.VerificationCodes, request.Phone, token))
@@ -31,7 +32,7 @@ public static class Endpoint
         }
         if (result != VerificationResult.Valid)
         {
-            return Results.BadRequest(result switch
+            throw new BusinessException(result switch
             {
                 VerificationResult.Blocked => "Вы превысили допустимое число попыток. Запросите новый код",
                 VerificationResult.Expired => "Код истёк. Запросите новый код",
