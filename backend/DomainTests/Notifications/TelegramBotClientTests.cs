@@ -57,6 +57,25 @@ public class TelegramBotClientTests
             await Assert.ThrowsAsync<HttpRequestException>(
                 () => client.SendMessageAsync(ChatId, "Текст"));
         }
+
+        [Fact]
+        public async Task SendMessageAsync_WhenBotApiReturnsOkFalse_ThrowsWithDescription()
+        {
+            const string content = """
+            {
+              "ok": false,
+              "error_code": 403,
+              "description": "Forbidden: bot was blocked by the user"
+            }
+            """;
+            var handler = FakeHttpMessageHandler.ReturnsOk(content);
+            var client = CreateClient(handler);
+
+            var exception = await Assert.ThrowsAsync<HttpRequestException>(
+                () => client.SendMessageAsync(ChatId, "Текст"));
+
+            Assert.Contains("bot was blocked by the user", exception.Message);
+        }
     }
 
     public class GetUpdatesAsync
@@ -126,6 +145,25 @@ public class TelegramBotClientTests
             var contact = Assert.Single(updates).Message!.Contact;
             Assert.Equal("+79991234567", contact!.PhoneNumber);
             Assert.Equal(555, contact.UserId);
+        }
+
+        [Fact]
+        public async Task GetUpdatesAsync_WhenBotApiReturnsOkFalse_ThrowsWithDescription()
+        {
+            const string content = """
+            {
+              "ok": false,
+              "error_code": 401,
+              "description": "Unauthorized"
+            }
+            """;
+            var handler = FakeHttpMessageHandler.ReturnsOk(content);
+            var client = CreateClient(handler);
+
+            var exception = await Assert.ThrowsAsync<HttpRequestException>(
+                () => client.GetUpdatesAsync());
+
+            Assert.Contains("Unauthorized", exception.Message);
         }
     }
 }

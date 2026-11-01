@@ -5,7 +5,7 @@ namespace Infrastructure.Notifications;
 
 /// <summary>
 /// Тонкая обёртка над Bot API. Сбой Bot API — исключение.
-/// <c>SendMessageAsync</c> ограничен <see cref="SendMessageTimeoutSeconds"/> секундами,
+/// <c>SendMessageAsync</c> завершается через 5 секунд,
 /// <c>GetUpdatesAsync</c> ждёт до <see cref="LongPollingTimeoutSeconds"/> секунд (long polling).
 /// </summary>
 public class TelegramBotClient(HttpClient httpClient, string token) : ITelegramMessageSender
@@ -42,6 +42,8 @@ public class TelegramBotClient(HttpClient httpClient, string token) : ITelegramM
         using var response = await httpClient.PostAsJsonAsync(
             MethodUrl("sendMessage"), payload, timeout.Token);
         response.EnsureSuccessStatusCode();
+        using var document = await ParseJsonAsync(response, "sendMessage", timeout.Token);
+        EnsureOk(document.RootElement, "sendMessage");
     }
 
     public async Task<IReadOnlyList<TelegramUpdate>> GetUpdatesAsync(
@@ -60,12 +62,50 @@ public class TelegramBotClient(HttpClient httpClient, string token) : ITelegramM
         using var response = await httpClient.PostAsJsonAsync(
             MethodUrl("getUpdates"), payload, cancellationToken);
         response.EnsureSuccessStatusCode();
-        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-        using var document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+        using var document = await ParseJsonAsync(response, "getUpdates", cancellationToken);
+        EnsureOk(document.RootElement, "getUpdates");
         return ParseUpdates(document.RootElement);
     }
 
     private string MethodUrl(string method) => $"{ApiBaseUrl}/bot{token}/{method}";
+
+    private static async Task<JsonDocument> ParseJsonAsync(
+        HttpResponseMessage response,
+        string method,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+            return await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+        }
+        catch (JsonException exception)
+        {
+            throw new HttpRequestException(
+                $"Bot API вернул ответ не в формате JSON на {method}.", exception);
+        }
+    }
+
+    private static void EnsureOk(JsonElement root, string method)
+    {
+        if (root.ValueKind == JsonValueKind.Object
+            && root.TryGetProperty("ok", out var ok)
+            && ok.ValueKind == JsonValueKind.True)
+        {
+            return;
+        }
+
+        string? description = null;
+        if (root.ValueKind == JsonValueKind.Object
+            && root.TryGetProperty("description", out var value)
+            && value.ValueKind == JsonValueKind.String)
+        {
+            description = value.GetString();
+        }
+
+        throw new HttpRequestException(
+            description ?? $"Bot API вернул ошибку на {method}.");
+    }
 
     private static IReadOnlyList<TelegramUpdate> ParseUpdates(JsonElement root)
     {
