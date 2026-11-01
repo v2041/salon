@@ -8,12 +8,14 @@ import {accentInk} from "@/lib/theme";
 
 export default function LoginScreen() {
     const {refresh} = useAuth();
-    const [step, setStep] = useState<"phone" | "code">("phone");
+    const [step, setStep] = useState<"phone" | "binding" | "code">("phone");
     const [phone, setPhone] = useState("");
     const [code, setCode] = useState("");
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [isRegistered, setIsRegistered] = useState(true);
+    const [bindingUrl, setBindingUrl] = useState<string | null>(null);
+    const [devCode, setDevCode] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -23,12 +25,24 @@ export default function LoginScreen() {
         try {
             const res = await authApi.sendCode({phone});
             setIsRegistered(res.isRegistered);
+            if (res.status === "binding_required") {
+                setBindingUrl(res.bindingUrl);
+                setStep("binding");
+                return;
+            }
+            setDevCode(res.code ?? null);
             setStep("code");
         } catch (err) {
             setError(err instanceof Error ? err.message : "Не удалось отправить код");
         } finally {
             setLoading(false);
         }
+    }
+
+    function changePhone() {
+        setStep("phone");
+        setError(null);
+        setDevCode(null);
     }
 
     async function submit() {
@@ -58,7 +72,7 @@ export default function LoginScreen() {
                     {step === "phone" ? (
                         <>
                             <Typography variant="body2" color="text.secondary">
-                                Введите номер телефона. Код подтверждения появится в базе данных.
+                                Введите номер телефона. Код для входа придёт в Telegram.
                             </Typography>
                             <TextField
                                 label="Телефон"
@@ -71,12 +85,36 @@ export default function LoginScreen() {
                                 Получить код
                             </Button>
                         </>
+                    ) : step === "binding" ? (
+                        <>
+                            <Typography variant="body2" color="text.secondary">
+                                Откройте бота салона в Telegram и нажмите «Поделиться номером». Затем вернитесь на сайт.
+                            </Typography>
+                            {bindingUrl && (
+                                <Button
+                                    variant="contained"
+                                    component="a"
+                                    href={bindingUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    Открыть бота
+                                </Button>
+                            )}
+                            <Button variant="outlined" disabled={loading} onClick={sendCode}>
+                                Получить код
+                            </Button>
+                            <Button variant="text" onClick={changePhone}>
+                                Изменить номер
+                            </Button>
+                        </>
                     ) : (
                         <>
                             <Typography variant="body2" color="text.secondary">
-                                Введите код из базы данных.
+                                Введите код из Telegram.
                             </Typography>
                             <TextField label="Код" value={code} onChange={e => setCode(e.target.value)} fullWidth/>
+                            {devCode && <Alert severity="info">Код для входа (dev): {devCode}</Alert>}
                             {!isRegistered && (
                                 <>
                                     <TextField label="Имя" value={firstName} onChange={e => setFirstName(e.target.value)} fullWidth/>
@@ -90,7 +128,7 @@ export default function LoginScreen() {
                             >
                                 {isRegistered ? "Войти" : "Зарегистрироваться"}
                             </Button>
-                            <Button variant="text" onClick={() => { setStep("phone"); setError(null); }}>
+                            <Button variant="text" onClick={changePhone}>
                                 Изменить номер
                             </Button>
                         </>
