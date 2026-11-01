@@ -1,5 +1,3 @@
-"use client";
-
 import {createTheme} from "@mui/material/styles";
 
 export const cardShadow = "0 1px 2px rgba(42,28,28,0.05), 0 16px 40px -28px rgba(42,28,28,0.45)";

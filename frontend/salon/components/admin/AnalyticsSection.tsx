@@ -4,7 +4,7 @@ import {Alert, Box, Button, CircularProgress, Paper, Stack, Typography} from "@m
 import {useState} from "react";
 import {analyticsApi} from "@/lib/api";
 import DateField from "@/components/admin/DateField";
-import {formatMonthLabel, formatPrice, formatRuDate, parseRuDate, toIsoDate} from "@/lib/format";
+import {formatMonthLabel, formatPercent, formatPrice, formatRuDate, parseRuDate, toIsoDate} from "@/lib/format";
 import {cardSx} from "@/lib/theme";
 
 type Row = {name: string; count: number; price: number};
@@ -51,10 +51,6 @@ function defaultFrom() {
 
 function safe<T>(promise: Promise<T>) {
     return promise.catch(() => null);
-}
-
-function percent(rate: number) {
-    return `${(rate * 100).toLocaleString("ru-RU", {maximumFractionDigits: 1})} %`;
 }
 
 function Metric({label, value}: {label: string; value: string}) {
@@ -171,15 +167,15 @@ export default function AnalyticsSection() {
                     <Box sx={{display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2}}>
                         <Metric label="Доход за период" value={formatPrice(data.gain)}/>
                         <Metric label="Средний чек" value={formatPrice(data.averageCheck)}/>
-                        <Metric label="Загруженность" value={percent(data.workload)}/>
-                        <Metric label="Пропуски" value={percent(data.noShow)}/>
+                        <Metric label="Загруженность" value={formatPercent(data.workload)}/>
+                        <Metric label="Пропуски" value={formatPercent(data.noShow)}/>
                         <Metric
                             label="Отмены"
-                            value={`${data.losses.canceled} · ${percent(data.losses.canceledRate)}`}
+                            value={`${data.losses.canceled} · ${formatPercent(data.losses.canceledRate)}`}
                         />
                         <Metric
                             label="Отказы"
-                            value={`${data.losses.rejected} · ${percent(data.losses.rejectedRate)}`}
+                            value={`${data.losses.rejected} · ${formatPercent(data.losses.rejectedRate)}`}
                         />
                         <Metric label="Всего клиентов" value={String(data.clients.total)}/>
                         <Metric label="Новые клиенты" value={String(data.clients.new)}/>
@@ -231,19 +227,19 @@ export default function AnalyticsSection() {
                             label="Отмены"
                             value={data.losses.canceled}
                             max={Math.max(data.losses.canceled, data.losses.rejected, data.losses.missed)}
-                            caption={`${data.losses.canceled} · ${percent(data.losses.canceledRate)}`}
+                            caption={`${data.losses.canceled} · ${formatPercent(data.losses.canceledRate)}`}
                         />
                         <Bar
                             label="Отказы"
                             value={data.losses.rejected}
                             max={Math.max(data.losses.canceled, data.losses.rejected, data.losses.missed)}
-                            caption={`${data.losses.rejected} · ${percent(data.losses.rejectedRate)}`}
+                            caption={`${data.losses.rejected} · ${formatPercent(data.losses.rejectedRate)}`}
                         />
                         <Bar
                             label="Пропуски"
                             value={data.losses.missed}
                             max={Math.max(data.losses.canceled, data.losses.rejected, data.losses.missed)}
-                            caption={`${data.losses.missed} · ${percent(data.losses.missedRate)}`}
+                            caption={`${data.losses.missed} · ${formatPercent(data.losses.missedRate)}`}
                         />
                     </Panel>
 

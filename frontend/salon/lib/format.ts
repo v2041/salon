@@ -12,8 +12,12 @@ export function formatPrice(price: number) {
     return `${price.toLocaleString("ru-RU")} ₽`;
 }
 
-export function formatTime(iso: string) {
-    return new Date(iso).toLocaleTimeString("ru-RU", {hour: "2-digit", minute: "2-digit"});
+export function formatMonth(date: Date) {
+    return date.toLocaleDateString("ru-RU", {month: "long", year: "numeric"});
+}
+
+export function formatPercent(rate: number) {
+    return `${(rate * 100).toLocaleString("ru-RU", {maximumFractionDigits: 1})} %`;
 }
 
 export function formatDurationValue(mins: number) {
@@ -23,10 +27,6 @@ export function formatDurationValue(mins: number) {
     if (h > 0) parts.push(`${h} ${plural(h, "час", "часа", "часов")}`);
     if (m > 0) parts.push(`${m} ${plural(m, "минута", "минуты", "минут")}`);
     return parts.join(" ");
-}
-
-export function formatDuration(start: string, end: string) {
-    return formatDurationValue(Math.round((+new Date(end) - +new Date(start)) / 60000));
 }
 
 export function durationToMinutes(duration: string) {
@@ -77,8 +77,7 @@ export function formatRuDate(iso: string) {
 
 export function formatMonthLabel(month: string) {
     const [year, value] = month.split("-").map(Number);
-    const date = new Date(year, value - 1, 1);
-    return date.toLocaleDateString("ru-RU", {month: "long", year: "numeric"});
+    return formatMonth(new Date(year, value - 1, 1));
 }
 
 export function parseRuDate(value: string): string | null {

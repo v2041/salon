@@ -2,8 +2,7 @@ import type {Metadata, Viewport} from "next";
 import "./globals.css";
 import {Manrope, Playfair_Display} from "next/font/google";
 import {AppRouterCacheProvider} from "@mui/material-nextjs/v13-appRouter";
-import {CssBaseline, ThemeProvider} from "@mui/material";
-import theme from "@/lib/theme";
+import ThemeRegistry from "@/components/ThemeRegistry";
 import {AuthProvider} from "@/lib/auth";
 
 const body = Manrope({
@@ -33,10 +32,9 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
         <html lang="ru" className={`${body.variable} ${display.variable}`}>
             <body>
                 <AppRouterCacheProvider>
-                    <ThemeProvider theme={theme}>
-                        <CssBaseline/>
+                    <ThemeRegistry>
                         <AuthProvider>{children}</AuthProvider>
-                    </ThemeProvider>
+                    </ThemeRegistry>
                 </AppRouterCacheProvider>
             </body>
         </html>

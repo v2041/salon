@@ -1,7 +1,7 @@
 import {ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon} from "@mui/icons-material";
 import {Box, IconButton, Paper, Stack, Typography} from "@mui/material";
 import {useState} from "react";
-import {toIsoDate} from "@/lib/format";
+import {formatMonth, toIsoDate} from "@/lib/format";
 
 type Props = {
     selected: string | null;
@@ -92,7 +92,7 @@ export default function Calendar({selected, onSelect, availableDates, disablePas
                     <ChevronLeftIcon/>
                 </IconButton>
                 <Typography variant="subtitle1" sx={{fontWeight: 600, textTransform: "capitalize"}}>
-                    {month.toLocaleDateString("ru-RU", {month: "long", year: "numeric"})}
+                    {formatMonth(month)}
                 </Typography>
                 <IconButton size="small" disabled={atMax} onClick={() => shiftMonth(1)}>
                     <ChevronRightIcon/>

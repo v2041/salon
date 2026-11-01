@@ -73,6 +73,8 @@ services:
       context: ./frontend/salon
       args:
         NEXT_PUBLIC_API_URL: ${PUBLIC_URL:-http://localhost}
+        NEXT_PUBLIC_SALON_ADDRESS: ${SALON_ADDRESS:-}
+        NEXT_PUBLIC_SALON_PHONE: ${SALON_PHONE:-}
     restart: unless-stopped
     depends_on:
       - api

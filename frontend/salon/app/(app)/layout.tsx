@@ -8,6 +8,7 @@ import {
     ButtonBase,
     CircularProgress,
     IconButton,
+    Paper,
     Stack,
     Toolbar,
     Tooltip,
@@ -51,46 +52,55 @@ export default function AppLayout({children}: {children: React.ReactNode}) {
                     >
                         С
                     </Avatar>
-                    <Typography variant="subtitle1" sx={{fontWeight: 700, mr: "auto", letterSpacing: "0.01em"}}>
+                    <Typography variant="subtitle1" sx={{fontWeight: 700, letterSpacing: "0.01em"}}>
                         Салон
                     </Typography>
-                    <Stack
-                        component="nav"
-                        direction="row"
-                        spacing={0.25}
-                        sx={{bgcolor: "rgba(255,255,255,0.08)", p: 0.5, borderRadius: 999}}
-                    >
-                        {tabs.map(t => {
-                            const active = pathname === t.path;
-                            return (
-                                <ButtonBase
-                                    key={t.path}
-                                    component={Link}
-                                    href={t.path}
-                                    sx={{
-                                        px: 1.5,
-                                        py: 0.75,
-                                        borderRadius: 999,
-                                        fontSize: 13.5,
-                                        fontWeight: active ? 700 : 500,
-                                        color: active ? "#FFFFFF" : "rgba(255,255,255,0.6)",
-                                        bgcolor: active ? "rgba(255,255,255,0.16)" : "transparent",
-                                        transition: "background-color .2s, color .2s",
-                                    }}
-                                >
-                                    {t.label}
-                                </ButtonBase>
-                            );
-                        })}
-                    </Stack>
                     <Tooltip title="Выход">
-                        <IconButton onClick={signOut} sx={{color: "rgba(255,255,255,0.65)"}}>
+                        <IconButton onClick={signOut} sx={{color: "rgba(255,255,255,0.65)", ml: "auto"}}>
                             <LogoutIcon fontSize="small"/>
                         </IconButton>
                     </Tooltip>
                 </Toolbar>
             </AppBar>
-            <Box sx={{maxWidth: 560, mx: "auto", px: 2, pt: 3, pb: 6}}>{children}</Box>
+            <Box sx={{maxWidth: 560, mx: "auto", px: 2, pt: 3, pb: 12}}>{children}</Box>
+            <Paper
+                component="nav"
+                elevation={3}
+                sx={{
+                    position: "fixed",
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    borderTop: 1,
+                    borderColor: "divider",
+                    borderRadius: 0,
+                }}
+            >
+                <Stack direction="row" sx={{maxWidth: 560, mx: "auto", px: 2, py: 1, gap: 1}}>
+                    {tabs.map(t => {
+                        const active = pathname === t.path;
+                        return (
+                            <ButtonBase
+                                key={t.path}
+                                component={Link}
+                                href={t.path}
+                                sx={{
+                                    flex: 1,
+                                    py: 1,
+                                    borderRadius: 3,
+                                    fontSize: 13.5,
+                                    fontWeight: active ? 700 : 500,
+                                    color: active ? "primary.main" : "text.secondary",
+                                    bgcolor: active ? "rgba(42,28,28,0.06)" : "transparent",
+                                    transition: "background-color .2s, color .2s",
+                                }}
+                            >
+                                {t.label}
+                            </ButtonBase>
+                        );
+                    })}
+                </Stack>
+            </Paper>
         </>
     );
 }

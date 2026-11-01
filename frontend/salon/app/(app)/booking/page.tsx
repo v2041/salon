@@ -2,18 +2,19 @@
 
 import {CheckCircle as CheckCircleIcon, Place as PlaceIcon, Phone as PhoneIcon} from "@mui/icons-material";
 import {Alert, Box, Button, CircularProgress, Paper, Stack, Typography} from "@mui/material";
-import {Suspense, useEffect, useState} from "react";
+import {Suspense, useState} from "react";
 import {useSearchParams} from "next/navigation";
 import Calendar from "@/components/booking/Calendar";
 import ServicePicker from "@/components/booking/ServicePicker";
 import TimeGrid from "@/components/booking/TimeGrid";
-import {appointmentsApi, offeringsApi, schedulesApi} from "@/lib/api";
-import {durationToMinutes, formatDayLabel, formatDurationValue, formatPrice, formatTimeOnly, timeToMinutes} from "@/lib/format";
+import {appointmentsApi} from "@/lib/api";
+import {formatDayLabel, formatDurationValue, formatPrice, formatTimeOnly, timeToMinutes} from "@/lib/format";
 import {accentInk, cardSx, darkSurface, serviceZoneBorder} from "@/lib/theme";
-import {buildSlots} from "@/lib/slots";
-import type {Money, OfferingResponse, TimeInterval} from "@/lib/types";
+import {useBookingFlow} from "@/lib/useBookingFlow";
+import type {Money} from "@/lib/types";
 
-const CONTACTS = {address: "ул. Примерная, д. 1", phone: "+7 (999) 123-45-67"};
+const ADDRESS = process.env.NEXT_PUBLIC_SALON_ADDRESS;
+const PHONE = process.env.NEXT_PUBLIC_SALON_PHONE;
 
 const darkSx = {
     p: 2,
@@ -63,95 +64,37 @@ export default function BookingPage() {
 function BookingContent() {
     const searchParams = useSearchParams();
     const preselectedId = searchParams.get("offeringId");
-    const [offerings, setOfferings] = useState<OfferingResponse[]>([]);
-    const [offeringsLoading, setOfferingsLoading] = useState(true);
+    const flow = useBookingFlow(preselectedId ? [preselectedId] : []);
     const [step, setStep] = useState<"services" | "time">("services");
-    const [selectedIds, setSelectedIds] = useState<string[]>(() => preselectedId ? [preselectedId] : []);
-    const [dates, setDates] = useState<string[]>([]);
-    const [datesLoading, setDatesLoading] = useState(false);
-    const [date, setDate] = useState<string | null>(null);
-    const [intervals, setIntervals] = useState<TimeInterval[]>([]);
-    const [slotsLoading, setSlotsLoading] = useState(false);
-    const [time, setTime] = useState<string | null>(null);
     const [submitting, setSubmitting] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const [booked, setBooked] = useState<Booked | null>(null);
 
-    useEffect(() => {
-        offeringsApi.getAll()
-            .then(setOfferings)
-            .catch(() => setError("Не удалось загрузить услуги"))
-            .finally(() => setOfferingsLoading(false));
-    }, []);
-
-    useEffect(() => {
-        if (step !== "time") return;
-        let cancelled = false;
-        schedulesApi.getAvailableDates(selectedIds)
-            .then(res => { if (!cancelled) setDates(res.dates); })
-            .catch(() => { if (!cancelled) setDates([]); })
-            .finally(() => { if (!cancelled) setDatesLoading(false); });
-        return () => { cancelled = true; };
-    }, [step, selectedIds]);
-
-    useEffect(() => {
-        if (!date) return;
-        let cancelled = false;
-        schedulesApi.getFreeTime(date)
-            .then(res => { if (!cancelled) setIntervals(res.freeIntervals); })
-            .catch(() => { if (!cancelled) setIntervals([]); })
-            .finally(() => { if (!cancelled) setSlotsLoading(false); });
-        return () => { cancelled = true; };
-    }, [date]);
-
-    const selected = offerings.filter(o => selectedIds.includes(o.id));
-    const total = selected.reduce((sum, o) => sum + o.price.value, 0);
-    const totalDuration = selected.reduce((sum, o) => sum + durationToMinutes(o.duration), 0);
-    const slots = date ? buildSlots(intervals, totalDuration) : [];
-
-    function toggle(id: string) {
-        setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
-    }
-
-    function goToTime() {
-        setDates([]);
-        setDatesLoading(true);
-        setDate(null);
-        setTime(null);
-        setIntervals([]);
-        setStep("time");
-    }
-
-    function selectDate(next: string) {
-        if (next === date) return;
-        setDate(next);
-        setTime(null);
-        setIntervals([]);
-        setSlotsLoading(true);
-    }
-
     async function submit() {
-        if (!date || !time) return;
+        if (!flow.date || !flow.time) return;
         setSubmitting(true);
-        setError(null);
+        flow.setError(null);
         try {
-            const created = await appointmentsApi.create({date, time: `${time}:00`, offeringIds: selectedIds});
-            setBooked({date: created.date, start: created.interval.start, end: created.interval.end, price: created.price});
+            const created = await appointmentsApi.create({
+                date: flow.date,
+                time: `${flow.time}:00`,
+                offeringIds: flow.selectedIds,
+            });
+            setBooked({
+                date: created.date,
+                start: created.interval.start,
+                end: created.interval.end,
+                price: created.price,
+            });
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Не удалось создать запись");
+            flow.setError(err instanceof Error ? err.message : "Не удалось создать запись");
         } finally {
             setSubmitting(false);
         }
     }
 
     function reset() {
-        setSelectedIds([]);
-        setDate(null);
-        setTime(null);
-        setDates([]);
-        setIntervals([]);
+        flow.reset();
         setBooked(null);
-        setError(null);
         setStep("services");
     }
 
@@ -192,28 +135,30 @@ function BookingContent() {
                 <StepDots step={step}/>
             </Stack>
 
-            {error && <Alert severity="error">{error}</Alert>}
+            {flow.error && <Alert severity="error">{flow.error}</Alert>}
 
             {step === "services" && (
                 <>
                     <Paper sx={{...cardSx, p: 1.5, border: 3, borderColor: serviceZoneBorder}}>
-                        {offeringsLoading
+                        {flow.offeringsLoading
                             ? <Loader/>
-                            : <ServicePicker offerings={offerings} selectedIds={selectedIds} onToggle={toggle}/>}
+                            : <ServicePicker offerings={flow.offerings} selectedIds={flow.selectedIds} onToggle={flow.toggle}/>}
                     </Paper>
                     <Paper sx={darkSx}>
                         <Stack direction="row" spacing={2} sx={{alignItems: "center"}}>
                             <Box sx={{flex: 1, minWidth: 0}}>
                                 <Typography variant="caption" sx={{opacity: 0.65}}>
-                                    Выбрано: {selected.length} · {formatDurationValue(totalDuration)}
+                                    Выбрано: {flow.selected.length} · {formatDurationValue(flow.totalDuration)}
                                 </Typography>
-                                <Typography variant="h6">{formatPrice(total)}</Typography>
+                                <Typography variant="h6">
+                                    {formatPrice(flow.selected.reduce((sum, o) => sum + o.price.value, 0))}
+                                </Typography>
                             </Box>
                             <Button
                                 variant="contained"
                                 color="secondary"
-                                disabled={selected.length === 0}
-                                onClick={goToTime}
+                                disabled={flow.selected.length === 0}
+                                onClick={() => setStep("time")}
                             >
                                 Далее
                             </Button>
@@ -227,9 +172,11 @@ function BookingContent() {
                     <Paper sx={cardSx}>
                         <Stack direction="row" spacing={1} sx={{alignItems: "center"}}>
                             <Box sx={{flex: 1, minWidth: 0}}>
-                                <Typography variant="subtitle1" sx={{fontWeight: 650}}>{formatPrice(total)}</Typography>
+                                <Typography variant="subtitle1" sx={{fontWeight: 650}}>
+                                    {formatPrice(flow.selected.reduce((sum, o) => sum + o.price.value, 0))}
+                                </Typography>
                                 <Typography variant="caption" color="text.secondary">
-                                    {selected.map(o => o.title).join(", ")} · {formatDurationValue(totalDuration)}
+                                    {flow.selected.map(o => o.title).join(", ")} · {formatDurationValue(flow.totalDuration)}
                                 </Typography>
                             </Box>
                             <Button variant="text" size="small" onClick={() => setStep("services")}>Изменить</Button>
@@ -241,25 +188,25 @@ function BookingContent() {
                             <Typography variant="overline" sx={{color: "text.secondary", letterSpacing: "0.12em"}}>
                                 Дата
                             </Typography>
-                            {datesLoading
+                            {flow.datesLoading
                                 ? <Loader/>
-                                : dates.length === 0
+                                : flow.dates.length === 0
                                     ? <Alert severity="info">Нет доступных дат</Alert>
-                                    : <Calendar availableDates={dates} selected={date} onSelect={selectDate}/>}
+                                    : <Calendar availableDates={flow.dates} selected={flow.date} onSelect={flow.selectDate}/>}
                         </Stack>
                     </Paper>
 
-                    {date && (
+                    {flow.date && (
                         <Paper sx={cardSx}>
                             <Stack spacing={2}>
                                 <Typography variant="overline" sx={{color: "text.secondary", letterSpacing: "0.12em"}}>
                                     Время
                                 </Typography>
-                                {slotsLoading
+                                {flow.slotsLoading
                                     ? <Loader/>
-                                    : slots.length === 0
+                                    : flow.slots.length === 0
                                         ? <Alert severity="info">Нет свободных слотов</Alert>
-                                        : <TimeGrid slots={slots} selected={time} onSelect={setTime}/>}
+                                        : <TimeGrid slots={flow.slots} selected={flow.time} onSelect={flow.setTime}/>}
                             </Stack>
                         </Paper>
                     )}
@@ -267,7 +214,7 @@ function BookingContent() {
                     <Button
                         variant="contained"
                         size="large"
-                        disabled={!date || !time || submitting}
+                        disabled={!flow.date || !flow.time || submitting}
                         onClick={submit}
                         sx={{py: 1.5}}
                     >
@@ -282,20 +229,25 @@ function BookingContent() {
 }
 
 function ContactsCard() {
+    if (!ADDRESS && !PHONE) return null;
     return (
         <Paper sx={darkSx}>
             <Stack spacing={1.25}>
                 <Typography variant="overline" sx={{opacity: 0.6, letterSpacing: "0.14em"}}>Контакты</Typography>
-                <Stack direction="row" spacing={1.25} sx={{alignItems: "center"}}>
-                    <PlaceIcon fontSize="small" sx={{color: "secondary.main"}}/>
-                    <Typography variant="body2">{CONTACTS.address}</Typography>
-                </Stack>
-                <Stack direction="row" spacing={1.25} sx={{alignItems: "center"}}>
-                    <PhoneIcon fontSize="small" sx={{color: "secondary.main"}}/>
-                    <Typography variant="body2" component="a" href={`tel:${CONTACTS.phone}`} sx={{color: "inherit"}}>
-                        {CONTACTS.phone}
-                    </Typography>
-                </Stack>
+                {ADDRESS && (
+                    <Stack direction="row" spacing={1.25} sx={{alignItems: "center"}}>
+                        <PlaceIcon fontSize="small" sx={{color: "secondary.main"}}/>
+                        <Typography variant="body2">{ADDRESS}</Typography>
+                    </Stack>
+                )}
+                {PHONE && (
+                    <Stack direction="row" spacing={1.25} sx={{alignItems: "center"}}>
+                        <PhoneIcon fontSize="small" sx={{color: "secondary.main"}}/>
+                        <Typography variant="body2" component="a" href={`tel:${PHONE}`} sx={{color: "inherit"}}>
+                            {PHONE}
+                        </Typography>
+                    </Stack>
+                )}
             </Stack>
         </Paper>
     );
