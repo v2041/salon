@@ -55,6 +55,42 @@ public class TimeIntervalTests
 
             Assert.Throws<BusinessException>(() => TimeInterval.Create(start, end));
         }
+
+        [Fact]
+        public void Create_WithDurationInsideDay_ReturnsInterval()
+        {
+            var start = new TimeOnly(10, 0, 0);
+            var interval = TimeInterval.Create(start, TimeSpan.FromMinutes(90));
+            Assert.Equal(new TimeOnly(11, 30, 0), interval.End);
+        }
+
+        [Fact]
+        public void Create_WithDurationCrossingMidnight_ThrowsBusinessException()
+        {
+            Assert.Throws<BusinessException>(() =>
+                TimeInterval.Create(new TimeOnly(23, 30, 0), TimeSpan.FromHours(1)));
+        }
+
+        [Fact]
+        public void Create_WithDurationReachingMidnight_ThrowsBusinessException()
+        {
+            Assert.Throws<BusinessException>(() =>
+                TimeInterval.Create(new TimeOnly(23, 0, 0), TimeSpan.FromHours(1)));
+        }
+
+        [Fact]
+        public void Create_WithDurationOfWholeDay_ThrowsBusinessException()
+        {
+            Assert.Throws<BusinessException>(() =>
+                TimeInterval.Create(new TimeOnly(10, 0, 0), TimeSpan.FromDays(1)));
+        }
+
+        [Fact]
+        public void Create_WithZeroDuration_ThrowsBusinessException()
+        {
+            Assert.Throws<BusinessException>(() =>
+                TimeInterval.Create(new TimeOnly(10, 0, 0), TimeSpan.Zero));
+        }
     }
 
     public class IsOverlapping

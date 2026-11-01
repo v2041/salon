@@ -7,22 +7,25 @@ namespace Domain.Services;
 public static class AppointmentTimeChanger
 {
     public static void Reschedule(
-        Schedule sourceSchedule, 
-        Schedule targetSchedule, 
-        Guid appointmentId, 
+        Schedule sourceSchedule,
+        Schedule targetSchedule,
+        Guid appointmentId,
         TimeOnly? newStartTime)
     {
-        var appointment = sourceSchedule.DetachAppointment(appointmentId);
-        
-        if (newStartTime.HasValue)
-        {
-            var newInterval = TimeInterval.Create(
-                newStartTime.Value, 
-                newStartTime.Value.Add(appointment.Interval.Duration));
-                
-            appointment.ChangeInterval(newInterval);
-        }
-        
+        var appointment = sourceSchedule.Appointments.FirstOrDefault(a => a.Id == appointmentId);
+        if (appointment is null)
+            throw new BusinessException("Запись не найдена");
+
+        var newInterval = newStartTime.HasValue
+            ? TimeInterval.Create(newStartTime.Value, appointment.Interval.Duration)
+            : appointment.Interval;
+
+        if (!targetSchedule.IsWorking)
+            throw new BusinessException("Нельзя записаться на нерабочий день.");
+        targetSchedule.EnsureAppointmentInterval(newInterval, appointment.Id);
+
+        sourceSchedule.DetachAppointment(appointmentId);
+        appointment.ChangeInterval(newInterval);
         targetSchedule.AttachAppointment(appointment);
     }
 }

@@ -9,7 +9,7 @@ public static class TimelineBuilder
     public static TimeInterval BuildInterval(TimeOnly startTime, IEnumerable<AppointmentOfferingData> offerings)
     {
         var duration = offerings.Aggregate(TimeSpan.Zero, (current, offering) => current + offering.Duration);
-        return TimeInterval.Create(startTime, startTime.Add(duration));
+        return TimeInterval.Create(startTime, duration);
     }
 
     public static IEnumerable<TimeInterval> FindBusyIntervals(Schedule schedule)

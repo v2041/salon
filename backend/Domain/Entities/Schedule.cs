@@ -69,11 +69,6 @@ public class Schedule
         );
     }
 
-    public void CheckAppointmentInterval(TimeInterval interval)
-    {
-        EnsureAppointmentInterval(interval);
-    }
-
     internal void EnsureAppointmentInterval(TimeInterval interval, Guid? exceptAppointmentId = null, bool checkPast = true)
     {
         if (checkPast && DateTime.Now > Date.ToDateTime(interval.Start))
@@ -105,7 +100,7 @@ public class Schedule
     {
         if (!IsWorking)
             throw new BusinessException("Нельзя записаться на нерабочий день.");
-        CheckAppointmentInterval(appointment.Interval);
+        EnsureAppointmentInterval(appointment.Interval);
         _appointments.Add(appointment);
         appointment.ChangeSchedule(this);
     }
@@ -125,7 +120,7 @@ public class Schedule
         var appointment = _appointments.FirstOrDefault(a => a.Id == appointmentId);
         if (appointment is null)
             throw new BusinessException("Запись не найдена");
-        var interval = TimeInterval.Create(startTime, startTime.Add(appointment.Interval.Duration));
+        var interval = TimeInterval.Create(startTime, appointment.Interval.Duration);
         EnsureAppointmentInterval(interval, appointment.Id,
             checkPast: appointment.Status is AppointmentStatus.Pending or AppointmentStatus.Confirmed);
         appointment.ChangeInterval(interval);

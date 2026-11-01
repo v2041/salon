@@ -1,4 +1,5 @@
 using Domain.Entities;
+using Domain.Exceptions;
 using Domain.Services;
 using Domain.ValueObjects;
 
@@ -6,6 +7,48 @@ namespace DomainTests.Services;
 
 public class TimelineBuilderTests
 {
+    public class BuildInterval
+    {
+        [Fact]
+        public void BuildInterval_WhenOfferingsFitDay_ReturnsInterval()
+        {
+            var offerings = new List<AppointmentOfferingData>
+            {
+                new(Guid.NewGuid(), Money.FromDecimal(500), TimeSpan.FromMinutes(30)),
+                new(Guid.NewGuid(), Money.FromDecimal(700), TimeSpan.FromMinutes(45))
+            };
+
+            var interval = TimelineBuilder.BuildInterval(new TimeOnly(10, 0, 0), offerings);
+
+            Assert.Equal(new TimeOnly(10, 0, 0), interval.Start);
+            Assert.Equal(new TimeOnly(11, 15, 0), interval.End);
+        }
+
+        [Fact]
+        public void BuildInterval_WhenOfferingsCrossMidnight_ThrowsBusinessException()
+        {
+            var offerings = new List<AppointmentOfferingData>
+            {
+                new(Guid.NewGuid(), Money.FromDecimal(500), TimeSpan.FromHours(1))
+            };
+
+            Assert.Throws<BusinessException>(() =>
+                TimelineBuilder.BuildInterval(new TimeOnly(23, 30, 0), offerings));
+        }
+
+        [Fact]
+        public void BuildInterval_WhenOfferingsWrapPastDay_ThrowsBusinessException()
+        {
+            var offerings = new List<AppointmentOfferingData>
+            {
+                new(Guid.NewGuid(), Money.FromDecimal(500), TimeSpan.FromHours(25))
+            };
+
+            Assert.Throws<BusinessException>(() =>
+                TimelineBuilder.BuildInterval(new TimeOnly(10, 0, 0), offerings));
+        }
+    }
+
     public class FindFreeIntervals
     {
         [Fact]

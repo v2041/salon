@@ -28,6 +28,12 @@ public class AppointmentTests
         return (appointment, offeringId);
     }
 
+    private sealed class FixedTimeProvider(DateTimeOffset now) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => now.ToUniversalTime();
+        public override TimeZoneInfo LocalTimeZone => TimeZoneInfo.Utc;
+    }
+
     public class ChangeOfferingDuration
     {
         private static Schedule CreateSchedule(TimeInterval? breakInterval = null)
@@ -72,6 +78,34 @@ public class AppointmentTests
             var (appointment, offeringId) = CreateAppointment();
             Assert.Throws<BusinessException>(() =>
                 appointment.ChangeOfferingDuration(offeringId, TimeSpan.FromMinutes(minutes)));
+        }
+
+        [Fact]
+        public void ChangeOfferingDuration_WhenDurationEqualsMinimum_ThrowsBusinessException()
+        {
+            var (appointment, offeringId) = CreateAppointment();
+            Assert.Throws<BusinessException>(() =>
+                appointment.ChangeOfferingDuration(offeringId, Offering.MIN_DURATION));
+        }
+
+        [Fact]
+        public void ChangeOfferingDuration_WhenCrossesMidnight_ThrowsBusinessException()
+        {
+            var schedule = Schedule.Create(
+                new DateOnly(2099, 1, 1),
+                true,
+                TimeInterval.Create(new TimeOnly(10, 0, 0), new TimeOnly(23, 59, 0)),
+                null);
+            var offeringId = Guid.NewGuid();
+            var appointment = schedule.AddAppointment(
+                Guid.NewGuid(),
+                new TimeOnly(23, 0, 0),
+                [new AppointmentOfferingData(offeringId, Price, Duration)]);
+
+            Assert.Throws<BusinessException>(() =>
+                appointment.ChangeOfferingDuration(offeringId, TimeSpan.FromHours(2)));
+            Assert.Equal(Duration, appointment.Offerings.Single().Duration);
+            Assert.Equal(new TimeOnly(23, 30, 0), appointment.Interval.End);
         }
 
         [Fact]
@@ -269,11 +303,63 @@ public class AppointmentTests
         }
 
         [Fact]
+        public void Cancel_WhenPendingOutsideTwoHours_SetsCanceled()
+        {
+            var (appointment, _) = CreateAppointment();
+            appointment.Cancel(new FixedTimeProvider(new DateTimeOffset(2099, 1, 1, 8, 0, 0, TimeSpan.Zero)));
+            Assert.Equal(AppointmentStatus.Canceled, appointment.Status);
+        }
+
+        [Fact]
+        public void Cancel_WhenPendingWithinTwoHours_ThrowsBusinessException()
+        {
+            var (appointment, _) = CreateAppointment();
+            Assert.Throws<BusinessException>(() =>
+                appointment.Cancel(new FixedTimeProvider(new DateTimeOffset(2099, 1, 1, 9, 30, 0, TimeSpan.Zero))));
+            Assert.Equal(AppointmentStatus.Pending, appointment.Status);
+        }
+
+        [Fact]
+        public void Cancel_WhenPendingExactlyTwoHoursBeforeStart_SetsCanceled()
+        {
+            var (appointment, _) = CreateAppointment();
+            appointment.Cancel(new FixedTimeProvider(new DateTimeOffset(2099, 1, 1, 9, 0, 0, TimeSpan.Zero)));
+            Assert.Equal(AppointmentStatus.Canceled, appointment.Status);
+        }
+
+        [Fact]
+        public void Cancel_WhenConfirmedOutsideTwoHours_SetsCanceled()
+        {
+            var (appointment, _) = CreateAppointment();
+            appointment.Confirm();
+            appointment.Cancel(new FixedTimeProvider(new DateTimeOffset(2099, 1, 1, 8, 0, 0, TimeSpan.Zero)));
+            Assert.Equal(AppointmentStatus.Canceled, appointment.Status);
+        }
+
+        [Fact]
+        public void Cancel_WhenConfirmedWithinTwoHours_ThrowsBusinessException()
+        {
+            var (appointment, _) = CreateAppointment();
+            appointment.Confirm();
+            Assert.Throws<BusinessException>(() =>
+                appointment.Cancel(new FixedTimeProvider(new DateTimeOffset(2099, 1, 1, 10, 0, 0, TimeSpan.Zero))));
+            Assert.Equal(AppointmentStatus.Confirmed, appointment.Status);
+        }
+
+        [Fact]
         public void Cancel_WhenCompleted_ThrowsBusinessException()
         {
             var (appointment, _) = CreateAppointment();
             appointment.Confirm();
             appointment.Complete();
+            Assert.Throws<BusinessException>(() => appointment.Cancel());
+        }
+
+        [Fact]
+        public void Cancel_WhenRejected_ThrowsBusinessException()
+        {
+            var (appointment, _) = CreateAppointment();
+            appointment.Reject();
             Assert.Throws<BusinessException>(() => appointment.Cancel());
         }
     }
