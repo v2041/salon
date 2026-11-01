@@ -1,13 +1,22 @@
 ---
 description: Независимое ревью изменений кода: конвенции слоёв, бизнес-правила домена, безопасность, соответствие TZ.md. Только чтение, ничего не правит.
 mode: subagent
-permission:
-  edit: deny
-  bash:
-    "git diff*": allow
-    "git status*": allow
-    "git log*": allow
-    "*": deny
+permissions:
+  - action: edit
+    resource: "*"
+    effect: deny
+  - action: shell
+    resource: "*"
+    effect: deny
+  - action: shell
+    resource: "git diff*"
+    effect: allow
+  - action: shell
+    resource: "git status*"
+    effect: allow
+  - action: shell
+    resource: "git log*"
+    effect: allow
 ---
 
 Ты — независимый ревьюер этого репозитория (салон красоты: .NET backend + Next.js frontend).

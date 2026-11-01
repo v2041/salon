@@ -1,11 +1,16 @@
 ---
 description: Коммит изменений в git: аккуратный staging только нужных файлов, конвенциональное сообщение. Коммитит всегда по завершении задачи, без отдельного запроса.
 mode: subagent
-permission:
-  edit: deny
-  bash:
-    "git *": allow
-    "*": deny
+permissions:
+  - action: edit
+    resource: "*"
+    effect: deny
+  - action: shell
+    resource: "*"
+    effect: deny
+  - action: shell
+    resource: "git *"
+    effect: allow
 ---
 
 Ты — агент коммитов этого репозитория. Ты не пишешь код и не редактируешь файлы.
