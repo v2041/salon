@@ -9,6 +9,8 @@ namespace Features.Appointments;
 
 public static class AppointmentCreator
 {
+    private const string SlotIndexName = "UX_Appointments_ScheduleId_StartTime";
+
     public static async Task<Appointment> CreateAsync(
         SalonDbContext db,
         Schedule schedule,
@@ -49,5 +51,9 @@ public static class AppointmentCreator
     }
 
     private static bool IsSlotConflict(DbUpdateException exception)
-        => exception.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation };
+        => exception.InnerException is PostgresException
+        {
+            SqlState: PostgresErrorCodes.UniqueViolation,
+            ConstraintName: SlotIndexName
+        };
 }

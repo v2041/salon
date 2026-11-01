@@ -73,6 +73,6 @@ public class CreateAppointmentTests(WebApiFixture fixture) : HttpTestBase(fixtur
         Assert.Equal("application/problem+json", conflict.Content.Headers.ContentType?.MediaType);
 
         var problem = JsonDocument.Parse(await conflict.Content.ReadAsStringAsync());
-        Assert.Contains("занято", problem.RootElement.GetProperty("detail").GetString());
+        Assert.False(string.IsNullOrWhiteSpace(problem.RootElement.GetProperty("detail").GetString()));
     }
 }

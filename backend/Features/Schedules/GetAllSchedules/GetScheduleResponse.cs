@@ -1,5 +1,4 @@
-﻿using Domain.Enums;
-using Domain.ValueObjects;
+﻿using Domain.ValueObjects;
 
 namespace Features.Schedules.GetAllSchedules;
 
