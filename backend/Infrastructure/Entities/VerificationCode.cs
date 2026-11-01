@@ -42,13 +42,14 @@ public class VerificationCode
         return VerificationResult.Invalid;
     }
 
-    public void RegenerateCode(DateTime? now = null)
+    public bool RegenerateCode(DateTime? now = null)
     {
         var current = now ?? DateTime.UtcNow;
-        if (CreatedAt.AddMinutes(1) > current) return;
+        if (CreatedAt.AddMinutes(1) > current) return false;
         CreatedAt = current;
         ExpiresAt = current.AddMinutes(5);
         Code = GenerateCode();
         AttemptsCount = 0;
+        return true;
     }
 }
