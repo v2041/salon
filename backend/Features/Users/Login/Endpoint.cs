@@ -21,14 +21,12 @@ public static class Endpoint
             x.Phone == request.Phone, token);
         if (code == null)
             throw new BusinessException("Неверный номер телефона или код");
+        if (!code.TryRegisterAttempt())
+            throw new RateLimitException("Слишком много попыток. Повторите позже");
         var result = code.Verify(request.Code);
-        if (result == VerificationResult.Invalid
-            && !await VerificationCodeCounter.TryCountFailedAttemptAsync(db.VerificationCodes, request.Phone, token))
-        {
-            result = VerificationResult.Blocked;
-        }
         if (result != VerificationResult.Valid)
         {
+            await db.SaveChangesAsync(token);
             throw new BusinessException(result switch
             {
                 VerificationResult.Blocked => "Вы превысили допустимое число попыток. Запросите новый код",

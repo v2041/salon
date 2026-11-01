@@ -24,14 +24,12 @@ public static class Endpoint
             v.Phone == request.Phone, token);
         if (code is null)
             throw new BusinessException("Неверный код");
+        if (!code.TryRegisterAttempt())
+            throw new RateLimitException("Слишком много попыток. Повторите позже");
         var result = code.Verify(request.Code);
-        if (result == VerificationResult.Invalid
-            && !await VerificationCodeCounter.TryCountFailedAttemptAsync(db.VerificationCodes, request.Phone, token))
-        {
-            result = VerificationResult.Blocked;
-        }
         if (result != VerificationResult.Valid)
         {
+            await db.SaveChangesAsync(token);
             throw new BusinessException(result switch
             {
                 VerificationResult.Blocked => "Вы превысили допустимое число попыток. Запросите новый код",
@@ -40,6 +38,8 @@ public static class Endpoint
             });
         }
         var user = User.Create(request.FirstName, request.LastName, request.Phone, DateTime.UtcNow);
+        if (configuration["AdminPhone"] == request.Phone)
+            user.PromoteToAdmin();
         db.VerificationCodes.Remove(code);
         db.Users.Add(user);
         await db.SaveChangesAsync(token);

@@ -18,6 +18,7 @@ public class ExceptionHandlingMiddleware(ILogger<ExceptionHandlingMiddleware> lo
             {
                 BusinessException => (StatusCodes.Status400BadRequest, "Ошибка бизнес-логики"),
                 NotFoundException => (StatusCodes.Status404NotFound, "Данные не найдены"),
+                RateLimitException => (StatusCodes.Status429TooManyRequests, "Слишком много запросов"),
                 JsonException => (StatusCodes.Status400BadRequest, "Ошибка формата данных"),
                 BadHttpRequestException => (StatusCodes.Status400BadRequest, "Некорректный запрос"),
                 _ => (StatusCodes.Status500InternalServerError, "Ошибка сервера")

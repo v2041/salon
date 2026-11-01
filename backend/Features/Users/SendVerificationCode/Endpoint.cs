@@ -1,4 +1,5 @@
-﻿using Features.Common;
+using Domain.Exceptions;
+using Features.Common;
 using FluentValidation;
 using Infrastructure.Data;
 using Infrastructure.Entities;
@@ -12,6 +13,7 @@ public static class Endpoint
     public static async Task<IResult> SendVerificationCodeAsync(
         [FromBody] SendVerificationCodeRequest request,
         IValidator<SendVerificationCodeRequest> validator,
+        IHostEnvironment environment,
         SalonDbContext db,
         CancellationToken token
     )
@@ -25,7 +27,8 @@ public static class Endpoint
         VerificationCode code;
         if (existing is not null)
         {
-            existing.RegenerateCode();
+            if (!existing.TryResend())
+                throw new RateLimitException("Слишком много кодов. Повторите позже");
             code = existing;
         }
         else
@@ -34,7 +37,11 @@ public static class Endpoint
             db.VerificationCodes.Add(code);
         }
         await db.SaveChangesAsync(token);
-        var response = new SendVerificationCodeResponse(code.ExpiresAt, isRegistered);
+        var response = new SendVerificationCodeResponse(
+            code.ExpiresAt,
+            isRegistered,
+            environment.IsDevelopment() ? code.Code : null
+        );
         return Results.Ok(response);
     }
 }

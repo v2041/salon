@@ -179,6 +179,12 @@ namespace Infrastructure.Migrations
                     b.Property<int>("AttemptsCount")
                         .HasColumnType("integer");
 
+                    b.Property<int>("AttemptsInWindow")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("AttemptsWindowStart")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasColumnType("text");
@@ -188,6 +194,12 @@ namespace Infrastructure.Migrations
 
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("SendWindowStart")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("SendsInWindow")
+                        .HasColumnType("integer");
 
                     b.HasKey("Phone");
 
