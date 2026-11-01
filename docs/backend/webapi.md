@@ -36,6 +36,16 @@ UseCors → ExceptionHandlingMiddleware → UseAuthentication → UseAuthorizati
 
 Логируйте исключение один раз. Не дублируйте `LogError`.
 
+## Генерация openapi.json
+
+`dotnet build backend/WebApi/WebApi.csproj` пишет `docs/openapi.json`.
+
+- Пакет: `Microsoft.Extensions.ApiDescription.Server`, `PrivateAssets=all`.
+- Путь и имя файла задайте в `WebApi.csproj`: `OpenApiDocumentsDirectory`, `OpenApiGenerateDocumentsOptions`.
+- Генерация запускает точку входа приложения с mock-сервером. Секреты и БД не нужны.
+- Документ обновляется, когда меняется сборка WebApi.
+- Отключить генерацию: `-p:OpenApiGenerateDocuments=false`.
+
 ## Конфигурация
 
 - `appsettings.Development.json` в `.gitignore`: строка БД и `Jwt:Key`.
