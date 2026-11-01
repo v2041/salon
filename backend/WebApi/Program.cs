@@ -33,6 +33,7 @@ builder.Services.AddCors(options =>
     });
 });
 builder.Services.AddValidatorsFromAssembly(typeof(AppointmentsModule).Assembly);
+builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 builder.Services.AddDbContext<SalonDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString(nameof(SalonDbContext)))
@@ -93,3 +94,5 @@ app.MapSchedulesEndpoints();
 app.MapUsersEndpoints();
 app.MapAnalyticsEndpoints();
 app.Run();
+
+public partial class Program { }
