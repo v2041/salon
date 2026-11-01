@@ -89,6 +89,13 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy("User", p => p.RequireAuthenticatedUser());
 builder.Services.AddHostedService<ScheduleService>();
 var app = builder.Build();
+// Генерация docs/openapi.json при dotnet build стартует приложение в Production.
+var isOpenApiGeneration = Environment.GetCommandLineArgs()[0]
+    .Contains("GetDocument.Insider", StringComparison.OrdinalIgnoreCase);
+if (!app.Environment.IsDevelopment() && !isOpenApiGeneration && string.IsNullOrWhiteSpace(telegram["Token"]))
+{
+    throw new InvalidOperationException("Telegram:Bot:Token не задан. Задайте TELEGRAM_BOT_TOKEN.");
+}
 app.UseCors();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseAuthentication();
