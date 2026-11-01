@@ -55,12 +55,14 @@ public abstract class HttpTestBase(WebApiFixture fixture) : IAsyncLifetime
         });
     }
 
-    protected void AuthenticateAs(User user)
+    protected void AuthenticateAs(User user) => Authenticate(Client, user);
+
+    protected void Authenticate(HttpClient client, User user)
     {
         var configuration = Factory.Services.GetRequiredService<IConfiguration>();
         var token = JwtTokenGenerator.Create(user, configuration);
-        Client.DefaultRequestHeaders.Remove("Cookie");
-        Client.DefaultRequestHeaders.Add("Cookie", $"some-cookies={token}");
+        client.DefaultRequestHeaders.Remove("Cookie");
+        client.DefaultRequestHeaders.Add("Cookie", $"some-cookies={token}");
     }
 
     protected Task<Offering> SeedOfferingAsync(

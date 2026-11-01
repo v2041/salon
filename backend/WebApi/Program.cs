@@ -34,6 +34,7 @@ builder.Services.AddCors(options =>
 });
 builder.Services.AddValidatorsFromAssembly(typeof(AppointmentsModule).Assembly);
 builder.Services.AddProblemDetails();
+builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddOpenApi();
 builder.Services.AddDbContext<SalonDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString(nameof(SalonDbContext)))

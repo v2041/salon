@@ -10,6 +10,7 @@ public static class Endpoint
 {
     public static async Task<IResult> ChangeAppointmentStatusAsync(
         [FromBody] ChangeAppointmentStatusRequest request,
+        TimeProvider timeProvider,
         SalonDbContext db,
         CancellationToken token
     )
@@ -30,7 +31,7 @@ public static class Endpoint
                 appointment.Reject();
                 break;
             case AppointmentStatus.Canceled:
-                appointment.Cancel();
+                appointment.Cancel(timeProvider);
                 break;
             case AppointmentStatus.Completed:
                 appointment.Complete();

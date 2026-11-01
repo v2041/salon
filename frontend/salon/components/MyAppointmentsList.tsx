@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import {AccessTime as AccessTimeIcon} from "@mui/icons-material";
-import {Alert, Box, Chip, CircularProgress, Divider, Paper, Stack, Typography} from "@mui/material";
+import {Alert, Box, Button, Chip, CircularProgress, Divider, Paper, Stack, Typography} from "@mui/material";
 import {useEffect, useState} from "react";
 import {appointmentsApi} from "@/lib/api";
 import {formatDayLabel, formatDurationValue, formatPrice, formatTimeOnly, timeToMinutes} from "@/lib/format";
@@ -21,9 +21,23 @@ const STATUS_META: Record<AppointmentStatus, {label: string; color: "warning" | 
 function startOf(a: UserAppointmentResponse) {    return new Date(`${a.date}T${a.interval.start}`);
 }
 
-function AppointmentCard({appointment, muted}: {appointment: UserAppointmentResponse; muted: boolean}) {
+function AppointmentCard({
+    appointment,
+    muted,
+    busy,
+    now,
+    onCancel,
+}: {
+    appointment: UserAppointmentResponse;
+    muted: boolean;
+    busy: boolean;
+    now: number;
+    onCancel: (appointment: UserAppointmentResponse) => void;
+}) {
     const status = STATUS_META[appointment.status];
     const duration = timeToMinutes(appointment.interval.end) - timeToMinutes(appointment.interval.start);
+    const canCancel = appointment.status === AppointmentStatus.Pending || appointment.status === AppointmentStatus.Confirmed;
+    const withinTwoHours = startOf(appointment).getTime() - now < 2 * 60 * 60 * 1000;
     return (
         <Paper sx={{...cardSx, opacity: muted ? 0.75 : 1}}>
             <Stack direction="row" sx={{justifyContent: "space-between", alignItems: "center", mb: 0.5}}>
@@ -55,6 +69,24 @@ function AppointmentCard({appointment, muted}: {appointment: UserAppointmentResp
                 <Typography variant="caption" color="text.secondary">Итого</Typography>
                 <Typography variant="subtitle1" sx={{fontWeight: 700}}>{formatPrice(appointment.price.value)}</Typography>
             </Stack>
+            {canCancel && (
+                <Stack spacing={0.5} sx={{mt: 1.5, alignItems: "flex-start"}}>
+                    <Button
+                        size="small"
+                        variant="outlined"
+                        color="error"
+                        disabled={busy || withinTwoHours}
+                        onClick={() => onCancel(appointment)}
+                    >
+                        Отменить запись
+                    </Button>
+                    {withinTwoHours && (
+                        <Typography variant="caption" color="text.secondary">
+                            Отмена доступна не позднее чем за 2 часа до начала
+                        </Typography>
+                    )}
+                </Stack>
+            )}
         </Paper>
     );
 }
@@ -63,10 +95,16 @@ function Section({
     title,
     appointments,
     muted,
+    busyId,
+    now,
+    onCancel,
 }: {
     title: string;
     appointments: UserAppointmentResponse[];
     muted: boolean;
+    busyId: string | null;
+    now: number;
+    onCancel: (appointment: UserAppointmentResponse) => void;
 }) {
     return (
         <Stack spacing={1.5}>
@@ -80,7 +118,7 @@ function Section({
                 <Typography variant="body2" sx={{color: "text.secondary"}}>Нет записей</Typography>
             )}
             {appointments.map(a => (
-                <AppointmentCard key={a.id} appointment={a} muted={muted}/>
+                <AppointmentCard key={a.id} appointment={a} muted={muted} busy={busyId === a.id} now={now} onCancel={onCancel}/>
             ))}
         </Stack>
     );
@@ -90,6 +128,8 @@ export default function MyAppointmentsList() {
     const [appointments, setAppointments] = useState<UserAppointmentResponse[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [cancelError, setCancelError] = useState<string | null>(null);
+    const [busyId, setBusyId] = useState<string | null>(null);
 
     useEffect(() => {
         let cancelled = false;
@@ -110,6 +150,20 @@ export default function MyAppointmentsList() {
             cancelled = true;
         };
     }, []);
+
+    async function cancel(appointment: UserAppointmentResponse) {
+        setBusyId(appointment.id);
+        setCancelError(null);
+        try {
+            await appointmentsApi.cancel(appointment.id);
+            const res = await appointmentsApi.getByUser();
+            setAppointments(res);
+        } catch (err) {
+            setCancelError(err instanceof Error ? err.message : "Не удалось отменить запись");
+        } finally {
+            setBusyId(null);
+        }
+    }
 
     if (loading) {
         return <Box sx={{display: "flex", justifyContent: "center", py: 4}}><CircularProgress size={24} sx={{color: accentInk}}/></Box>;
@@ -133,8 +187,9 @@ export default function MyAppointmentsList() {
 
     return (
         <Stack spacing={3.5}>
-            <Section title="Предстоящие" appointments={upcoming} muted={false}/>
-            <Section title="Прошлые" appointments={past} muted={true}/>
+            {cancelError && <Alert severity="error" onClose={() => setCancelError(null)}>{cancelError}</Alert>}
+            <Section title="Предстоящие" appointments={upcoming} muted={false} busyId={busyId} now={now.getTime()} onCancel={cancel}/>
+            <Section title="Прошлые" appointments={past} muted={true} busyId={busyId} now={now.getTime()} onCancel={cancel}/>
         </Stack>
     );
 }

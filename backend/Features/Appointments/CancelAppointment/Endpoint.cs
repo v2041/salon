@@ -13,6 +13,7 @@ public static class Endpoint
     public static async Task<IResult> CancelAppointmentAsync(
         [FromBody] ChangeAppointmentStatusRequest request,
         HttpContext context,
+        TimeProvider timeProvider,
         SalonDbContext db,
         CancellationToken token
     )
@@ -26,7 +27,7 @@ public static class Endpoint
             .FirstOrDefaultAsync(a => a.Id == request.Id && a.UserId == userId, token);
         if (appointment is null)
             throw new NotFoundException("Запись не найдена");
-        appointment.Cancel();
+        appointment.Cancel(timeProvider);
         await db.SaveChangesAsync(token);
         return Results.NoContent();
     }
