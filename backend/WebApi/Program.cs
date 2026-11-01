@@ -92,7 +92,7 @@ var app = builder.Build();
 // Генерация docs/openapi.json при dotnet build стартует приложение в Production.
 var isOpenApiGeneration = Environment.GetCommandLineArgs()[0]
     .Contains("GetDocument.Insider", StringComparison.OrdinalIgnoreCase);
-if (!app.Environment.IsDevelopment() && !isOpenApiGeneration && string.IsNullOrWhiteSpace(telegram["Token"]))
+if (!app.Environment.IsDevelopment() && !isOpenApiGeneration && !hasTelegramToken)
 {
     throw new InvalidOperationException("Telegram:Bot:Token не задан. Задайте TELEGRAM_BOT_TOKEN.");
 }
