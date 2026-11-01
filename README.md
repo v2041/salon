@@ -9,7 +9,7 @@
 - `backend/` — .NET 10 (Minimal API), DDD и vertical slices, PostgreSQL + EF Core, FluentValidation, JWT в HttpOnly-cookie.
 - `frontend/salon/` — Next.js 16 (App Router), React 19, TypeScript, MUI 9. Интерфейс mobile-first.
 
-Продуктовые требования и план — в [TZ.md](./TZ.md).
+Продуктовые требования и план — в [TZ.md](./TZ.md). Пошаговый запуск — в [docs/runbook.md](./docs/runbook.md).
 
 ## Возможности
 

@@ -5,6 +5,7 @@
 
 | Задача | Документ |
 |---|---|
+| Поднять проект: локально или Docker | `runbook.md` |
 | Команды, Docker, демо-сид | `commands.md` |
 | Слои и поток данных | `architecture.md` |
 | Форматы API, статусы, ошибки, auth | `api.md` |
@@ -30,6 +31,7 @@
 ```text
 docs/
 ├── README.md
+├── runbook.md
 ├── commands.md
 ├── architecture.md
 ├── api.md
