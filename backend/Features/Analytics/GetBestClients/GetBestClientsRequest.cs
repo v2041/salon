@@ -2,6 +2,6 @@
 
 namespace Features.Analytics.GetBestClients;
 
-public record GetBestClientRequest(
+public record GetBestClientsRequest(
     [FromQuery] int Limit
 );

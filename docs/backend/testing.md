@@ -1,6 +1,7 @@
-# DomainTests
+# Тесты backend
 
-xUnit-тесты доменного слоя и сущности `VerificationCode`. HTTP и БД не тестируются.
+`DomainTests` — xUnit-тесты доменного слоя и сущности `VerificationCode`.
+`WebApiTests` — интеграционные HTTP-тесты на PostgreSQL через Testcontainers.
 
 ## Стек
 
@@ -57,6 +58,12 @@ public class OfferingTests
 Для проверки прошлого и будущего можно брать даты от `DateTime.Now` или `DateTime.UtcNow`.
 Не зависьте от времени суток. Не проверяйте точное текущее время.
 Явные даты передавайте в доменный метод, когда это возможно.
+
+## HTTP-тесты WebApiTests
+
+`WebApiTests` проверяет HTTP-контракт на `WebApplicationFactory` и PostgreSQL через Testcontainers.
+Docker Desktop обязателен. Каждый тест получает чистое состояние БД.
+Тесты лежат в `WebApiTests/<Раздел>/`. Базовый класс — `Infrastructure/HttpTestBase.cs`.
 
 ## Запуск
 

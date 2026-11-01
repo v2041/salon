@@ -201,6 +201,7 @@ export type SendVerificationCodeRequest = {
 export type SendVerificationCodeResponse = {
     expiresAt: string;
     isRegistered: boolean;
+    code?: string | null;
 };
 
 export type CurrentUser = {

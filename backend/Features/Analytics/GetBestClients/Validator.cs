@@ -2,7 +2,7 @@ using FluentValidation;
 
 namespace Features.Analytics.GetBestClients;
 
-public class Validator : AbstractValidator<GetBestClientRequest>
+public class Validator : AbstractValidator<GetBestClientsRequest>
 {
     public Validator()
     {

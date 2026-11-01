@@ -139,6 +139,10 @@ export default function AnalyticsSection() {
         }
     }
 
+    const maxMonth = data ? Math.max(0, ...data.months.map(x => x.gain)) : 0;
+    const maxGain = data ? Math.max(0, ...data.gainRows.map(x => x.price)) : 0;
+    const maxLoss = data ? Math.max(0, data.losses.canceled, data.losses.rejected, data.losses.missed) : 0;
+
     return (
         <Stack spacing={2}>
             {error && <Alert severity="error">{error}</Alert>}
@@ -190,7 +194,7 @@ export default function AnalyticsSection() {
                                 key={m.month}
                                 label={formatMonthLabel(m.month)}
                                 value={m.gain}
-                                max={Math.max(...data.months.map(x => x.gain))}
+                                max={maxMonth}
                                 caption={formatPrice(m.gain)}
                             />
                         ))}
@@ -205,7 +209,7 @@ export default function AnalyticsSection() {
                                 key={r.name}
                                 label={`${r.name} · ${r.count}`}
                                 value={r.price}
-                                max={Math.max(...data.gainRows.map(x => x.price))}
+                                max={maxGain}
                                 caption={formatPrice(r.price)}
                             />
                         ))}
@@ -226,19 +230,19 @@ export default function AnalyticsSection() {
                         <Bar
                             label="Отмены"
                             value={data.losses.canceled}
-                            max={Math.max(data.losses.canceled, data.losses.rejected, data.losses.missed)}
+                            max={maxLoss}
                             caption={`${data.losses.canceled} · ${formatPercent(data.losses.canceledRate)}`}
                         />
                         <Bar
                             label="Отказы"
                             value={data.losses.rejected}
-                            max={Math.max(data.losses.canceled, data.losses.rejected, data.losses.missed)}
+                            max={maxLoss}
                             caption={`${data.losses.rejected} · ${formatPercent(data.losses.rejectedRate)}`}
                         />
                         <Bar
                             label="Пропуски"
                             value={data.losses.missed}
-                            max={Math.max(data.losses.canceled, data.losses.rejected, data.losses.missed)}
+                            max={maxLoss}
                             caption={`${data.losses.missed} · ${formatPercent(data.losses.missedRate)}`}
                         />
                     </Panel>

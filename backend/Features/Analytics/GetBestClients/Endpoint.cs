@@ -10,8 +10,8 @@ namespace Features.Analytics.GetBestClients;
 public static class Endpoint
 {
     public static async Task<IResult> GetBestClientsAsync(
-        [AsParameters] GetBestClientRequest request,
-        IValidator<GetBestClientRequest> validator,
+        [AsParameters] GetBestClientsRequest request,
+        IValidator<GetBestClientsRequest> validator,
         SalonDbContext db,
         CancellationToken token
     )
