@@ -25,6 +25,17 @@
 - `send-code`, `login`, `register` и админ-запись принимают телефон в теле.
 - JWT хранится в HttpOnly-cookie. Frontend отправляет `credentials: "include"`.
 
+## Код входа
+
+`POST /api/auth/send-code` принимает `{ "phone": "+7XXXXXXXXXX" }`.
+Ответ: `expiresAt`, `isRegistered`, `status`, `bindingUrl`.
+
+- `status: "sent"` — код отправлен в Telegram-бот, `bindingUrl` = `null`.
+- `status: "binding_required"` — номер не привязан: откройте `bindingUrl` и нажмите «Поделиться номером» в боте.
+- В Development без токена бота ответ содержит `code`.
+- Повтор в течение минуты не отправляет второе сообщение.
+- Сбой отправки → 500; код не сохраняется.
+
 ## Ошибки и коды ответов
 
 - Валидация: `Results.ValidationProblem` → 400.

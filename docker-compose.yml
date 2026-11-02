@@ -61,6 +61,8 @@ services:
       Jwt__Audience: ${JWT_AUDIENCE:-salon-client}
       Jwt__Key: ${JWT_KEY:?set JWT_KEY in .env}
       Cors__AllowedOrigins__0: ${PUBLIC_URL:-http://localhost}
+      Telegram__Bot__Token: ${TELEGRAM_BOT_TOKEN}
+      Telegram__Bot__Username: ${TELEGRAM_BOT_USERNAME}
       TZ: ${TZ:-Europe/Moscow}
     depends_on:
       migrate:

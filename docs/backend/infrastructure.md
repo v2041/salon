@@ -43,6 +43,17 @@ dotnet ef database update --project Infrastructure --startup-project WebApi
 
 `Authentication/JwtTokenGenerator.cs` выпускает JWT. Cookie — `some-cookies`, HttpOnly.
 
+## Уведомления
+
+`Notifications/` доставляет код входа в Telegram.
+
+- Шов — `ICodeSender.SendAsync`. `FakeCodeSender` работает в Development без токена бота и пишет код в лог. `TelegramBotCodeSender` ищет чат по `TelegramBinding` и шлёт «Код для входа: 1234. Никому не сообщайте.». Без привязки возвращает `BindingUrl` — ссылку `https://t.me/<username>`.
+- `TelegramBotClient` — обёртка над Bot API: `sendMessage` и `getUpdates`. `sendMessage` завершается через 5 секунд. Ответ с `ok != true` или не в формате JSON — исключение.
+- `TelegramUpdateHandler` обрабатывает `/start` (кнопка «Поделиться номером») и контакт. Бот принимает контакт, только если его отправил владелец. Повторный контакт обновляет `chat_id`.
+- `TelegramUpdatesService` — hosted service: long polling (`getUpdates`, timeout 50 секунд). Ошибка не останавливает сервис: пауза 5 секунд.
+
+Сбой провайдера — исключение. Код сохраняется только после успешной отправки.
+
 ## Фоновый сервис
 
 `BackgroundServices/ScheduleService.cs` создает расписание на 14 дней вперед.

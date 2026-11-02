@@ -188,6 +188,9 @@ export type SendVerificationCodeRequest = {
 export type SendVerificationCodeResponse = {
     expiresAt: string;
     isRegistered: boolean;
+    status: "sent" | "binding_required";
+    bindingUrl: string | null;
+    code?: string | null;
 };
 
 export type CurrentUser = {

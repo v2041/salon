@@ -7,6 +7,7 @@ using Features.Users;
 using FluentValidation;
 using Infrastructure.BackgroundServices;
 using Infrastructure.Data;
+using Infrastructure.Notifications;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -37,6 +38,30 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<SalonDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString(nameof(SalonDbContext)))
 );
+var telegram = builder.Configuration.GetSection(TelegramOptions.SectionName);
+builder.Services.Configure<TelegramOptions>(telegram);
+var telegramToken = telegram["Token"];
+var hasTelegramToken = !string.IsNullOrWhiteSpace(telegramToken);
+if (builder.Environment.IsDevelopment() && !hasTelegramToken)
+{
+    builder.Services.AddScoped<ICodeSender, FakeCodeSender>();
+}
+else
+{
+    builder.Services.AddHttpClient(TelegramBotClient.HttpClientName, client =>
+        client.Timeout = TimeSpan.FromSeconds(TelegramBotClient.HttpClientTimeoutSeconds));
+    builder.Services.AddTransient(sp => new TelegramBotClient(
+        sp.GetRequiredService<IHttpClientFactory>().CreateClient(TelegramBotClient.HttpClientName),
+        telegramToken!));
+    builder.Services.AddScoped<ICodeSender, TelegramBotCodeSender>();
+    if (hasTelegramToken)
+    {
+        builder.Services.AddTransient<ITelegramMessageSender>(sp =>
+            sp.GetRequiredService<TelegramBotClient>());
+        builder.Services.AddScoped<TelegramUpdateHandler>();
+        builder.Services.AddHostedService<TelegramUpdatesService>();
+    }
+}
 var jwt = builder.Configuration.GetSection("Jwt");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -64,6 +89,13 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy("User", p => p.RequireAuthenticatedUser());
 builder.Services.AddHostedService<ScheduleService>();
 var app = builder.Build();
+// Генерация docs/openapi.json при dotnet build стартует приложение в Production.
+var isOpenApiGeneration = Environment.GetCommandLineArgs()[0]
+    .Contains("GetDocument.Insider", StringComparison.OrdinalIgnoreCase);
+if (!app.Environment.IsDevelopment() && !isOpenApiGeneration && !hasTelegramToken)
+{
+    throw new InvalidOperationException("Telegram:Bot:Token не задан. Задайте TELEGRAM_BOT_TOKEN.");
+}
 app.UseCors();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseAuthentication();

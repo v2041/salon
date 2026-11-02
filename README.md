@@ -17,7 +17,7 @@
 
 - поток записи: услуги (можно несколько) → дата → время → подтверждение. Список услуг встроен в поток, отдельной витрины нет (FR-V3 в планах);
 - «Мои записи»: статусы, отмена своей записи;
-- вход и регистрация по телефону. Код — 4 цифры, действует 5 минут. Повторная отправка — не чаще 1 раза в минуту. Пять неверных попыток блокируют код. SMS-провайдер не подключён — код виден в базе данных.
+- вход и регистрация по телефону. Код — 4 цифры, действует 5 минут. Повторная отправка — не чаще 1 раза в минуту. Пять неверных попыток блокируют код. Код приходит в Telegram-бот салона. При первом входе клиент открывает бота по ссылке и привязывает номер кнопкой «Поделиться номером». В dev-режиме без токена бота код виден на экране входа.
 
 **Мастер**
 
@@ -40,7 +40,7 @@ salon_project/
     backend.sln
     Domain/           # Entities, ValueObjects, Enums, Services, Exceptions — бизнес-правила
     Features/         # Appointments, Offerings, Schedules, Users, Analytics (vertical slices)
-    Infrastructure/   # SalonDbContext, EF-конфигурации, миграции, JWT, ScheduleService
+    Infrastructure/   # SalonDbContext, EF-конфигурации, миграции, JWT, фоновые сервисы, Telegram
     WebApi/           # Program.cs, Middlewares, appsettings
     Seeder/           # демо-данные для Docker-стенда
     DomainTests/      # xUnit-тесты домена
@@ -80,6 +80,8 @@ psql -U postgres -c "CREATE DATABASE salon;"
 }
 ```
 
+Токен бота необязателен: без него Development использует fake-отправитель. Код пишется в лог API и приходит в ответе `send-code`.
+
 ### 2. Backend
 
 ```powershell
@@ -110,7 +112,9 @@ http://localhost:3000 → `/booking`, `/my-appointments`, `/admin`. Все эк�
    - `POSTGRES_PASSWORD` — пароль БД;
    - `JWT_KEY` — случайная строка не короче 32 символов (`openssl rand -base64 48`);
    - `PUBLIC_URL` — публичный адрес сайта: `https://salon.example.com` или `http://1.2.3.4`;
-   - `DOMAIN` — домен для Caddy: `salon.example.com` (авто-HTTPS) или `:80` (проверка по IP без TLS).
+   - `DOMAIN` — домен для Caddy: `salon.example.com` (авто-HTTPS) или `:80` (проверка по IP без TLS);
+   - `TELEGRAM_BOT_TOKEN` — токен бота от @BotFather. Production без токена не стартует;
+   - `TELEGRAM_BOT_USERNAME` — имя бота без `@` (для ссылки привязки).
 
 2. Соберите и запустите:
 
@@ -147,7 +151,7 @@ docker compose --profile demo run --rm --build seed
 docker compose start api
 ```
 
-Сид удаляет записи, услуги, расписания, клиентов и коды подтверждения. Тестовые Admin `+79991234567` и Client `+79341234567` остаются. Код входа — в таблице `VerificationCodes`. Сервис `seed` задает `ALLOW_DEMO_SEED=true` и флаг `--reset`. Без флага `--reset` сид останавливается, если в БД уже есть данные.
+Сид удаляет записи, услуги, расписания, клиентов и коды подтверждения. Тестовые Admin `+79991234567` и Client `+79341234567` остаются. Код входа приходит в Telegram-бот после привязки номера. Сервис `seed` задает `ALLOW_DEMO_SEED=true` и флаг `--reset`. Без флага `--reset` сид останавливается, если в БД уже есть данные.
 
 ## Скрипты frontend
 
@@ -180,10 +184,11 @@ xUnit-тесты (`DomainTests`): `Offering`, `Schedule`, `Money`, `TimeInterval
 
 | Метод | Путь | Тело / ответ |
 |---|---|---|
-| POST | `/send-code` | `{ "phone": "+79991234567" }` → `{ "expiresAt", "isRegistered" }` |
+| POST | `/send-code` | `{ "phone": "+79991234567" }` → `{ "expiresAt", "isRegistered", "status", "bindingUrl" }`; в dev-режиме ещё `code` |
 | POST | `/register` | `{ "code", "phone", "firstName", "lastName" }` → cookie `some-cookies` |
 | POST | `/login` | `{ "code", "phone" }` → cookie `some-cookies` |
 
+`status: "sent"` — код отправлен в Telegram. `status: "binding_required"` — номер не привязан: откройте `bindingUrl` и поделитесь номером в боте. Повтор в течение минуты не отправляет второе сообщение.
 Неверный или истёкший код → `400`. Пять неверных попыток блокируют код.
 
 ### Offerings — `/api/offerings`

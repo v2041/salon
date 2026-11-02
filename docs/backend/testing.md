@@ -1,6 +1,6 @@
 # DomainTests
 
-xUnit-тесты доменного слоя и сущности `VerificationCode`. HTTP и БД не тестируются.
+xUnit-тесты доменного слоя, `VerificationCode` и классов Infrastructure (`Notifications/`). Реальные БД и сеть не используются.
 
 ## Стек
 
@@ -12,9 +12,10 @@ xUnit-тесты доменного слоя и сущности `VerificationCo
 
 - `Entities/` — тесты сущностей.
 - `Value Objects/` — тесты Value Objects.
-- Файл — `<Сущность>Tests.cs`.
+- `Notifications/` — тесты уведомлений: отправители кода, клиент Bot API, обработчик обновлений.
+- Файл — `<Класс>Tests.cs`.
 
-`VerificationCode` лежит в Infrastructure. Ссылка на Infrastructure нужна только для его тестов.
+`VerificationCode` и классы уведомлений лежат в Infrastructure. Ссылка на Infrastructure нужна для их тестов.
 
 ## Naming
 
@@ -50,7 +51,7 @@ public class OfferingTests
 - Каждое правило покрывайте happy path и нарушением.
 - Проверяйте пересечение слотов, перерыв, прошлое, отмену менее чем за 2 часа, длину названия и минимальную длительность.
 - Новый доменный метод → тесты сразу.
-- Тесты изолированные. Без БД и HTTP.
+- Тесты изолированные. Вместо БД — EF InMemory, вместо сети — подмена `HttpMessageHandler`.
 
 ## Время
 

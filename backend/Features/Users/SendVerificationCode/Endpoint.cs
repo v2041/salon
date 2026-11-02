@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using Infrastructure.Data;
 using Infrastructure.Entities;
+using Infrastructure.Notifications;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,6 +13,8 @@ public static class Endpoint
         [FromBody] SendVerificationCodeRequest request,
         IValidator<SendVerificationCodeRequest> validator,
         SalonDbContext db,
+        ICodeSender sender,
+        IHostEnvironment environment,
         CancellationToken token
     )
     {
@@ -29,10 +32,13 @@ public static class Endpoint
 
         var isRegistered = await db.Users.AnyAsync(u => u.Phone == request.Phone, token);
         var existing = await db.VerificationCodes.FirstOrDefaultAsync(x => x.Phone == request.Phone, token);
+
         VerificationCode code;
         if (existing is not null)
         {
-            existing.RegenerateCode();
+            if (!existing.RegenerateCode())
+                return Results.Ok(CreateResponse(
+                    existing, isRegistered, SendVerificationCodeResponse.StatusSent, null, environment));
             code = existing;
         }
         else
@@ -40,8 +46,31 @@ public static class Endpoint
             code = VerificationCode.Create(request.Phone);
             db.VerificationCodes.Add(code);
         }
+
+        var result = await sender.SendAsync(request.Phone, code.Code, token);
+        if (!result.Delivered)
+        {
+            return Results.Ok(CreateResponse(
+                code, isRegistered, SendVerificationCodeResponse.StatusBindingRequired, result.BindingUrl, environment));
+        }
+
         await db.SaveChangesAsync(token);
-        var response = new SendVerificationCodeResponse(code.ExpiresAt, isRegistered);
-        return Results.Ok(response);
+        return Results.Ok(CreateResponse(
+            code, isRegistered, SendVerificationCodeResponse.StatusSent, null, environment));
     }
+
+    private static SendVerificationCodeResponse CreateResponse(
+        VerificationCode code,
+        bool isRegistered,
+        string status,
+        string? bindingUrl,
+        IHostEnvironment environment
+    ) =>
+        new(
+            code.ExpiresAt,
+            isRegistered,
+            status,
+            bindingUrl,
+            environment.IsDevelopment() ? code.Code : null
+        );
 }
