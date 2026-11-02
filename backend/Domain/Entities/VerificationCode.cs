@@ -1,17 +1,24 @@
 ﻿using System.Security.Cryptography;
+using Domain.Enums;
 
-namespace Infrastructure.Entities;
+namespace Domain.Entities;
 
 public class VerificationCode
 {
     public const int MAX_ATTEMPTS = 5;
+    public const int CODE_TTL_MINUTES = 5;
+    public const int RESEND_COOLDOWN_MINUTES = 1;
 
-    public string Phone { get; private set; }
-    public string Code { get; private set; }
+    public string Phone { get; private set; } = null!;
+    public string Code { get; private set; } = null!;
     public DateTime ExpiresAt { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public int AttemptsCount { get; private set; }
     public bool IsBlocked => AttemptsCount >= MAX_ATTEMPTS;
+
+    private VerificationCode()
+    {
+    }
 
     private VerificationCode(string phone, string code, DateTime expiresAt, DateTime createdAt, int attemptsCount)
     {
@@ -25,7 +32,7 @@ public class VerificationCode
     public static VerificationCode Create(string phone)
     {
         var now = DateTime.UtcNow;
-        var expiresAt = now.AddMinutes(5);
+        var expiresAt = now.AddMinutes(CODE_TTL_MINUTES);
         var code = GenerateCode();
         return new VerificationCode(phone, code, expiresAt, now, 0);
     }
@@ -45,9 +52,9 @@ public class VerificationCode
     public bool RegenerateCode(DateTime? now = null)
     {
         var current = now ?? DateTime.UtcNow;
-        if (CreatedAt.AddMinutes(1) > current) return false;
+        if (CreatedAt.AddMinutes(RESEND_COOLDOWN_MINUTES) > current) return false;
         CreatedAt = current;
-        ExpiresAt = current.AddMinutes(5);
+        ExpiresAt = current.AddMinutes(CODE_TTL_MINUTES);
         Code = GenerateCode();
         AttemptsCount = 0;
         return true;

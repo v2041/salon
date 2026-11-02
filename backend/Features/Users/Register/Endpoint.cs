@@ -1,7 +1,7 @@
 ﻿using Domain.Entities;
+using Domain.Enums;
 using Infrastructure.Authentication;
 using Infrastructure.Data;
-using Infrastructure.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
