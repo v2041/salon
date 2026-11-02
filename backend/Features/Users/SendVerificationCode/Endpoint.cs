@@ -1,6 +1,6 @@
-﻿using FluentValidation;
+﻿using Domain.Entities;
+using FluentValidation;
 using Infrastructure.Data;
-using Infrastructure.Entities;
 using Infrastructure.Notifications;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

@@ -165,23 +165,7 @@ namespace Infrastructure.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Infrastructure.Entities.TelegramBinding", b =>
-                {
-                    b.Property<string>("Phone")
-                        .HasColumnType("text");
-
-                    b.Property<long>("ChatId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Phone");
-
-                    b.ToTable("TelegramBindings");
-                });
-
-            modelBuilder.Entity("Infrastructure.Entities.VerificationCode", b =>
+            modelBuilder.Entity("Domain.Entities.VerificationCode", b =>
                 {
                     b.Property<string>("Phone")
                         .HasColumnType("text");
@@ -202,6 +186,22 @@ namespace Infrastructure.Migrations
                     b.HasKey("Phone");
 
                     b.ToTable("VerificationCodes");
+                });
+
+            modelBuilder.Entity("Infrastructure.Entities.TelegramBinding", b =>
+                {
+                    b.Property<string>("Phone")
+                        .HasColumnType("text");
+
+                    b.Property<long>("ChatId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Phone");
+
+                    b.ToTable("TelegramBindings");
                 });
 
             modelBuilder.Entity("Domain.Entities.Appointment", b =>
