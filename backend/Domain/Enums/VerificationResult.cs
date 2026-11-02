@@ -1,4 +1,4 @@
-namespace Infrastructure.Entities;
+namespace Domain.Enums;
 
 public enum VerificationResult
 {

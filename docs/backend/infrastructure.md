@@ -25,7 +25,7 @@ Value Objects маппятся через `OwnsOne`:
 
 Явные FK и `DeleteBehavior.Restrict` сохраняйте.
 
-Сущности Domain лежат в `Domain/Entities`. Инфраструктурные сущности (например `VerificationCode`) — в `Infrastructure/Entities`.
+Сущности Domain лежат в `Domain/Entities`. Инфраструктурные сущности (например `TelegramBinding`) — в `Infrastructure/Entities`.
 
 ## Миграции
 
