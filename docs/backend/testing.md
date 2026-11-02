@@ -1,6 +1,6 @@
 # DomainTests
 
-xUnit-тесты доменного слоя, `VerificationCode` и классов Infrastructure (`Notifications/`). Реальные БД и сеть не используются.
+xUnit-тесты доменного слоя и классов Infrastructure (`Notifications/`, `TelegramBinding`). Реальные БД и сеть не используются.
 
 ## Стек
 
@@ -15,7 +15,7 @@ xUnit-тесты доменного слоя, `VerificationCode` и классо
 - `Notifications/` — тесты уведомлений: отправители кода, клиент Bot API, обработчик обновлений.
 - Файл — `<Класс>Tests.cs`.
 
-`VerificationCode` и классы уведомлений лежат в Infrastructure. Ссылка на Infrastructure нужна для их тестов.
+Классы уведомлений и `TelegramBinding` лежат в Infrastructure. Ссылка на Infrastructure нужна для их тестов.
 
 ## Naming
 
