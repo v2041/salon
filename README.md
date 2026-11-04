@@ -3,6 +3,7 @@
 [![CI](https://github.com/v2041/salon/actions/workflows/ci.yml/badge.svg)](https://github.com/v2041/salon/actions/workflows/ci.yml)
 ![.NET](https://img.shields.io/badge/.NET-10-512BD4)
 ![Next.js](https://img.shields.io/badge/Next.js-16-000000)
+![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
 Веб-система для салона красоты на одного мастера. Клиент записывается онлайн по номеру телефона. Мастер ведёт услуги, расписание и аналитику дохода.
 
@@ -302,6 +303,6 @@ CI (`.github/workflows/ci.yml`) запускает backend build/test и fronten
 
 ## Лицензия и автор
 
-Файл `LICENSE` в репозитории отсутствует. Добавьте его, чтобы закрепить условия использования.
+Проект распространяется по лицензии MIT. Полный текст — в файле [LICENSE](./LICENSE).
 
 Автор: [v2041](https://github.com/v2041) · makstara55@gmail.com
