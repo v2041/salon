@@ -9,7 +9,7 @@
 - `backend/` — .NET 10 (Minimal API), DDD и vertical slices, PostgreSQL + EF Core, FluentValidation, JWT в HttpOnly-cookie.
 - `frontend/salon/` — Next.js 16 (App Router), React 19, TypeScript, MUI 9. Интерфейс mobile-first.
 
-Продуктовые требования и план — в [TZ.md](./TZ.md).
+Продуктовые требования и план — в [TZ.md](./TZ.md). Карта документации — в [docs/README.md](./docs/README.md).
 
 ## Возможности
 
@@ -49,6 +49,7 @@ salon_project/
       app/(app)/      # booking, my-appointments, admin
       components/     # booking/*, admin/*, LoginScreen, MyAppointmentsList
       lib/            # api.ts, auth.tsx, format.ts, slots.ts, types.ts, theme.ts
+  docs/               # документация для разработки
   TZ.md               # техзадание
 ```
 
@@ -169,11 +170,11 @@ cd backend
 dotnet test
 ```
 
-xUnit-тесты (`DomainTests`): `Offering`, `Schedule`, `Money`, `TimeInterval`, `Appointment`, `User`, `TimelineBuilder`, `VerificationCode` — 110 тестов.
+xUnit-тесты (`DomainTests`): сущности (`Offering`, `Schedule`, `Appointment`, `User`, `VerificationCode`, `TelegramBinding`), Value Objects (`Money`, `TimeInterval`), `TimelineBuilder` и Telegram-уведомления.
 
 ## API
 
-База: `http://localhost:5164`.
+База: `http://localhost:5164`. Машинный контракт — [docs/openapi.json](./docs/openapi.json); файл генерируется при сборке WebApi.
 
 - Даты — `yyyy-MM-dd`, время — `HH:mm` (в ответах `HH:mm:ss`), деньги — `{ "value": 3500, "currency": "RUB" }`.
 - Статусы записи: `0=Pending, 1=Confirmed, 2=Completed, 3=Canceled, 4=Missed, 5=Rejected`.
@@ -187,6 +188,8 @@ xUnit-тесты (`DomainTests`): `Offering`, `Schedule`, `Money`, `TimeInterval
 | POST | `/send-code` | `{ "phone": "+79991234567" }` → `{ "expiresAt", "isRegistered", "status", "bindingUrl" }`; в dev-режиме ещё `code` |
 | POST | `/register` | `{ "code", "phone", "firstName", "lastName" }` → cookie `some-cookies` |
 | POST | `/login` | `{ "code", "phone" }` → cookie `some-cookies` |
+| POST | `/logout` | очищает cookie → `204` |
+| GET | `/me` | текущий пользователь `{ "id", "firstName", "lastName", "phone", "role" }`; без cookie → `401` |
 
 `status: "sent"` — код отправлен в Telegram. `status: "binding_required"` — номер не привязан: откройте `bindingUrl` и поделитесь номером в боте. Повтор в течение минуты не отправляет второе сообщение.
 Неверный или истёкший код → `400`. Пять неверных попыток блокируют код.
@@ -245,6 +248,10 @@ xUnit-тесты (`DomainTests`): `Offering`, `Schedule`, `Money`, `TimeInterval
 - Нельзя: запись в прошлом, вне рабочего времени, в перерыв, в выходной день, с пересечением `Pending|Confirmed`.
 - Отмена из `Confirmed` — не позже чем за 2 часа. Закрыть день можно только без активных записей.
 
+## Конфигурация
+
+Секреты и конфигурация описаны в [docs/security.md](./docs/security.md).
+
 | Где | Ключ | Зачем |
 |---|---|---|
 | `appsettings.Development.json` | `ConnectionStrings:SalonDbContext` | строка подключения PostgreSQL (файл в `.gitignore`) |
@@ -259,8 +266,25 @@ dotnet publish backend/WebApi -c Release -o ./publish
 dotnet ef database update --project backend/Infrastructure --startup-project backend/WebApi
 ```
 
+## Где получить помощь
+
+- Карта документации: [docs/README.md](./docs/README.md).
+- API, форматы и коды ошибок: [docs/api.md](./docs/api.md).
+- Telegram-бот: [docs/telegram-bot.md](./docs/telegram-bot.md).
+- Требования и известные проблемы: [TZ.md](./TZ.md).
+- Вопросы и баги: [GitHub Issues](https://github.com/v2041/salon/issues).
+
+## Участие в разработке
+
+1. Прочитайте [AGENTS.md](./AGENTS.md) и [docs/workflow.md](./docs/workflow.md).
+2. Добавьте правило в `Domain`. Сразу добавьте тест в `DomainTests`.
+3. Запустите проверки: `dotnet test backend/backend.sln`, `npm --prefix frontend/salon run lint`, `npm --prefix frontend/salon run build`.
+4. Обновите `README.md` и `TZ.md`.
+
+Ревью и коммиты — по [docs/workflow.md](./docs/workflow.md).
+
 ## Лицензия
 
-TODO: файл `LICENSE` в репозитории отсутствует — добавьте его, чтобы закрепить лицензию.
+Файл `LICENSE` в репозитории отсутствует. Добавьте файл, чтобы закрепить условия использования.
 
 Автор: [v2041](https://github.com/v2041) · makstara55@gmail.com
