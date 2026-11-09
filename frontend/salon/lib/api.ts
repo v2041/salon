@@ -3,6 +3,7 @@
     type AppointmentDetailResponse,
     type AppointmentResponse,
     AppointmentStatus,
+    type ApplySettingsResponse,
     type AvailableDatesResponse,
     type AverageCheckResponse,
     type BestClientResponse,
@@ -10,6 +11,8 @@
     type ChangeAppointmentTimeRequest,
     type ChangeOfferingRequest,
     type ChangeScheduleRequest,
+    type ChangeSettingsRequest,
+    type ContactsResponse,
     type CreateAppointmentForUserRequest,
     type CreateAppointmentRequest,
     type CreateOfferingRequest,
@@ -26,6 +29,7 @@
     type ScheduleResponse,
     type SendVerificationCodeRequest,
     type SendVerificationCodeResponse,
+    type SettingsResponse,
     type UserAppointmentResponse,
 } from "./types";
 
@@ -171,4 +175,12 @@ export const analyticsApi = {
         apiFetch<RateResponse>(`/api/analytics/workload-rate${query({ from, to })}`),
     getBestClients: (limit: number) =>
         apiFetch<BestClientResponse[]>(`/api/analytics/best-clients${query({ limit })}`),
+};
+
+export const settingsApi = {
+    get: () => apiFetch<SettingsResponse>("/api/settings"),
+    change: (request: ChangeSettingsRequest) =>
+        apiFetch<void>("/api/settings", { method: "PUT", ...json(request) }),
+    getContacts: () => apiFetch<ContactsResponse>("/api/settings/contacts"),
+    apply: () => apiFetch<ApplySettingsResponse>("/api/settings/apply", { method: "POST" }),
 };
