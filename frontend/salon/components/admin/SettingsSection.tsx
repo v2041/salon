@@ -37,6 +37,7 @@ const WEEKDAYS: {value: DayOfWeek; label: string}[] = [
 const MIN_HORIZON = 1;
 const MAX_HORIZON = 60;
 const MIN_WORK_MINUTES = 120;
+const MAX_WEEKEND_DAYS = 6;
 
 type Form = {
     address: string;
@@ -88,6 +89,9 @@ function validate(form: Form): string | null {
     const horizon = Number(form.horizonDays);
     if (!Number.isInteger(horizon) || horizon < MIN_HORIZON || horizon > MAX_HORIZON) {
         return `Горизонт — целое число от ${MIN_HORIZON} до ${MAX_HORIZON}.`;
+    }
+    if (form.weekends.length > MAX_WEEKEND_DAYS) {
+        return `Выходных дней — не больше ${MAX_WEEKEND_DAYS}.`;
     }
     return null;
 }
@@ -273,6 +277,10 @@ export default function SettingsSection() {
                                     control={
                                         <Checkbox
                                             checked={form.weekends.includes(day.value)}
+                                            disabled={
+                                                !form.weekends.includes(day.value) &&
+                                                form.weekends.length >= MAX_WEEKEND_DAYS
+                                            }
                                             onChange={() => toggleWeekend(day.value)}
                                         />
                                     }
