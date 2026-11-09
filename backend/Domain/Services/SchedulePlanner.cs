@@ -23,11 +23,10 @@ public static class SchedulePlanner
 
         var plan = new List<SchedulePlanItem>();
         var byDate = existingDays.ToDictionary(day => day.Date);
-        for (var offset = 1; offset <= settings.HorizonDays; offset++)
+        foreach (var (date, existing) in DaysUpToHorizon(settings, byDate, today))
         {
-            var date = today.AddDays(offset);
             var target = BuildTarget(settings, date);
-            if (!byDate.TryGetValue(date, out var existing))
+            if (existing is null)
             {
                 plan.Add(SchedulePlanItem.Create(date, target));
                 continue;
@@ -65,10 +64,9 @@ public static class SchedulePlanner
     {
         var plan = new List<SchedulePlanItem>();
         var byDate = existingDays.ToDictionary(day => day.Date);
-        for (var offset = 1; offset <= settings.HorizonDays; offset++)
+        foreach (var (date, existing) in DaysUpToHorizon(settings, byDate, today))
         {
-            var date = today.AddDays(offset);
-            if (!byDate.ContainsKey(date))
+            if (existing is null)
                 plan.Add(SchedulePlanItem.Create(date, BuildTarget(settings, date)));
         }
 
@@ -116,6 +114,23 @@ public static class SchedulePlanner
         }
 
         return created;
+    }
+
+    /// <summary>
+    /// Дни от завтра до горизонта включительно. Для каждого дня возвращает
+    /// существующий снимок состояния или null, если дня нет.
+    /// </summary>
+    private static IEnumerable<(DateOnly Date, ScheduleDayState? Existing)> DaysUpToHorizon(
+        SalonSettings settings,
+        IReadOnlyDictionary<DateOnly, ScheduleDayState> byDate,
+        DateOnly today)
+    {
+        for (var offset = 1; offset <= settings.HorizonDays; offset++)
+        {
+            var date = today.AddDays(offset);
+            byDate.TryGetValue(date, out var existing);
+            yield return (date, existing);
+        }
     }
 
     private static SchedulePlanTarget BuildTarget(SalonSettings settings, DateOnly date) =>
