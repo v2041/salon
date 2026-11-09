@@ -482,6 +482,50 @@
         }
       }
     },
+    "/api/settings": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Settings"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/settings/contacts": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/auth/register": {
       "post": {
         "tags": [
@@ -908,6 +952,56 @@
           }
         }
       },
+      "ChangeSettingsRequest": {
+        "required": [
+          "address",
+          "phone",
+          "workInterval",
+          "breakInterval",
+          "generationEnabled",
+          "horizonDays",
+          "weekendDays"
+        ],
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "workInterval": {
+            "$ref": "#/components/schemas/TimeInterval"
+          },
+          "breakInterval": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TimeInterval"
+              }
+            ]
+          },
+          "generationEnabled": {
+            "type": "boolean"
+          },
+          "horizonDays": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "weekendDays": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DayOfWeek"
+            }
+          }
+        }
+      },
       "CreateAppointmentForUserRequest": {
         "required": [
           "phone",
@@ -1035,6 +1129,9 @@
             ]
           }
         }
+      },
+      "DayOfWeek": {
+        "type": "integer"
       },
       "GetAvailableDatesRequest": {
         "required": [
@@ -1186,6 +1283,9 @@
     },
     {
       "name": "Schedules"
+    },
+    {
+      "name": "Settings"
     },
     {
       "name": "Users"

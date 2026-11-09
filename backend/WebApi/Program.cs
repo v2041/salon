@@ -3,6 +3,7 @@ using Features.Analytics;
 using Features.Appointments;
 using Features.Offerings;
 using Features.Schedules;
+using Features.Settings;
 using Features.Users;
 using FluentValidation;
 using Infrastructure.BackgroundServices;
@@ -110,6 +111,7 @@ if (app.Environment.IsDevelopment())
 app.MapAppointmentsEndpoints();
 app.MapOfferingsEndpoints();
 app.MapSchedulesEndpoints();
+app.MapSettingsEndpoints();
 app.MapUsersEndpoints();
 app.MapAnalyticsEndpoints();
 app.Run();
