@@ -7,8 +7,6 @@ namespace Domain.Entities;
 
 public class Schedule
 {
-    private static readonly TimeSpan MinimumWorkDuration = TimeSpan.FromHours(2);
-
     private Schedule()
     {
     }
@@ -55,12 +53,9 @@ public class Schedule
             throw new BusinessException("Нельзя назначить рабочий день в прошлом.");
         }
 
-        if (breakInterval != null && !breakInterval.IsInside(workInterval))
-            throw new BusinessException("Заданное время перерыва не входит в рабочее время.");
-        if (breakInterval?.Start == workInterval.Start || breakInterval?.End == workInterval.End)
-            throw new BusinessException("Время перерыва не должно граничить с временем начала или конца работы.");
-        if (workInterval.Duration < MinimumWorkDuration)
-            throw new BusinessException("Время работы должно быть не меньше двух часов.");
+        ScheduleRules.EnsureBreakInsideWorkInterval(workInterval, breakInterval);
+        ScheduleRules.EnsureBreakDoesNotTouchBorders(workInterval, breakInterval);
+        ScheduleRules.EnsureWorkIntervalDuration(workInterval);
         return new Schedule(
             Guid.NewGuid(),
             isWorking,
@@ -142,10 +137,8 @@ public class Schedule
 
     public void ChangeBreakInterval(TimeInterval? newBreakInterval)
     {
-        if (newBreakInterval is not null && !newBreakInterval.IsInside(WorkInterval))
-            throw new BusinessException("Заданное время перерыва не входит в рабочее время.");
-        if (newBreakInterval?.Start == WorkInterval.Start || newBreakInterval?.End == WorkInterval.End)
-            throw new BusinessException("Время перерыва не должно граничить с временем начала или конца работы.");
+        ScheduleRules.EnsureBreakInsideWorkInterval(WorkInterval, newBreakInterval);
+        ScheduleRules.EnsureBreakDoesNotTouchBorders(WorkInterval, newBreakInterval);
         if (newBreakInterval is not null && _appointments.Any(a =>
                 a.Interval.IsOverlapping(newBreakInterval) &&
                 a.Status is AppointmentStatus.Confirmed or AppointmentStatus.Pending))
@@ -157,10 +150,8 @@ public class Schedule
     {
         if (checkPast && DateTime.Now > Date.ToDateTime(newWorkInterval.Start))
             throw new BusinessException("Нельзя создать рабочий день в прошлом.");
-        if (newWorkInterval.Duration < MinimumWorkDuration)
-            throw new BusinessException("Время работы должно быть не меньше двух часов.");
-        if (BreakInterval is not null && !BreakInterval.IsInside(newWorkInterval))
-            throw new BusinessException("Заданное время перерыва не входит в рабочее время.");
+        ScheduleRules.EnsureWorkIntervalDuration(newWorkInterval);
+        ScheduleRules.EnsureBreakInsideWorkInterval(newWorkInterval, BreakInterval);
         if (_appointments.Any(a =>
                 !a.Interval.IsInside(newWorkInterval) &&
                 a.Status is AppointmentStatus.Confirmed or AppointmentStatus.Pending))
