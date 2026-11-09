@@ -16,7 +16,8 @@ public class Schedule
         bool isWorking,
         DateOnly date,
         TimeInterval workInterval,
-        TimeInterval? breakInterval
+        TimeInterval? breakInterval,
+        ScheduleSource source
     )
     {
         Id = id;
@@ -24,6 +25,7 @@ public class Schedule
         Date = date;
         WorkInterval = workInterval;
         BreakInterval = breakInterval;
+        Source = source;
     }
 
     public Guid Id { get; }
@@ -36,6 +38,9 @@ public class Schedule
     public IReadOnlyCollection<Appointment> Appointments
         => _appointments;
 
+    public bool HasActiveAppointments
+        => _appointments.Any(a => a.Status is AppointmentStatus.Pending or AppointmentStatus.Confirmed);
+
     private readonly List<Appointment> _appointments = [];
 
     public static Schedule Create(
@@ -43,7 +48,8 @@ public class Schedule
         bool isWorking,
         TimeInterval workInterval,
         TimeInterval? breakInterval,
-        bool checkPast = true
+        bool checkPast = true,
+        ScheduleSource source = ScheduleSource.Manual
     )
     {
         if (checkPast && (date < DateOnly.FromDateTime(DateTime.Now) ||
@@ -61,7 +67,8 @@ public class Schedule
             isWorking,
             date,
             workInterval,
-            breakInterval
+            breakInterval,
+            source
         );
     }
 
@@ -164,5 +171,27 @@ public class Schedule
         if (!isWorking && _appointments.Any(a => a.Status is AppointmentStatus.Pending or AppointmentStatus.Confirmed))
             throw new BusinessException("Нельзя завершить рабочий день с назначенными записями.");
         IsWorking = isWorking;
+    }
+
+    /// <summary>
+    /// Приводит день к настройкам генерации и помечает его как Auto.
+    /// Дни с активными записями вызывающий пропускает.
+    /// </summary>
+    public void AlignToSettings(bool isWorking, TimeInterval workInterval, TimeInterval? breakInterval)
+    {
+        if (BreakInterval is not null && !BreakInterval.IsInside(workInterval))
+            ChangeBreakInterval(null);
+        ChangeWorkInterval(workInterval);
+        ChangeIsWorking(isWorking);
+        ChangeBreakInterval(breakInterval);
+        Source = ScheduleSource.Auto;
+    }
+
+    /// <summary>
+    /// Помечает день как измененный вручную: генерация его не трогает.
+    /// </summary>
+    public void MarkAsManual()
+    {
+        Source = ScheduleSource.Manual;
     }
 }

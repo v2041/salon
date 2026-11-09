@@ -1,5 +1,5 @@
 ﻿using Domain.Entities;
-using Domain.ValueObjects;
+using Domain.Services;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,29 +17,15 @@ public class ScheduleService(IServiceScopeFactory scopeFactory, ILogger<Schedule
                 using var scope = scopeFactory.CreateScope();
                 var db = scope.ServiceProvider.GetRequiredService<SalonDbContext>();
 
-                var today = DateOnly.FromDateTime(DateTime.Now);
-                var createBound = today.AddDays(14);
-
-                var schedules = await db.Schedules
-                    .Where(s => s.Date >= today && s.Date <= createBound)
-                    .ToListAsync(token);
-
-                List<Schedule> newSchedules = [];
-                for (var i = 1; i < 14; i++)
+                var settings = await db.SalonSettings.FirstOrDefaultAsync(token);
+                if (settings is null)
                 {
-                    var date = today.AddDays(i);
-                    if (schedules.Any(s => s.Date == date)) continue;
-                    var newSchedule = Schedule.Create(
-                        date,
-                        date.DayOfWeek != DayOfWeek.Sunday,
-                        TimeInterval.Create(TimeOnly.Parse("10:00"), TimeOnly.Parse("18:00")),
-                        TimeInterval.Create(TimeOnly.Parse("15:00"), TimeOnly.Parse("15:20"))
-                    );
-                    newSchedules.Add(newSchedule);
+                    logger.LogWarning("Настройки не найдены. Генерация расписания пропущена.");
                 }
-
-                db.Schedules.AddRange(newSchedules);
-                await db.SaveChangesAsync(token);
+                else
+                {
+                    await GenerateAsync(db, settings, token);
+                }
 
                 await Task.Delay(100000, token);
             }
@@ -48,5 +34,24 @@ public class ScheduleService(IServiceScopeFactory scopeFactory, ILogger<Schedule
                 logger.LogError(exception, exception.Message);
             }
         }
+    }
+
+    private static async Task GenerateAsync(SalonDbContext db, SalonSettings settings, CancellationToken token)
+    {
+        var today = DateOnly.FromDateTime(DateTime.Now);
+        var horizonEnd = today.AddDays(settings.HorizonDays);
+        var schedules = await db.Schedules
+            .Include(s => s.Appointments)
+            .Where(s => s.Date > today && s.Date <= horizonEnd)
+            .ToListAsync(token);
+
+        var plan = SchedulePlanner.BuildGenerationPlan(
+            settings,
+            schedules.Select(ScheduleDayState.FromSchedule).ToList(),
+            today);
+
+        var created = SchedulePlanner.Apply(plan, schedules.ToDictionary(s => s.Date));
+        db.Schedules.AddRange(created);
+        await db.SaveChangesAsync(token);
     }
 }
