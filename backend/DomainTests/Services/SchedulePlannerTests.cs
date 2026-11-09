@@ -51,7 +51,7 @@ public class SchedulePlannerTests
     public class BuildGenerationPlan
     {
         [Fact]
-        public void WhenGenerationDisabled_ReturnsEmptyPlan()
+        public void BuildGenerationPlan_GenerationDisabled_ReturnsEmptyPlan()
         {
             var settings = CreateSettings(generationEnabled: false, horizonDays: 3);
 
@@ -61,7 +61,7 @@ public class SchedulePlannerTests
         }
 
         [Fact]
-        public void CreatesMissingDaysFromTomorrowToHorizon()
+        public void BuildGenerationPlan_MissingDays_CreatesFromTomorrowToHorizon()
         {
             var settings = CreateSettings(horizonDays: 3);
 
@@ -78,7 +78,7 @@ public class SchedulePlannerTests
         }
 
         [Fact]
-        public void WhenWeekendDay_CreatesNonWorkingDayWithSettingsIntervals()
+        public void BuildGenerationPlan_WeekendDay_CreatesNonWorkingDayWithSettingsIntervals()
         {
             var settings = CreateSettings(horizonDays: 7, weekendDays: [DayOfWeek.Sunday]);
 
@@ -92,7 +92,7 @@ public class SchedulePlannerTests
         }
 
         [Fact]
-        public void DoesNotTouchTodayOrDaysAfterHorizon()
+        public void BuildGenerationPlan_TodayAndDaysAfterHorizon_DoesNotTouch()
         {
             var settings = CreateSettings(horizonDays: 3);
             var existing = new[]
@@ -109,7 +109,7 @@ public class SchedulePlannerTests
         }
 
         [Fact]
-        public void WhenDayIsManual_SkipsIt()
+        public void BuildGenerationPlan_ManualDay_Skips()
         {
             var settings = CreateSettings(horizonDays: 1);
             var date = Today.AddDays(1);
@@ -125,7 +125,7 @@ public class SchedulePlannerTests
         }
 
         [Fact]
-        public void WhenDayHasActiveAppointments_SkipsIt()
+        public void BuildGenerationPlan_DayWithActiveAppointments_Skips()
         {
             var settings = CreateSettings(horizonDays: 1);
             var date = Today.AddDays(1);
@@ -140,7 +140,7 @@ public class SchedulePlannerTests
         }
 
         [Fact]
-        public void WhenAutoDayDiffers_ChangesIt()
+        public void BuildGenerationPlan_AutoDayDiffers_Changes()
         {
             var settings = CreateSettings(horizonDays: 1);
             var date = Today.AddDays(1);
@@ -156,7 +156,7 @@ public class SchedulePlannerTests
         }
 
         [Fact]
-        public void WhenAutoDayIsNonWorking_ChangesIt()
+        public void BuildGenerationPlan_AutoDayNonWorking_Changes()
         {
             var settings = CreateSettings(horizonDays: 1);
             var date = Today.AddDays(1);
@@ -170,7 +170,7 @@ public class SchedulePlannerTests
         }
 
         [Fact]
-        public void WhenAutoDayMatches_SkipsIt()
+        public void BuildGenerationPlan_AutoDayMatches_Skips()
         {
             var settings = CreateSettings(horizonDays: 1);
             var date = Today.AddDays(1);
@@ -187,7 +187,7 @@ public class SchedulePlannerTests
     public class BuildApplyPlan
     {
         [Fact]
-        public void WhenGenerationDisabled_StillBuildsPlan()
+        public void BuildApplyPlan_GenerationDisabled_StillBuildsPlan()
         {
             var settings = CreateSettings(generationEnabled: false, horizonDays: 1);
 
@@ -198,7 +198,7 @@ public class SchedulePlannerTests
         }
 
         [Fact]
-        public void CreatesMissingDaysUpToHorizon()
+        public void BuildApplyPlan_MissingDays_CreatesUpToHorizon()
         {
             var settings = CreateSettings(horizonDays: 3);
 
@@ -211,7 +211,7 @@ public class SchedulePlannerTests
         }
 
         [Fact]
-        public void WhenManualDayWithoutAppointments_ChangesIt()
+        public void BuildApplyPlan_ManualDayWithoutAppointments_Changes()
         {
             var settings = CreateSettings(horizonDays: 1);
             var date = Today.AddDays(1);
@@ -226,7 +226,7 @@ public class SchedulePlannerTests
         }
 
         [Fact]
-        public void WhenAutoDayBeyondHorizonDiffers_ChangesIt()
+        public void BuildApplyPlan_AutoDayBeyondHorizonDiffers_Changes()
         {
             var settings = CreateSettings(horizonDays: 1);
             var date = Today.AddDays(10);
@@ -240,7 +240,7 @@ public class SchedulePlannerTests
         }
 
         [Fact]
-        public void WhenDayHasActiveAppointments_SkipsIt()
+        public void BuildApplyPlan_DayWithActiveAppointments_Skips()
         {
             var settings = CreateSettings(horizonDays: 1);
             var date = Today.AddDays(1);
@@ -254,7 +254,7 @@ public class SchedulePlannerTests
         }
 
         [Fact]
-        public void DoesNotTouchToday()
+        public void BuildApplyPlan_Today_DoesNotTouch()
         {
             var settings = CreateSettings(horizonDays: 1);
             var existing = CreateDay(Today, workInterval: OtherWorkInterval, hasBreak: false);
@@ -265,7 +265,7 @@ public class SchedulePlannerTests
         }
 
         [Fact]
-        public void WhenAutoDayMatches_SkipsIt()
+        public void BuildApplyPlan_AutoDayMatches_Skips()
         {
             var settings = CreateSettings(horizonDays: 1);
             var date = Today.AddDays(1);
@@ -282,7 +282,7 @@ public class SchedulePlannerTests
     public class Apply
     {
         [Fact]
-        public void Create_ReturnsScheduleWithAutoSource()
+        public void Apply_Create_ReturnsScheduleWithAutoSource()
         {
             var date = Today.AddDays(1);
             var plan = new[]
@@ -301,7 +301,7 @@ public class SchedulePlannerTests
         }
 
         [Fact]
-        public void Change_AlignsExistingDayAndMarksAuto()
+        public void Apply_Change_AlignsExistingDayAndMarksAuto()
         {
             var date = Today.AddDays(1);
             var schedule = Schedule.Create(date, true, OtherWorkInterval, null, checkPast: false);
@@ -320,7 +320,7 @@ public class SchedulePlannerTests
         }
 
         [Fact]
-        public void Skip_DoesNotTouchExistingDay()
+        public void Apply_Skip_DoesNotTouchExistingDay()
         {
             var date = Today.AddDays(1);
             var schedule = Schedule.Create(date, true, OtherWorkInterval, null, checkPast: false);
