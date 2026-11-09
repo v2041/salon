@@ -10,6 +10,7 @@ public static class SettingsModule
 
         group.MapGet("/", GetSettings.Endpoint.GetSettingsAsync).RequireAuthorization("Admin");
         group.MapPut("/", ChangeSettings.Endpoint.ChangeSettingsAsync).RequireAuthorization("Admin");
+        group.MapPost("/apply", ApplySettings.Endpoint.ApplySettingsAsync).RequireAuthorization("Admin");
         group.MapGet("/contacts", GetContacts.Endpoint.GetContactsAsync);
     }
 }
