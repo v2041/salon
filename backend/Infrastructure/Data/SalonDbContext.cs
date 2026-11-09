@@ -10,6 +10,7 @@ public class SalonDbContext(DbContextOptions<SalonDbContext> options)
 {
     public DbSet<Appointment> Appointments { get; set; }
     public DbSet<Offering> Offerings { get; set; }
+    public DbSet<SalonSettings> SalonSettings { get; set; }
     public DbSet<Schedule> Schedules { get; set; }
     public DbSet<User> Users { get; set; }
     
@@ -21,6 +22,7 @@ public class SalonDbContext(DbContextOptions<SalonDbContext> options)
         modelBuilder.ApplyConfiguration(new AppointmentConfiguration());
         modelBuilder.ApplyConfiguration(new AppointmentOfferingConfiguration());
         modelBuilder.ApplyConfiguration(new OfferingConfiguration());
+        modelBuilder.ApplyConfiguration(new SalonSettingsConfiguration());
         modelBuilder.ApplyConfiguration(new ScheduleConfiguration());
         modelBuilder.ApplyConfiguration(new UserConfiguration());
         modelBuilder.ApplyConfiguration(new VerificationCodeConfiguration());

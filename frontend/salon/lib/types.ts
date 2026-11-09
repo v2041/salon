@@ -19,6 +19,16 @@ export enum UserRole {
     Admin = 1,
 }
 
+export enum DayOfWeek {
+    Sunday = 0,
+    Monday = 1,
+    Tuesday = 2,
+    Wednesday = 3,
+    Thursday = 4,
+    Friday = 5,
+    Saturday = 6,
+}
+
 export type Money = {
     value: number;
     currency: string;
@@ -235,4 +245,33 @@ export type BestClientResponse = {
     name: string;
     phoneNumber: string;
     spent: Money;
+};
+
+export type SettingsResponse = {
+    address: string;
+    phone: string;
+    workInterval: TimeInterval;
+    breakInterval: TimeInterval | null;
+    generationEnabled: boolean;
+    horizonDays: number;
+    weekendDays: DayOfWeek[];
+};
+
+export type ChangeSettingsRequest = {
+    address: string;
+    phone: string;
+    workInterval: TimeInterval;
+    breakInterval: TimeInterval | null;
+    generationEnabled: boolean;
+    horizonDays: number;
+    weekendDays: DayOfWeek[];
+};
+
+export type ContactsResponse = {
+    address: string;
+    phone: string;
+};
+
+export type ApplySettingsResponse = {
+    affectedDays: number;
 };

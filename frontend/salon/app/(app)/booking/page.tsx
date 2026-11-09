@@ -6,13 +6,11 @@ import {useEffect, useState} from "react";
 import Calendar from "@/components/booking/Calendar";
 import ServicePicker from "@/components/booking/ServicePicker";
 import TimeGrid from "@/components/booking/TimeGrid";
-import {appointmentsApi, offeringsApi, schedulesApi} from "@/lib/api";
-import {durationToMinutes, formatDayLabel, formatDurationValue, formatPrice, formatTimeOnly, timeToMinutes} from "@/lib/format";
+import {appointmentsApi, offeringsApi, schedulesApi, settingsApi} from "@/lib/api";
+import {durationToMinutes, formatDayLabel, formatDurationValue, formatPhone, formatPrice, formatTimeOnly, timeToMinutes} from "@/lib/format";
 import {accentInk, cardSx, darkSurface, serviceZoneBorder} from "@/lib/theme";
 import {buildSlots} from "@/lib/slots";
-import type {Money, OfferingResponse, TimeInterval} from "@/lib/types";
-
-const CONTACTS = {address: "ул. Примерная, д. 1", phone: "+7 (999) 123-45-67"};
+import type {ContactsResponse, Money, OfferingResponse, TimeInterval} from "@/lib/types";
 
 const darkSx = {
     p: 2,
@@ -271,20 +269,34 @@ export default function BookingPage() {
 }
 
 function ContactsCard() {
+    const [contacts, setContacts] = useState<ContactsResponse | null>(null);
+
+    useEffect(() => {
+        settingsApi.getContacts()
+            .then(setContacts)
+            .catch(() => setContacts(null));
+    }, []);
+
+    if (!contacts || (!contacts.address && !contacts.phone)) return null;
+
     return (
         <Paper sx={darkSx}>
             <Stack spacing={1.25}>
                 <Typography variant="overline" sx={{opacity: 0.6, letterSpacing: "0.14em"}}>Контакты</Typography>
-                <Stack direction="row" spacing={1.25} sx={{alignItems: "center"}}>
-                    <PlaceIcon fontSize="small" sx={{color: "secondary.main"}}/>
-                    <Typography variant="body2">{CONTACTS.address}</Typography>
-                </Stack>
-                <Stack direction="row" spacing={1.25} sx={{alignItems: "center"}}>
-                    <PhoneIcon fontSize="small" sx={{color: "secondary.main"}}/>
-                    <Typography variant="body2" component="a" href={`tel:${CONTACTS.phone}`} sx={{color: "inherit"}}>
-                        {CONTACTS.phone}
-                    </Typography>
-                </Stack>
+                {contacts.address && (
+                    <Stack direction="row" spacing={1.25} sx={{alignItems: "center"}}>
+                        <PlaceIcon fontSize="small" sx={{color: "secondary.main"}}/>
+                        <Typography variant="body2">{contacts.address}</Typography>
+                    </Stack>
+                )}
+                {contacts.phone && (
+                    <Stack direction="row" spacing={1.25} sx={{alignItems: "center"}}>
+                        <PhoneIcon fontSize="small" sx={{color: "secondary.main"}}/>
+                        <Typography variant="body2" component="a" href={`tel:${contacts.phone}`} sx={{color: "inherit"}}>
+                            {formatPhone(contacts.phone)}
+                        </Typography>
+                    </Stack>
+                )}
             </Stack>
         </Paper>
     );

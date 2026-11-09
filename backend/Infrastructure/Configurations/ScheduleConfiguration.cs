@@ -1,4 +1,5 @@
 ﻿using Domain.Entities;
+using Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -10,6 +11,7 @@ public class ScheduleConfiguration : IEntityTypeConfiguration<Schedule>
     {
         builder.HasKey(x => x.Id);
         builder.HasIndex(s => s.Date).IsUnique();
+        builder.Property(s => s.Source).HasDefaultValue(ScheduleSource.Manual);
         builder.OwnsOne(a => a.WorkInterval,
             interval =>
             {

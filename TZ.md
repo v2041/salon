@@ -49,12 +49,16 @@
 | PATCH | `/api/appointments/{AppointmentId}/offering/{OfferingId}/change-price` | Правка цены в записи | **Admin ✓** |
 | PATCH | `/api/appointments/{AppointmentId}/offering/{OfferingId}/change-duration` | Правка длительности услуги в записи | **Admin ✓** |
 | GET | `/api/analytics/*` (8 шт.: gain, offerings-popularity, offerings-gain, no-show-rate, average-check, average-hour-gain, workload-rate, best-clients) | Аналитика (вместо `schedules/gain`) | **Admin ✓** |
+| GET | `/api/settings` | Настройки мастера (контакты, генерация, горизонт, выходные) | **Admin ✓** |
+| PUT | `/api/settings` | Изменить настройки мастера | **Admin ✓** |
+| POST | `/api/settings/apply` | Применить настройки к будущим дням; ответ — число изменённых дней | **Admin ✓** |
+| GET | `/api/settings/contacts` | Публичные контакты салона (адрес, телефон) | нет (публичный) |
 | GET | `/healthz` | Health check (БД) | **не реализован** |
 
 `GET /api/schedules/gain` **удалён** — перенесён в `GET /api/analytics/gain`.
 Пути `change-status` / `change-time` / `change-price` отличаются от §5 (§5 приведено к коду).
 
-- **Фоновый сервис `ScheduleService`:** автогенерация расписания на 14 дней вперёд (ежедневно 10:00–18:00, перерыв 15:00–15:20, воскресенье — выходной), повтор каждые ~100 с.
+- **Фоновый сервис `ScheduleService`:** автогенерация расписания по настройкам мастера (`SalonSettings`): рабочие часы, перерыв, выходные дни, горизонт 1–60 дней; повтор каждые ~100 с.
 - **Тесты:** xUnit (Offering, Schedule, Money, TimeInterval, Appointment, User, TimelineBuilder, VerificationCode) — 110 тестов, 20.10.2026.
 
 ### 2.2 Frontend — есть

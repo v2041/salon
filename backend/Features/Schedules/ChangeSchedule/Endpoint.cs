@@ -22,6 +22,7 @@ public static class Endpoint
         schedule.ChangeWorkInterval(request.WorkInterval);
         schedule.ChangeBreakInterval(request.BreakInterval);
         schedule.ChangeIsWorking(request.IsWorking);
+        schedule.MarkAsManual();
 
         await db.SaveChangesAsync(token);
 

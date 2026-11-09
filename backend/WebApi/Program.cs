@@ -3,11 +3,13 @@ using Features.Analytics;
 using Features.Appointments;
 using Features.Offerings;
 using Features.Schedules;
+using Features.Settings;
 using Features.Users;
 using FluentValidation;
 using Infrastructure.BackgroundServices;
 using Infrastructure.Data;
 using Infrastructure.Notifications;
+using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -87,6 +89,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy("Admin", p => p.RequireRole("Admin"))
     .AddPolicy("User", p => p.RequireAuthenticatedUser());
+builder.Services.AddScoped<ScheduleGenerationRunner>();
 builder.Services.AddHostedService<ScheduleService>();
 var app = builder.Build();
 // Генерация docs/openapi.json при dotnet build стартует приложение в Production.
@@ -110,6 +113,7 @@ if (app.Environment.IsDevelopment())
 app.MapAppointmentsEndpoints();
 app.MapOfferingsEndpoints();
 app.MapSchedulesEndpoints();
+app.MapSettingsEndpoints();
 app.MapUsersEndpoints();
 app.MapAnalyticsEndpoints();
 app.Run();

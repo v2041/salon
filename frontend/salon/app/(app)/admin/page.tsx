@@ -7,6 +7,7 @@ import AppointmentsSection from "@/components/admin/AppointmentsSection";
 import CreateAppointmentSection from "@/components/admin/CreateAppointmentSection";
 import OfferingsSection from "@/components/admin/OfferingsSection";
 import ScheduleSection from "@/components/admin/ScheduleSection";
+import SettingsSection from "@/components/admin/SettingsSection";
 import {useAuth} from "@/lib/auth";
 import {accentInk} from "@/lib/theme";
 import {UserRole} from "@/lib/types";
@@ -17,6 +18,7 @@ const SECTIONS = [
     {key: "appointments", label: "Записи"},
     {key: "schedule", label: "График"},
     {key: "analytics", label: "Аналитика"},
+    {key: "settings", label: "Настройки"},
 ] as const;
 
 type SectionKey = (typeof SECTIONS)[number]["key"];
@@ -87,6 +89,7 @@ export default function AdminPage() {
                 {section === "appointments" && <AppointmentsSection/>}
                 {section === "schedule" && <ScheduleSection/>}
                 {section === "analytics" && <AnalyticsSection/>}
+                {section === "settings" && <SettingsSection/>}
             </Box>
         </Stack>
     );

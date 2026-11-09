@@ -1,6 +1,5 @@
-﻿using Domain.Entities;
-using Domain.ValueObjects;
-using Infrastructure.Data;
+﻿using Infrastructure.Data;
+using Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.BackgroundServices;
@@ -16,30 +15,17 @@ public class ScheduleService(IServiceScopeFactory scopeFactory, ILogger<Schedule
             {
                 using var scope = scopeFactory.CreateScope();
                 var db = scope.ServiceProvider.GetRequiredService<SalonDbContext>();
+                var runner = scope.ServiceProvider.GetRequiredService<ScheduleGenerationRunner>();
 
-                var today = DateOnly.FromDateTime(DateTime.Now);
-                var createBound = today.AddDays(14);
-
-                var schedules = await db.Schedules
-                    .Where(s => s.Date >= today && s.Date <= createBound)
-                    .ToListAsync(token);
-
-                List<Schedule> newSchedules = [];
-                for (var i = 1; i < 14; i++)
+                var settings = await db.SalonSettings.FirstOrDefaultAsync(token);
+                if (settings is null)
                 {
-                    var date = today.AddDays(i);
-                    if (schedules.Any(s => s.Date == date)) continue;
-                    var newSchedule = Schedule.Create(
-                        date,
-                        date.DayOfWeek != DayOfWeek.Sunday,
-                        TimeInterval.Create(TimeOnly.Parse("10:00"), TimeOnly.Parse("18:00")),
-                        TimeInterval.Create(TimeOnly.Parse("15:00"), TimeOnly.Parse("15:20"))
-                    );
-                    newSchedules.Add(newSchedule);
+                    logger.LogWarning("Настройки не найдены. Генерация расписания пропущена.");
                 }
-
-                db.Schedules.AddRange(newSchedules);
-                await db.SaveChangesAsync(token);
+                else
+                {
+                    await runner.GenerateAsync(settings, token);
+                }
 
                 await Task.Delay(100000, token);
             }

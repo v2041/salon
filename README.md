@@ -30,7 +30,7 @@
 
 **Система**
 
-- Фоновый сервис `ScheduleService` создаёт расписание на 14 дней вперёд: 10:00–18:00, перерыв 15:00–15:20, воскресенье — выходной.
+- Фоновый сервис `ScheduleService` создаёт расписание по настройкам мастера: рабочие часы, перерыв, выходные дни и горизонт генерации.
 - Доменные проверки: нет записи в прошлом, в перерыв, в выходной день и с пересечением.
 - Ошибки в формате `application/problem+json`, сообщения на русском языке.
 
@@ -230,6 +230,15 @@ docker compose start api
 | PATCH | `/{id}/change-time` | перенос времени, Admin |
 | PATCH | `/{AppointmentId}/offering/{OfferingId}/change-price` | правка цены, Admin |
 | PATCH | `/{AppointmentId}/offering/{OfferingId}/change-duration` | правка длительности, Admin |
+
+### Settings — `/api/settings`
+
+| Метод | Путь | Назначение |
+|---|---|---|
+| GET | `/` | настройки мастера, Admin |
+| PUT | `/` | изменить настройки, Admin |
+| POST | `/apply` | применить настройки к будущим дням, Admin |
+| GET | `/contacts` | адрес и телефон салона, публично |
 
 ### Analytics — `/api/analytics`
 
