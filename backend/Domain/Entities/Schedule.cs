@@ -39,7 +39,10 @@ public class Schedule
         => _appointments;
 
     public bool HasActiveAppointments
-        => _appointments.Any(a => a.Status is AppointmentStatus.Pending or AppointmentStatus.Confirmed);
+        => _appointments.Any(IsActive);
+
+    private static bool IsActive(Appointment appointment) =>
+        appointment.Status is AppointmentStatus.Pending or AppointmentStatus.Confirmed;
 
     private readonly List<Appointment> _appointments = [];
 
@@ -88,7 +91,7 @@ public class Schedule
         if (_appointments.Any(a =>
                 a.Id != exceptAppointmentId &&
                 a.Interval.IsOverlapping(interval) &&
-                a.Status is AppointmentStatus.Confirmed or AppointmentStatus.Pending))
+                IsActive(a)))
             throw new BusinessException("Запись не должна занимать время других записей.");
     }
 
@@ -148,7 +151,7 @@ public class Schedule
         ScheduleRules.EnsureBreakDoesNotTouchBorders(WorkInterval, newBreakInterval);
         if (newBreakInterval is not null && _appointments.Any(a =>
                 a.Interval.IsOverlapping(newBreakInterval) &&
-                a.Status is AppointmentStatus.Confirmed or AppointmentStatus.Pending))
+                IsActive(a)))
             throw new BusinessException("Заданное время перерыва пересекается с назначенными записями.");
         BreakInterval = newBreakInterval;
     }
@@ -161,14 +164,14 @@ public class Schedule
         ScheduleRules.EnsureBreakInsideWorkInterval(newWorkInterval, BreakInterval);
         if (_appointments.Any(a =>
                 !a.Interval.IsInside(newWorkInterval) &&
-                a.Status is AppointmentStatus.Confirmed or AppointmentStatus.Pending))
+                IsActive(a)))
             throw new BusinessException("Назначенные записи не входят в заданное рабочее время.");
         WorkInterval = newWorkInterval;
     }
 
     public void ChangeIsWorking(bool isWorking)
     {
-        if (!isWorking && _appointments.Any(a => a.Status is AppointmentStatus.Pending or AppointmentStatus.Confirmed))
+        if (!isWorking && HasActiveAppointments)
             throw new BusinessException("Нельзя завершить рабочий день с назначенными записями.");
         IsWorking = isWorking;
     }
