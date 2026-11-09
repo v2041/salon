@@ -514,6 +514,18 @@
         }
       }
     },
+    "/api/settings/apply": {
+      "post": {
+        "tags": [
+          "Settings"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/settings/contacts": {
       "get": {
         "tags": [
