@@ -186,4 +186,12 @@ public class Schedule
         ChangeBreakInterval(breakInterval);
         Source = ScheduleSource.Auto;
     }
+
+    /// <summary>
+    /// Помечает день как измененный вручную: генерация его не трогает.
+    /// </summary>
+    public void MarkAsManual()
+    {
+        Source = ScheduleSource.Manual;
+    }
 }

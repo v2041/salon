@@ -543,4 +543,39 @@ public class ScheduleTests
             Assert.False(schedule.HasActiveAppointments);
         }
     }
+
+    public class MarkAsManual
+    {
+        [Fact]
+        public void MarkAsManual_WhenAuto_SetsManual()
+        {
+            var schedule = Schedule.Create(
+                new DateOnly(2099, 1, 1),
+                true,
+                TimeInterval.Create(new TimeOnly(10, 0, 0), new TimeOnly(18, 0, 0)),
+                null,
+                source: ScheduleSource.Auto
+            );
+
+            schedule.MarkAsManual();
+
+            Assert.Equal(ScheduleSource.Manual, schedule.Source);
+        }
+
+        [Fact]
+        public void MarkAsManual_WhenAlreadyManual_KeepsManual()
+        {
+            var schedule = Schedule.Create(
+                new DateOnly(2099, 1, 1),
+                true,
+                TimeInterval.Create(new TimeOnly(10, 0, 0), new TimeOnly(18, 0, 0)),
+                null
+            );
+
+            schedule.MarkAsManual();
+            schedule.MarkAsManual();
+
+            Assert.Equal(ScheduleSource.Manual, schedule.Source);
+        }
+    }
 }
