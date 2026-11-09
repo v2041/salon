@@ -1,4 +1,5 @@
 using Domain.Entities;
+using Domain.Enums;
 using Domain.Exceptions;
 using Domain.ValueObjects;
 
@@ -129,6 +130,18 @@ public class ScheduleTests
             var workInterval = TimeInterval.Create(new TimeOnly(10, 0, 0), new TimeOnly(18, 0, 0));
             var schedule = Schedule.Create(date, true, workInterval, null, checkPast: false);
             Assert.Equal(date, schedule.Date);
+        }
+
+        [Fact]
+        public void Create_DefaultsToManualSource()
+        {
+            var schedule = Schedule.Create(
+                new DateOnly(2099, 1, 1),
+                true,
+                TimeInterval.Create(new TimeOnly(10, 0, 0), new TimeOnly(18, 0, 0)),
+                null
+            );
+            Assert.Equal(ScheduleSource.Manual, schedule.Source);
         }
     }
 

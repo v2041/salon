@@ -33,6 +33,7 @@ public class Schedule
     public DateOnly Date { get; private set; }
     public TimeInterval WorkInterval { get; private set; } = null!;
     public TimeInterval? BreakInterval { get; private set; }
+    public ScheduleSource Source { get; private set; } = ScheduleSource.Manual;
 
     public IReadOnlyCollection<Appointment> Appointments
         => _appointments;
