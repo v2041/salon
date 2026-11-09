@@ -89,6 +89,48 @@ namespace Infrastructure.Migrations
                     b.ToTable("Offerings");
                 });
 
+            modelBuilder.Entity("Domain.Entities.SalonSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<bool>("GenerationEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("HorizonDays")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasMaxLength(12)
+                        .HasColumnType("character varying(12)");
+
+                    b.PrimitiveCollection<int[]>("WeekendDays")
+                        .IsRequired()
+                        .HasColumnType("integer[]");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SalonSettings");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("7f2b9d64-3c1a-4e58-9b0d-6a5f4e3d2c1b"),
+                            Address = "ул. Примерная, д. 1",
+                            GenerationEnabled = true,
+                            HorizonDays = 14,
+                            Phone = "+79991234567",
+                            WeekendDays = new[] { 0 }
+                        });
+                });
+
             modelBuilder.Entity("Domain.Entities.Schedule", b =>
                 {
                     b.Property<Guid>("Id")
@@ -100,6 +142,11 @@ namespace Infrastructure.Migrations
 
                     b.Property<bool>("IsWorking")
                         .HasColumnType("boolean");
+
+                    b.Property<int>("Source")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
 
                     b.HasKey("Id");
 
@@ -306,6 +353,72 @@ namespace Infrastructure.Migrations
                         });
 
                     b.Navigation("Price")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Domain.Entities.SalonSettings", b =>
+                {
+                    b.OwnsOne("Domain.ValueObjects.TimeInterval", "BreakInterval", b1 =>
+                        {
+                            b1.Property<Guid>("SalonSettingsId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<TimeOnly>("End")
+                                .HasColumnType("time without time zone")
+                                .HasColumnName("BreakEndTime");
+
+                            b1.Property<TimeOnly>("Start")
+                                .HasColumnType("time without time zone")
+                                .HasColumnName("BreakStartTime");
+
+                            b1.HasKey("SalonSettingsId");
+
+                            b1.ToTable("SalonSettings");
+
+                            b1.WithOwner()
+                                .HasForeignKey("SalonSettingsId");
+
+                            b1.HasData(
+                                new
+                                {
+                                    SalonSettingsId = new Guid("7f2b9d64-3c1a-4e58-9b0d-6a5f4e3d2c1b"),
+                                    End = new TimeOnly(15, 20, 0),
+                                    Start = new TimeOnly(15, 0, 0)
+                                });
+                        });
+
+                    b.OwnsOne("Domain.ValueObjects.TimeInterval", "WorkInterval", b1 =>
+                        {
+                            b1.Property<Guid>("SalonSettingsId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<TimeOnly>("End")
+                                .HasColumnType("time without time zone")
+                                .HasColumnName("WorkEndTime");
+
+                            b1.Property<TimeOnly>("Start")
+                                .HasColumnType("time without time zone")
+                                .HasColumnName("WorkStartTime");
+
+                            b1.HasKey("SalonSettingsId");
+
+                            b1.ToTable("SalonSettings");
+
+                            b1.WithOwner()
+                                .HasForeignKey("SalonSettingsId");
+
+                            b1.HasData(
+                                new
+                                {
+                                    SalonSettingsId = new Guid("7f2b9d64-3c1a-4e58-9b0d-6a5f4e3d2c1b"),
+                                    End = new TimeOnly(18, 0, 0),
+                                    Start = new TimeOnly(10, 0, 0)
+                                });
+                        });
+
+                    b.Navigation("BreakInterval");
+
+                    b.Navigation("WorkInterval")
                         .IsRequired();
                 });
 
