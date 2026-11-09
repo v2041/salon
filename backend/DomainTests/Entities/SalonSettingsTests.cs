@@ -138,6 +138,13 @@ public class SalonSettingsTests
             => Assert.Throws<BusinessException>(() =>
                 SalonSettings.Create(Address, Phone, WorkInterval, BreakInterval, true, 14,
                     [DayOfWeek.Sunday, DayOfWeek.Sunday]));
+
+        [Theory]
+        [InlineData(-1)]
+        [InlineData(7)]
+        public void Create_WhenWeekendDayNotDefined_ThrowsBusinessException(int day)
+            => Assert.Throws<BusinessException>(() =>
+                SalonSettings.Create(Address, Phone, WorkInterval, BreakInterval, true, 14, [(DayOfWeek)day]));
     }
 
     public class Update
@@ -178,6 +185,16 @@ public class SalonSettingsTests
             var settings = CreateValid();
             Assert.Throws<BusinessException>(() =>
                 settings.Update(Address, "89991234567", WorkInterval, BreakInterval, true, 14, []));
+        }
+
+        [Theory]
+        [InlineData(-1)]
+        [InlineData(7)]
+        public void Update_WhenWeekendDayNotDefined_ThrowsBusinessException(int day)
+        {
+            var settings = CreateValid();
+            Assert.Throws<BusinessException>(() =>
+                settings.Update(Address, Phone, WorkInterval, BreakInterval, true, 14, [(DayOfWeek)day]));
         }
     }
 }

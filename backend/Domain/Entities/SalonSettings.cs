@@ -36,7 +36,7 @@ public class SalonSettings
         BreakInterval = breakInterval;
         GenerationEnabled = generationEnabled;
         HorizonDays = horizonDays;
-        _weekendDays = weekendDays;
+        _weekendDays.AddRange(weekendDays);
     }
 
     public Guid Id { get; }
@@ -47,29 +47,10 @@ public class SalonSettings
     public bool GenerationEnabled { get; private set; }
     public int HorizonDays { get; private set; }
 
-    private List<DayOfWeek> _weekendDays = [];
+    private readonly List<DayOfWeek> _weekendDays = [];
     public IReadOnlyCollection<DayOfWeek> WeekendDays => _weekendDays;
 
     public static SalonSettings Create(
-        string address,
-        string phone,
-        TimeInterval workInterval,
-        TimeInterval? breakInterval,
-        bool generationEnabled,
-        int horizonDays,
-        IEnumerable<DayOfWeek> weekendDays
-    ) => Create(
-        Guid.NewGuid(),
-        address,
-        phone,
-        workInterval,
-        breakInterval,
-        generationEnabled,
-        horizonDays,
-        weekendDays);
-
-    public static SalonSettings Create(
-        Guid id,
         string address,
         string phone,
         TimeInterval workInterval,
@@ -81,7 +62,7 @@ public class SalonSettings
     {
         var days = Validate(address, phone, workInterval, breakInterval, horizonDays, weekendDays);
         return new SalonSettings(
-            id,
+            Guid.NewGuid(),
             address,
             phone,
             workInterval,
@@ -108,7 +89,8 @@ public class SalonSettings
         BreakInterval = breakInterval;
         GenerationEnabled = generationEnabled;
         HorizonDays = horizonDays;
-        _weekendDays = days;
+        _weekendDays.Clear();
+        _weekendDays.AddRange(days);
     }
 
     private static List<DayOfWeek> Validate(
@@ -141,6 +123,8 @@ public class SalonSettings
             throw new BusinessException($"Выходных дней не может быть больше {MAX_WEEKEND_DAYS}.");
         if (days.Distinct().Count() != days.Count)
             throw new BusinessException("Выходные дни не должны повторяться.");
+        if (days.Any(day => !Enum.IsDefined(day)))
+            throw new BusinessException("Выходные дни содержат недопустимый день недели.");
         return days;
     }
 }
