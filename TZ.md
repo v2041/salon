@@ -58,7 +58,7 @@
 `GET /api/schedules/gain` **удалён** — перенесён в `GET /api/analytics/gain`.
 Пути `change-status` / `change-time` / `change-price` отличаются от §5 (§5 приведено к коду).
 
-- **Фоновый сервис `ScheduleService`:** автогенерация расписания на 14 дней вперёд (ежедневно 10:00–18:00, перерыв 15:00–15:20, воскресенье — выходной), повтор каждые ~100 с.
+- **Фоновый сервис `ScheduleService`:** автогенерация расписания по настройкам мастера (`SalonSettings`): рабочие часы, перерыв, выходные дни, горизонт 1–60 дней; повтор каждые ~100 с.
 - **Тесты:** xUnit (Offering, Schedule, Money, TimeInterval, Appointment, User, TimelineBuilder, VerificationCode) — 110 тестов, 20.10.2026.
 
 ### 2.2 Frontend — есть
