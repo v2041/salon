@@ -143,6 +143,19 @@ public class ScheduleTests
             );
             Assert.Equal(ScheduleSource.Manual, schedule.Source);
         }
+
+        [Fact]
+        public void Create_WithAutoSource_SetsSource()
+        {
+            var schedule = Schedule.Create(
+                new DateOnly(2099, 1, 1),
+                true,
+                TimeInterval.Create(new TimeOnly(10, 0, 0), new TimeOnly(18, 0, 0)),
+                null,
+                source: ScheduleSource.Auto
+            );
+            Assert.Equal(ScheduleSource.Auto, schedule.Source);
+        }
     }
 
     public class AddAppointment
@@ -462,6 +475,72 @@ public class ScheduleTests
             var schedule = CreateScheduleWithAppointment();
             schedule.ChangeIsWorking(true);
             Assert.True(schedule.IsWorking);
+        }
+    }
+
+    public class AlignToSettings
+    {
+        private static readonly TimeInterval OldWorkInterval =
+            TimeInterval.Create(new TimeOnly(10, 0, 0), new TimeOnly(18, 0, 0));
+
+        private static readonly TimeInterval OldBreakInterval =
+            TimeInterval.Create(new TimeOnly(15, 0, 0), new TimeOnly(15, 20, 0));
+
+        [Fact]
+        public void AlignToSettings_ChangesIntervalsAndMarksAuto()
+        {
+            var schedule = Schedule.Create(new DateOnly(2099, 1, 1), true, OldWorkInterval, OldBreakInterval);
+            var newWorkInterval = TimeInterval.Create(new TimeOnly(9, 0, 0), new TimeOnly(13, 0, 0));
+            var newBreakInterval = TimeInterval.Create(new TimeOnly(11, 0, 0), new TimeOnly(12, 0, 0));
+
+            schedule.AlignToSettings(true, newWorkInterval, newBreakInterval);
+
+            Assert.Equal(newWorkInterval, schedule.WorkInterval);
+            Assert.Equal(newBreakInterval, schedule.BreakInterval);
+            Assert.True(schedule.IsWorking);
+            Assert.Equal(ScheduleSource.Auto, schedule.Source);
+        }
+
+        [Fact]
+        public void AlignToSettings_WhenWeekend_SetsNonWorking()
+        {
+            var schedule = Schedule.Create(new DateOnly(2099, 1, 1), true, OldWorkInterval, OldBreakInterval);
+
+            schedule.AlignToSettings(false, OldWorkInterval, OldBreakInterval);
+
+            Assert.False(schedule.IsWorking);
+            Assert.Equal(OldWorkInterval, schedule.WorkInterval);
+            Assert.Equal(OldBreakInterval, schedule.BreakInterval);
+            Assert.Equal(ScheduleSource.Auto, schedule.Source);
+        }
+
+        [Fact]
+        public void AlignToSettings_WhenBreakIsRemoved_SetsNullBreak()
+        {
+            var schedule = Schedule.Create(new DateOnly(2099, 1, 1), true, OldWorkInterval, OldBreakInterval);
+
+            schedule.AlignToSettings(true, OldWorkInterval, null);
+
+            Assert.Null(schedule.BreakInterval);
+            Assert.Equal(ScheduleSource.Auto, schedule.Source);
+        }
+    }
+
+    public class HasActiveAppointments
+    {
+        [Fact]
+        public void HasActiveAppointments_WhenPendingAppointment_ReturnsTrue()
+        {
+            var schedule = CreateScheduleWithAppointment();
+            Assert.True(schedule.HasActiveAppointments);
+        }
+
+        [Fact]
+        public void HasActiveAppointments_WhenAppointmentCanceled_ReturnsFalse()
+        {
+            var schedule = CreateScheduleWithAppointment();
+            schedule.Appointments.Single().Cancel();
+            Assert.False(schedule.HasActiveAppointments);
         }
     }
 }
