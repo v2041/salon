@@ -46,14 +46,6 @@ export default function AppLayout({children}: {children: React.ReactNode}) {
         <>
             <AppBar position="sticky">
                 <Toolbar sx={{gap: 1.5, width: "100%", maxWidth: 560, mx: "auto", px: 2, minHeight: 64}}>
-                    <Avatar
-                        sx={{width: 30, height: 30, bgcolor: "secondary.main", fontSize: 15, fontWeight: 700}}
-                    >
-                        С
-                    </Avatar>
-                    <Typography variant="subtitle1" sx={{fontWeight: 700, mr: "auto", letterSpacing: "0.01em"}}>
-                        Салон
-                    </Typography>
                     <Stack
                         component="nav"
                         direction="row"

@@ -159,7 +159,7 @@ export default function BookingPage() {
                             </Typography>
                         </Stack>
                         <Typography variant="h6">{formatPrice(booked.price.value)}</Typography>
-                        <Button variant="contained" fullWidth onClick={reset}>Записаться ещё раз</Button>
+                        <Button variant="contained" fullWidth href="my-appointments">Посмотреть записи</Button>
                     </Stack>
                 </Paper>
                 <ContactsCard/>
