@@ -12,14 +12,14 @@ public class ScheduleConfiguration : IEntityTypeConfiguration<Schedule>
         builder.HasKey(x => x.Id);
         builder.HasIndex(s => s.Date).IsUnique();
         builder.Property(s => s.Source).HasDefaultValue(ScheduleSource.Manual);
-        builder.OwnsOne(a => a.WorkInterval,
+        builder.ComplexProperty(a => a.WorkInterval,
             interval =>
             {
                 interval.Property(p => p.Start).HasColumnName("WorkStartTime");
                 interval.Property(p => p.End).HasColumnName("WorkEndTime");
             }
         );
-        builder.OwnsOne(a => a.BreakInterval,
+        builder.ComplexProperty(a => a.BreakInterval,
             interval =>
             {
                 interval.Property(p => p.Start).HasColumnName("BreakStartTime");
