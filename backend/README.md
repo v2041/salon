@@ -43,16 +43,18 @@ Salon.API/
 ### Записи (Appointments)
 
 GET /api/appointments/{id} - Получить запись по ID (доступ: Admin)
-GET /api/appointments/all - Все записи (доступ: Admin)
-  Ответ: [{ "id": "guid", "date": "2026-08-10", "interval": { "start": "10:00:00", "end": "11:00:00" },
+GET /api/appointments/all?scope=upcoming&page=1&pageSize=20&status=0 - Записи мастера постранично (доступ: Admin)
+  Параметры: scope обязателен (upcoming | past); page с 1; pageSize 1–100; status 0–5, необязателен.
+  Ответ: { "items": [{ "id": "guid", "date": "2026-08-10", "interval": { "start": "10:00:00", "end": "11:00:00" },
     "status": 0, "price": { "value": 2000, "currency": "RUB" },
     "userId": "guid", "userName": "Иван", "userPhone": "+79341234567",
     "offerings": [{ "offeringId": "guid", "title": "Маникюр", "price": { "value": 2000, "currency": "RUB" },
-      "duration": "01:00:00" }] }]
-GET /api/appointments/user - Записи пользователя (доступ: User)
-  Ответ: [{ "id": "guid", "date": "2026-08-10", "interval": { "start": "10:00:00", "end": "11:00:00" },
+      "duration": "01:00:00" }] }], "page": 1, "pageSize": 20, "totalCount": 57 }
+GET /api/appointments/user?scope=upcoming&page=1&pageSize=20 - Записи пользователя постранично (доступ: User)
+  Ответ: { "items": [{ "id": "guid", "date": "2026-08-10", "interval": { "start": "10:00:00", "end": "11:00:00" },
     "status": 0, "price": { "value": 2000, "currency": "RUB" },
-    "offerings": [{ "title": "Маникюр", "price": { "value": 2000, "currency": "RUB" } }] }]
+    "offerings": [{ "title": "Маникюр", "price": { "value": 2000, "currency": "RUB" } }] }],
+    "page": 1, "pageSize": 20, "totalCount": 3 }
 POST /api/appointments/ - Создать запись (доступ: User)
   Тело (клиент): { "date": "2026-08-10", "time": "14:30:00", "offeringIds": ["guid"] }
 POST /api/appointments/admin - Создать запись клиенту по телефону (доступ: Admin)

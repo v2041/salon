@@ -14,7 +14,7 @@ Next.js 16 App Router, React 19, TypeScript strict, MUI 9. UI mobile-first. Node
 ## Компоненты
 
 - `export default function`.
-- Пропсы — локальный `type Props`.
+- Пропсы — локальный `type Props` (в файле с несколькими компонентами — `type <Имя>Props`).
 - `"use client"` — только для state, handlers или `useRouter`.
 - MUI — именованные импорты из `@mui/material`. Иконки — из `@mui/icons-material`.
 - Стили — только `sx` с theme-токенами. Без `styled()`, `makeStyles` и инлайн-CSS.

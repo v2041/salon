@@ -128,6 +128,25 @@ export type UserAppointmentResponse = AppointmentResponse & {
     offerings: UserAppointmentOffering[];
 };
 
+export type AppointmentScope = "upcoming" | "past";
+
+export type AppointmentsPageRequest = {
+    scope: AppointmentScope;
+    page: number;
+    pageSize: number;
+};
+
+export type AdminAppointmentsPageRequest = AppointmentsPageRequest & {
+    status?: AppointmentStatus;
+};
+
+export type PagedResponse<T> = {
+    items: T[];
+    page: number;
+    pageSize: number;
+    totalCount: number;
+};
+
 export type FreeTimeResponse = {
     freeIntervals: TimeInterval[];
 };

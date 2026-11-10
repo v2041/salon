@@ -21,3 +21,10 @@ public record GetAllAppointmentsResponse(
     string UserPhone,
     AppointmentStatus Status
 );
+
+public record GetAllAppointmentsPageResponse(
+    List<GetAllAppointmentsResponse> Items,
+    int Page,
+    int PageSize,
+    int TotalCount
+);

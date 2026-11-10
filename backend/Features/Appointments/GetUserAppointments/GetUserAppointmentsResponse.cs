@@ -16,3 +16,10 @@ public record GetUserAppointmentsResponse(
     Money Price,
     List<UserAppointmentOfferingResponse> Offerings
 );
+
+public record GetUserAppointmentsPageResponse(
+    List<GetUserAppointmentsResponse> Items,
+    int Page,
+    int PageSize,
+    int TotalCount
+);

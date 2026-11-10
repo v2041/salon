@@ -1,4 +1,7 @@
-﻿using Infrastructure.Data;
+﻿using Domain.Entities;
+using Domain.Enums;
+using FluentValidation;
+using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace Features.Appointments.GetAllAppointments;
@@ -6,16 +9,49 @@ namespace Features.Appointments.GetAllAppointments;
 public static class Endpoint
 {
     public static async Task<IResult> GetAllAppointmentsAsync(
+        [AsParameters] GetAllAppointmentsRequest request,
+        IValidator<GetAllAppointmentsRequest> validator,
         SalonDbContext db,
         CancellationToken token
     )
     {
-        var appointments = await db.Appointments
-            .AsNoTracking()
+        var validationResult = await validator.ValidateAsync(request, token);
+        if (!validationResult.IsValid)
+        {
+            var errors = validationResult.Errors
+                .GroupBy(e => e.PropertyName)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(e => e.ErrorMessage).ToArray()
+                );
+            return Results.ValidationProblem(errors);
+        }
+
+        var now = DateTime.Now;
+        var today = DateOnly.FromDateTime(now);
+        var nowTime = TimeOnly.FromDateTime(now);
+        var upcoming = request.Scope == "upcoming";
+
+        var slice = db.Appointments
+            .AsNoTracking();
+
+        if (request.Status.HasValue)
+        {
+            var status = (AppointmentStatus)request.Status.Value;
+            slice = slice.Where(a => a.Status == status);
+        }
+
+        slice = upcoming
+            ? slice.Where(Appointment.IsUpcoming(today, nowTime))
+            : slice.Where(Appointment.IsPast(today, nowTime));
+
+        var totalCount = await slice.CountAsync(token);
+
+        var appointments = await slice
+            .OrderByScope(upcoming)
             .Include(a => a.Schedule)
             .Include(a => a.Offerings)
-            .OrderBy(a => a.Schedule.Date)
-            .ThenBy(a => a.Interval.Start)
+            .TakePage(request.Page, request.PageSize)
             .ToListAsync(token);
 
         var userIds = appointments.Select(a => a.UserId).Distinct().ToList();
@@ -60,7 +96,11 @@ public static class Endpoint
             })
             .ToList();
 
-        return Results.Ok(response);
+        return Results.Ok(new GetAllAppointmentsPageResponse(
+            response,
+            request.Page,
+            request.PageSize,
+            totalCount));
     }
 
     private record UserShort(Guid Id, string FirstName, string? LastName, string Phone);

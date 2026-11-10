@@ -1,9 +1,11 @@
 ﻿import {
     type AdminAppointmentResponse,
+    type AdminAppointmentsPageRequest,
     type AppointmentDetailResponse,
     type AppointmentResponse,
     AppointmentStatus,
     type ApplySettingsResponse,
+    type AppointmentsPageRequest,
     type AvailableDatesResponse,
     type AverageCheckResponse,
     type BestClientResponse,
@@ -24,6 +26,7 @@
     type Money,
     type OfferingResponse,
     type OfferingsStatResponse,
+    type PagedResponse,
     type RateResponse,
     type RegisterRequest,
     type ScheduleResponse,
@@ -120,8 +123,10 @@ export const schedulesApi = {
 
 export const appointmentsApi = {
     get: (id: string) => apiFetch<AppointmentDetailResponse>(`/api/appointments/${id}`),
-    getAll: () => apiFetch<AdminAppointmentResponse[]>("/api/appointments/all"),
-    getByUser: () => apiFetch<UserAppointmentResponse[]>("/api/appointments/user"),
+    getAll: (request: AdminAppointmentsPageRequest) =>
+        apiFetch<PagedResponse<AdminAppointmentResponse>>(`/api/appointments/all${query({ ...request })}`),
+    getByUser: (request: AppointmentsPageRequest) =>
+        apiFetch<PagedResponse<UserAppointmentResponse>>(`/api/appointments/user${query({ ...request })}`),
     create: (request: CreateAppointmentRequest) =>
         apiFetch<AppointmentResponse>("/api/appointments/", { method: "POST", ...json(request) }),
     createForUser: (request: CreateAppointmentForUserRequest) =>

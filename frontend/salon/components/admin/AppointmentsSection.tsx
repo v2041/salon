@@ -1,12 +1,14 @@
 "use client";
 
 import {Alert, Button, Chip, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Paper, Select, Stack, TextField, Typography} from "@mui/material";
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {appointmentsApi} from "@/lib/api";
 import {durationToMinutes, formatDayLabel, formatDurationValue, formatPrice, formatTimeOnly, minutesToDuration} from "@/lib/format";
 import {accentInk, cardSx} from "@/lib/theme";
 import {AppointmentStatus} from "@/lib/types";
-import type {AdminAppointmentOffering, AdminAppointmentResponse} from "@/lib/types";
+import type {AdminAppointmentOffering, AdminAppointmentResponse, AppointmentScope} from "@/lib/types";
+
+const PAGE_SIZE = 20;
 
 const STATUS_META: Record<AppointmentStatus, {label: string; color: "warning" | "success" | "info" | "default" | "error"}> = {
     [AppointmentStatus.Pending]: {label: "Ожидает", color: "warning"},
@@ -46,21 +48,27 @@ const ACTIONS: Record<AppointmentStatus, Action[]> = {
 
 type Filter = AppointmentStatus | "all";
 
-function startOf(a: AdminAppointmentResponse) {
-    return new Date(`${a.date}T${a.interval.start}`);
-}
+type SectionData = {
+    items: AdminAppointmentResponse[];
+    page: number;
+    totalCount: number;
+};
+
+const EMPTY_SECTION: SectionData = {items: [], page: 0, totalCount: 0};
+
+type CardProps = {
+    appointment: AdminAppointmentResponse;
+    busy: boolean;
+    onStatus: (id: string, status: AppointmentStatus) => void;
+    onEdit: (appointment: AdminAppointmentResponse, offering: AdminAppointmentOffering) => void;
+};
 
 function AppointmentCard({
     appointment,
     busy,
     onStatus,
     onEdit,
-}: {
-    appointment: AdminAppointmentResponse;
-    busy: boolean;
-    onStatus: (id: string, status: AppointmentStatus) => void;
-    onEdit: (appointment: AdminAppointmentResponse, offering: AdminAppointmentOffering) => void;
-}) {
+}: CardProps) {
     const status = STATUS_META[appointment.status];
     return (
         <Paper sx={cardSx}>
@@ -119,26 +127,38 @@ function AppointmentCard({
     );
 }
 
+type SectionProps = {
+    title: string;
+    appointments: AdminAppointmentResponse[];
+    busyId: string | null;
+    totalCount: number;
+    loadMoreDisabled: boolean;
+    onStatus: (id: string, status: AppointmentStatus) => void;
+    onEdit: (appointment: AdminAppointmentResponse, offering: AdminAppointmentOffering) => void;
+    onLoadMore: () => void;
+};
+
 function Section({
     title,
     appointments,
     busyId,
+    totalCount,
+    loadMoreDisabled,
     onStatus,
     onEdit,
-}: {
-    title: string;
-    appointments: AdminAppointmentResponse[];
-    busyId: string | null;
-    onStatus: (id: string, status: AppointmentStatus) => void;
-    onEdit: (appointment: AdminAppointmentResponse, offering: AdminAppointmentOffering) => void;
-}) {
+    onLoadMore,
+}: SectionProps) {
     return (
         <Stack spacing={1.5}>
             <Stack direction="row" spacing={1} sx={{alignItems: "baseline"}}>
                 <Typography variant="overline" sx={{color: accentInk, letterSpacing: "0.14em"}}>
                     {title}
                 </Typography>
-                <Typography variant="caption" sx={{color: "text.secondary"}}>{appointments.length}</Typography>
+                {totalCount > 0 && (
+                    <Typography variant="caption" sx={{color: "text.secondary"}}>
+                        Показано {appointments.length} из {totalCount}
+                    </Typography>
+                )}
             </Stack>
             {appointments.length === 0 && (
                 <Typography variant="body2" sx={{color: "text.secondary"}}>Нет записей</Typography>
@@ -152,13 +172,27 @@ function Section({
                     onEdit={onEdit}
                 />
             ))}
+            {appointments.length < totalCount && (
+                <Button
+                    size="small"
+                    variant="outlined"
+                    disabled={loadMoreDisabled}
+                    onClick={onLoadMore}
+                    sx={{alignSelf: "center", minWidth: 160}}
+                >
+                    Показать ещё
+                </Button>
+            )}
         </Stack>
     );
 }
 
 export default function AppointmentsSection() {
-    const [appointments, setAppointments] = useState<AdminAppointmentResponse[]>([]);
+    const [upcoming, setUpcoming] = useState<SectionData>(EMPTY_SECTION);
+    const [past, setPast] = useState<SectionData>(EMPTY_SECTION);
     const [loading, setLoading] = useState(true);
+    const [pending, setPending] = useState(false);
+    const [loadingMore, setLoadingMore] = useState<AppointmentScope | null>(null);
     const [busyId, setBusyId] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [filter, setFilter] = useState<Filter>("all");
@@ -166,15 +200,49 @@ export default function AppointmentsSection() {
     const [editPrice, setEditPrice] = useState("");
     const [editMinutes, setEditMinutes] = useState("");
 
-    async function reload() {
-        setAppointments(await appointmentsApi.getAll());
+    const generation = useRef(0);
+
+    async function loadSection(scope: AppointmentScope, page: number, filterValue: Filter): Promise<SectionData> {
+        const res = await appointmentsApi.getAll({
+            scope,
+            page,
+            pageSize: PAGE_SIZE,
+            status: filterValue === "all" ? undefined : filterValue,
+        });
+        return {items: res.items, page: res.page, totalCount: res.totalCount};
+    }
+
+    async function refresh(filterValue: Filter) {
+        const request = ++generation.current;
+        setPending(true);
+        setLoadingMore(null);
+        setError(null);
+        try {
+            const [upcomingPage, pastPage] = await Promise.all([
+                loadSection("upcoming", 1, filterValue),
+                loadSection("past", 1, filterValue),
+            ]);
+            if (request !== generation.current) return;
+            setUpcoming(upcomingPage);
+            setPast(pastPage);
+        } catch {
+            if (request !== generation.current) return;
+            setError("Не удалось загрузить записи");
+        } finally {
+            if (request === generation.current) setPending(false);
+        }
     }
 
     useEffect(() => {
         let cancelled = false;
-        appointmentsApi.getAll()
-            .then(res => {
-                if (!cancelled) setAppointments(res);
+        Promise.all([
+            loadSection("upcoming", 1, "all"),
+            loadSection("past", 1, "all"),
+        ])
+            .then(([upcomingPage, pastPage]) => {
+                if (cancelled) return;
+                setUpcoming(upcomingPage);
+                setPast(pastPage);
             })
             .catch(() => {
                 if (!cancelled) setError("Не удалось загрузить записи");
@@ -187,12 +255,45 @@ export default function AppointmentsSection() {
         };
     }, []);
 
+    async function loadMore(scope: AppointmentScope) {
+        const request = generation.current;
+        const current = scope === "upcoming" ? upcoming : past;
+        setLoadingMore(scope);
+        setError(null);
+        try {
+            const res = await appointmentsApi.getAll({
+                scope,
+                page: current.page + 1,
+                pageSize: PAGE_SIZE,
+                status: filter === "all" ? undefined : filter,
+            });
+            if (request !== generation.current) return;
+            const apply = (prev: SectionData): SectionData => ({
+                items: [...prev.items, ...res.items],
+                page: res.page,
+                totalCount: res.totalCount,
+            });
+            if (scope === "upcoming") setUpcoming(apply);
+            else setPast(apply);
+        } catch {
+            if (request !== generation.current) return;
+            setError("Не удалось загрузить записи");
+        } finally {
+            if (request === generation.current) setLoadingMore(prev => (prev === scope ? null : prev));
+        }
+    }
+
+    function changeFilter(value: Filter) {
+        setFilter(value);
+        refresh(value);
+    }
+
     async function changeStatus(id: string, status: AppointmentStatus) {
         setBusyId(id);
         setError(null);
         try {
             await appointmentsApi.changeStatus({id, status});
-            await reload();
+            await refresh(filter);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Не удалось изменить статус");
         } finally {
@@ -232,7 +333,7 @@ export default function AppointmentsSection() {
             setError(err instanceof Error ? err.message : "Не удалось сохранить изменения");
         } finally {
             setBusyId(null);
-            reload().catch(() => {});
+            await refresh(filter);
         }
     }
 
@@ -240,18 +341,14 @@ export default function AppointmentsSection() {
         return <Stack sx={{alignItems: "center", py: 2}}><CircularProgress size={22}/></Stack>;
     }
 
-    const now = new Date();
-    const filtered = filter === "all" ? appointments : appointments.filter(a => a.status === filter);
-    const upcoming = filtered.filter(a => startOf(a) > now).sort((a, b) => +startOf(a) - +startOf(b));
-    const past = filtered.filter(a => startOf(a) <= now).sort((a, b) => +startOf(b) - +startOf(a));
-
     return (
         <Stack spacing={3}>
             {error && <Alert severity="error">{error}</Alert>}
             <Select
                 size="small"
                 value={filter}
-                onChange={e => setFilter(e.target.value as Filter)}
+                disabled={pending}
+                onChange={e => changeFilter(e.target.value as Filter)}
                 sx={{alignSelf: "flex-start", minWidth: 200, borderRadius: 2}}
             >
                 <MenuItem value="all">Все статусы</MenuItem>
@@ -261,17 +358,23 @@ export default function AppointmentsSection() {
             </Select>
             <Section
                 title="Предстоящие"
-                appointments={upcoming}
+                appointments={upcoming.items}
                 busyId={busyId}
+                totalCount={upcoming.totalCount}
+                loadMoreDisabled={pending || loadingMore === "upcoming"}
                 onStatus={changeStatus}
                 onEdit={openEdit}
+                onLoadMore={() => loadMore("upcoming")}
             />
             <Section
                 title="Прошедшие"
-                appointments={past}
+                appointments={past.items}
                 busyId={busyId}
+                totalCount={past.totalCount}
+                loadMoreDisabled={pending || loadingMore === "past"}
                 onStatus={changeStatus}
                 onEdit={openEdit}
+                onLoadMore={() => loadMore("past")}
             />
             <Dialog open={edit !== null} onClose={() => setEdit(null)} fullWidth maxWidth="xs">
                 <DialogTitle>Изменить услугу</DialogTitle>

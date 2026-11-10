@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Domain.Entities;
 using Domain.Enums;
 using Domain.Exceptions;
@@ -10,23 +11,31 @@ public class AppointmentTests
     private static readonly Money Price = Money.FromDecimal(1000);
     private static readonly TimeSpan Duration = TimeSpan.FromMinutes(30);
 
-    private static (Appointment Appointment, Guid OfferingId) CreateAppointment()
+    private static (Appointment Appointment, Guid OfferingId) CreateAppointment() =>
+        CreateAppointmentAt(new DateOnly(2099, 1, 1), TimeOnly.FromTimeSpan(TimeSpan.FromHours(11)));
+
+    private static readonly DateOnly FilterToday = new(2026, 11, 10);
+    private static readonly TimeOnly FilterNow = new(14, 0, 0);
+
+    private static (Appointment Appointment, Guid OfferingId) CreateAppointmentAt(DateOnly date, TimeOnly start)
     {
-        var date = new DateOnly(2099, 1, 1);
         var schedule = Schedule.Create(
             date,
             true,
-            TimeInterval.Create(
-                TimeOnly.FromTimeSpan(TimeSpan.FromHours(10)),
-                TimeOnly.FromTimeSpan(TimeSpan.FromHours(18))),
-            null);
+            TimeInterval.Create(new TimeOnly(10, 0, 0), new TimeOnly(18, 0, 0)),
+            null,
+            checkPast: false);
         var offeringId = Guid.NewGuid();
         var appointment = schedule.AddAppointment(
             Guid.NewGuid(),
-            TimeOnly.FromTimeSpan(TimeSpan.FromHours(11)),
-            [new AppointmentOfferingData(offeringId, Price, Duration)]);
+            start,
+            [new AppointmentOfferingData(offeringId, Price, Duration)],
+            checkPast: false);
         return (appointment, offeringId);
     }
+
+    private static bool Matches(Expression<Func<Appointment, bool>> filter, Appointment appointment) =>
+        filter.Compile()(appointment);
 
     public class ChangeOfferingDuration
     {
@@ -275,6 +284,50 @@ public class AppointmentTests
             appointment.Confirm();
             appointment.Complete();
             Assert.Throws<BusinessException>(() => appointment.Cancel());
+        }
+    }
+
+    public class IsUpcoming
+    {
+        [Theory]
+        [InlineData(-1, 12, 0)]
+        [InlineData(0, 13, 59)]
+        [InlineData(0, 14, 0)]
+        public void IsUpcoming_WithStartAtOrBeforeNow_ReturnsFalse(int dayOffset, int hour, int minute)
+        {
+            var (appointment, _) = CreateAppointmentAt(FilterToday.AddDays(dayOffset), new TimeOnly(hour, minute));
+            Assert.False(Matches(Appointment.IsUpcoming(FilterToday, FilterNow), appointment));
+        }
+
+        [Theory]
+        [InlineData(0, 14, 1)]
+        [InlineData(1, 12, 0)]
+        public void IsUpcoming_WithStartAfterNow_ReturnsTrue(int dayOffset, int hour, int minute)
+        {
+            var (appointment, _) = CreateAppointmentAt(FilterToday.AddDays(dayOffset), new TimeOnly(hour, minute));
+            Assert.True(Matches(Appointment.IsUpcoming(FilterToday, FilterNow), appointment));
+        }
+    }
+
+    public class IsPast
+    {
+        [Theory]
+        [InlineData(-1, 12, 0)]
+        [InlineData(0, 13, 59)]
+        [InlineData(0, 14, 0)]
+        public void IsPast_WithStartAtOrBeforeNow_ReturnsTrue(int dayOffset, int hour, int minute)
+        {
+            var (appointment, _) = CreateAppointmentAt(FilterToday.AddDays(dayOffset), new TimeOnly(hour, minute));
+            Assert.True(Matches(Appointment.IsPast(FilterToday, FilterNow), appointment));
+        }
+
+        [Theory]
+        [InlineData(0, 14, 1)]
+        [InlineData(1, 12, 0)]
+        public void IsPast_WithStartAfterNow_ReturnsFalse(int dayOffset, int hour, int minute)
+        {
+            var (appointment, _) = CreateAppointmentAt(FilterToday.AddDays(dayOffset), new TimeOnly(hour, minute));
+            Assert.False(Matches(Appointment.IsPast(FilterToday, FilterNow), appointment));
         }
     }
 }

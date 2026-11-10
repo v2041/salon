@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Domain.Enums;
 using Domain.Exceptions;
 using Domain.Services;
@@ -61,6 +62,14 @@ public class Appointment
             AppointmentStatus.Pending
         );
     }
+
+    public static Expression<Func<Appointment, bool>> IsUpcoming(DateOnly today, TimeOnly nowTime) =>
+        appointment => appointment.Schedule.Date > today
+            || (appointment.Schedule.Date == today && appointment.Interval.Start > nowTime);
+
+    public static Expression<Func<Appointment, bool>> IsPast(DateOnly today, TimeOnly nowTime) =>
+        appointment => appointment.Schedule.Date < today
+            || (appointment.Schedule.Date == today && appointment.Interval.Start <= nowTime);
 
     internal void ChangeInterval(TimeInterval interval)
     {

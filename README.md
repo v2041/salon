@@ -221,8 +221,8 @@ docker compose start api
 | Метод | Путь | Назначение |
 |---|---|---|
 | GET | `/{id}` | одна запись, Admin |
-| GET | `/all` | все записи, Admin |
-| GET | `/user` | записи текущего клиента |
+| GET | `/all?scope=upcoming&page=1&pageSize=20&status=0` | записи мастера, страница; `status` (0–5) необязателен, Admin |
+| GET | `/user?scope=upcoming&page=1&pageSize=20` | записи текущего клиента, страница |
 | POST | `/` | создать запись, `userId` из JWT |
 | POST | `/admin` | запись клиента мастером, Admin |
 | PATCH | `/{id}/cancel` | отмена своей записи |
@@ -230,6 +230,8 @@ docker compose start api
 | PATCH | `/{id}/change-time` | перенос времени, Admin |
 | PATCH | `/{AppointmentId}/offering/{OfferingId}/change-price` | правка цены, Admin |
 | PATCH | `/{AppointmentId}/offering/{OfferingId}/change-duration` | правка длительности, Admin |
+
+`/all` и `/user` отдают страницы. `scope` обязателен: `upcoming` — время начала позже текущего момента, `past` — не позже. Статус на деление не влияет. `page` — номер страницы с 1, `pageSize` — размер страницы от 1 до 100; по умолчанию 1 и 20. Ответ: `{ items, page, pageSize, totalCount }`. Порядок: `upcoming` — от ближайшей, `past` — от самой свежей. Неверные параметры → 400. Админка фильтрует статус на сервере.
 
 ### Settings — `/api/settings`
 
