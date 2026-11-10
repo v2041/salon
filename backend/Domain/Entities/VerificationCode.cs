@@ -31,6 +31,7 @@ public class VerificationCode
 
     public static VerificationCode Create(string phone)
     {
+        phone = NormalizePhone(phone);
         var now = DateTime.UtcNow;
         var expiresAt = now.AddMinutes(CODE_TTL_MINUTES);
         var code = GenerateCode();
@@ -58,5 +59,9 @@ public class VerificationCode
         Code = GenerateCode();
         AttemptsCount = 0;
         return true;
+    }
+    public static string NormalizePhone(string phone)
+    {
+        return phone.StartsWith('8') ? string.Concat("+7", phone.AsSpan(1)) : phone;
     }
 }

@@ -17,15 +17,16 @@ public static class Endpoint
         CancellationToken token
     )
     {
-        if (await db.Users.AnyAsync(u => u.Phone == request.Phone, token))
+        var phone = VerificationCode.NormalizePhone(request.Phone);
+        if (await db.Users.AnyAsync(u => u.Phone == phone, token))
             return Results.BadRequest("Номер телефона уже зарегистрирован");
         var code = await db.VerificationCodes.FirstOrDefaultAsync(v =>
-            v.Phone == request.Phone, token);
+            v.Phone == phone, token);
         if (code is null)
             return Results.BadRequest("Неверный код");
         var result = code.Verify(request.Code);
         if (result == VerificationResult.Invalid
-            && !await VerificationCodeCounter.TryCountFailedAttemptAsync(db.VerificationCodes, request.Phone, token))
+            && !await VerificationCodeCounter.TryCountFailedAttemptAsync(db.VerificationCodes, phone, token))
         {
             result = VerificationResult.Blocked;
         }
@@ -38,7 +39,7 @@ public static class Endpoint
                 _ => "Неверный код"
             });
         }
-        var user = User.Create(request.FirstName, request.LastName, request.Phone, DateTime.UtcNow);
+        var user = User.Create(request.FirstName, request.LastName, phone, DateTime.UtcNow);
         db.VerificationCodes.Remove(code);
         db.Users.Add(user);
         await db.SaveChangesAsync(token);

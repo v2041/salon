@@ -1,4 +1,5 @@
-﻿using Domain.Enums;
+﻿using Domain.Entities;
+using Domain.Enums;
 using Infrastructure.Authentication;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
@@ -16,13 +17,14 @@ public static class Endpoint
         CancellationToken token
     )
     {
+        var phone = VerificationCode.NormalizePhone(request.Phone);
         var code = await db.VerificationCodes.FirstOrDefaultAsync(x =>
-            x.Phone == request.Phone, token);
+            x.Phone == phone, token);
         if (code == null)
             return Results.BadRequest("Неверный номер телефона или код");
         var result = code.Verify(request.Code);
         if (result == VerificationResult.Invalid
-            && !await VerificationCodeCounter.TryCountFailedAttemptAsync(db.VerificationCodes, request.Phone, token))
+            && !await VerificationCodeCounter.TryCountFailedAttemptAsync(db.VerificationCodes, phone, token))
         {
             result = VerificationResult.Blocked;
         }
@@ -36,7 +38,7 @@ public static class Endpoint
             });
         }
 
-        var user = await db.Users.FirstOrDefaultAsync(u => u.Phone == request.Phone, token);
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Phone == phone, token);
         if (user == null)
             return Results.BadRequest("Пользователь не найден");
         db.VerificationCodes.Remove(code);

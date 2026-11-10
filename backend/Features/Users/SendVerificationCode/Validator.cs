@@ -10,7 +10,7 @@ public class Validator : AbstractValidator<SendVerificationCodeRequest>
         RuleFor(request => request.Phone)
             .NotEmpty()
             .WithMessage("Требуется номер телефона.")
-            .Matches(@"^\+7\d{10}$")
-            .WithMessage("Телефон должен быть в формате +7XXXXXXXXXX.");
+            .Matches(@"^(?:\+7|8)\d{10}$")
+            .WithMessage("Телефон должен быть в формате +7XXXXXXXXXX или 8XXXXXXXXXX");
     }
 }

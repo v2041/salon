@@ -30,8 +30,9 @@ public static class Endpoint
             return Results.ValidationProblem(errors);
         }
 
-        var isRegistered = await db.Users.AnyAsync(u => u.Phone == request.Phone, token);
-        var existing = await db.VerificationCodes.FirstOrDefaultAsync(x => x.Phone == request.Phone, token);
+        var phone = VerificationCode.NormalizePhone(request.Phone);
+        var isRegistered = await db.Users.AnyAsync(u => u.Phone == phone, token);
+        var existing = await db.VerificationCodes.FirstOrDefaultAsync(x => x.Phone == phone, token);
 
         VerificationCode code;
         if (existing is not null)
@@ -43,15 +44,16 @@ public static class Endpoint
         }
         else
         {
-            code = VerificationCode.Create(request.Phone);
+            code = VerificationCode.Create(phone);
             db.VerificationCodes.Add(code);
         }
 
-        var result = await sender.SendAsync(request.Phone, code.Code, token);
+        var result = await sender.SendAsync(phone, code.Code, token);
         if (!result.Delivered)
         {
             return Results.Ok(CreateResponse(
-                code, isRegistered, SendVerificationCodeResponse.StatusBindingRequired, result.BindingUrl, environment));
+                code, isRegistered, SendVerificationCodeResponse.StatusBindingRequired, result.BindingUrl,
+                environment));
         }
 
         await db.SaveChangesAsync(token);
