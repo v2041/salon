@@ -10,7 +10,9 @@ public class Validator : AbstractValidator<CreateAppointmentForUserRequest>
 
         RuleFor(x => x.Phone)
             .NotEmpty()
-            .WithMessage("Телефон обязателен");
+            .WithMessage("Телефон обязателен")
+            .Matches(@"^(?:\+7|8)[0-9]{10}$")
+            .WithMessage("Телефон должен быть в формате +7XXXXXXXXXX или 8XXXXXXXXXX");
 
         RuleFor(x => x.FirstName)
             .MaximumLength(50)

@@ -30,7 +30,7 @@ public static class Endpoint
             return Results.ValidationProblem(errors);
         }
 
-        var phone = request.Phone.Trim();
+        var phone = VerificationCode.NormalizePhone(request.Phone.Trim());
         var user = await db.Users
             .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Phone == phone, token);

@@ -6,7 +6,7 @@ import Calendar from "@/components/booking/Calendar";
 import ServicePicker from "@/components/booking/ServicePicker";
 import TimeGrid from "@/components/booking/TimeGrid";
 import {ApiError, appointmentsApi, offeringsApi, schedulesApi} from "@/lib/api";
-import {durationToMinutes, formatDayLabel, formatPrice, formatTimeOnly} from "@/lib/format";
+import {durationToMinutes, formatDayLabel, formatPhone, formatPrice, formatTimeOnly} from "@/lib/format";
 import {buildSlots} from "@/lib/slots";
 import {cardSx, serviceZoneBorder} from "@/lib/theme";
 import type {OfferingResponse, TimeInterval} from "@/lib/types";
@@ -77,6 +77,7 @@ export default function CreateAppointmentSection() {
     const selected = offerings.filter(o => selectedIds.includes(o.id));
     const totalDuration = selected.reduce((sum, o) => sum + durationToMinutes(o.duration), 0);
     const slots = date ? buildSlots(intervals, totalDuration) : [];
+    const phoneValid = /^(?:\+7|8)\d{10}$/.test(phone.trim());
 
     function toggle(id: string) {
         const next = selectedIds.includes(id)
@@ -105,7 +106,7 @@ export default function CreateAppointmentSection() {
         setCreated(null);
         try {
             const res = await appointmentsApi.createForUser({
-                phone,
+                phone: phone.trim(),
                 firstName: firstName.trim() || undefined,
                 lastName: lastName.trim() || undefined,
                 date,
@@ -113,7 +114,7 @@ export default function CreateAppointmentSection() {
                 offeringIds: selectedIds,
             });
             setCreated(
-                `${phone}: ${formatDayLabel(res.date)}, ` +
+                `${formatPhone(phone.trim())}: ${formatDayLabel(res.date)}, ` +
                 `${formatTimeOnly(res.interval.start)}–${formatTimeOnly(res.interval.end)}, ` +
                 `${formatPrice(res.price.value)}`
             );
@@ -145,6 +146,8 @@ export default function CreateAppointmentSection() {
                 value={phone}
                 onChange={e => setPhone(e.target.value)}
                 placeholder="+79341234567"
+                error={phone.length > 0 && !phoneValid}
+                helperText="Форматы: +7XXXXXXXXXX или 8XXXXXXXXXX"
                 fullWidth
             />
             <Paper sx={{...cardSx, p: 1.5, border: 3, borderColor: serviceZoneBorder}}>
@@ -164,7 +167,7 @@ export default function CreateAppointmentSection() {
             <Button
                 variant="contained"
                 size="large"
-                disabled={!phone || selectedIds.length === 0 || !date || !time || submitting}
+                disabled={!phoneValid || selectedIds.length === 0 || !date || !time || submitting}
                 onClick={submit}
             >
                 Создать запись
@@ -174,7 +177,7 @@ export default function CreateAppointmentSection() {
                 <DialogContent>
                     <Stack spacing={2} sx={{pt: 1}}>
                         <DialogContentText>
-                            Клиент с телефоном {phone} не зарегистрирован. Введите имя и фамилию — система создаст карточку клиента и запись.
+                            Клиент с телефоном {formatPhone(phone.trim())} не зарегистрирован. Введите имя и фамилию — система создаст карточку клиента и запись.
                         </DialogContentText>
                         {error && <Alert severity="error">{error}</Alert>}
                         <TextField
