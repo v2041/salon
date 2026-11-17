@@ -1,7 +1,7 @@
 namespace Infrastructure.Notifications;
 
 /// <summary>
-/// Настройки бота салона. Секция конфига — <see cref="SectionName"/>.
+/// Настройки бота студии. Секция конфига — <see cref="SectionName"/>.
 /// </summary>
 public class TelegramOptions
 {
