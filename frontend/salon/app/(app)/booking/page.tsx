@@ -186,7 +186,7 @@ export default function BookingPage() {
                     <Paper sx={{...cardSx, p: 1.5, border: 3, borderColor: serviceZoneBorder}}>
                         {offeringsLoading
                             ? <Loader/>
-                            : <ServicePicker offerings={offerings} selectedIds={selectedIds} onToggle={toggle}/>}
+                            : <ServicePicker offerings={offerings} selectedIds={selectedIds} onToggle={toggle} showDescription/>}
                     </Paper>
                     <Paper sx={darkSx}>
                         <Stack direction="row" spacing={2} sx={{alignItems: "center"}}>

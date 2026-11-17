@@ -1,7 +1,7 @@
 "use client";
 
-import {CheckCircle as CheckCircleIcon} from "@mui/icons-material";
-import {ButtonBase, Stack, Typography} from "@mui/material";
+import {CheckCircle as CheckCircleIcon, ExpandMore as ExpandMoreIcon} from "@mui/icons-material";
+import {ButtonBase, Collapse, Stack, Typography} from "@mui/material";
 import {durationToMinutes, formatCategory, formatDurationValue, formatPrice} from "@/lib/format";
 import {cardShadow, accentInk} from "@/lib/theme";
 import type {Category, OfferingResponse} from "@/lib/types";
@@ -10,9 +10,10 @@ type Props = {
     offerings: OfferingResponse[];
     selectedIds: string[];
     onToggle: (id: string) => void;
+    showDescription?: boolean;
 };
 
-export default function ServicePicker({offerings, selectedIds, onToggle}: Props) {
+export default function ServicePicker({offerings, selectedIds, onToggle, showDescription = false}: Props) {
     const groups: {category: Category; items: OfferingResponse[]}[] = [];
     for (const o of offerings) {
         const group = groups.find(g => g.category === o.category);
@@ -29,10 +30,14 @@ export default function ServicePicker({offerings, selectedIds, onToggle}: Props)
                     </Typography>
                     {g.items.map(o => {
                         const selected = selectedIds.includes(o.id);
+                        const hasDescription = showDescription && o.description.length > 0;
+                        const descriptionId = hasDescription ? `offering-description-${o.id}` : undefined;
                         return (
                             <ButtonBase
                                 key={o.id}
                                 onClick={() => onToggle(o.id)}
+                                aria-expanded={hasDescription ? selected : undefined}
+                                aria-controls={descriptionId}
                                 sx={{
                                     display: "block",
                                     width: "100%",
@@ -63,7 +68,24 @@ export default function ServicePicker({offerings, selectedIds, onToggle}: Props)
                                             sx={{color: selected ? accentInk : "rgba(36,27,27,0.15)"}}
                                         />
                                     </Stack>
+                                    {hasDescription && (
+                                        <ExpandMoreIcon
+                                            fontSize="small"
+                                            sx={{
+                                                color: "text.secondary",
+                                                transform: selected ? "rotate(180deg)" : "rotate(0deg)",
+                                                transition: "transform .2s",
+                                            }}
+                                        />
+                                    )}
                                 </Stack>
+                                {hasDescription && (
+                                    <Collapse id={descriptionId} in={selected} timeout={200}>
+                                        <Typography variant="body2" color="text.secondary" sx={{mt: 1.5, overflowWrap: "break-word"}}>
+                                            {o.description}
+                                        </Typography>
+                                    </Collapse>
+                                )}
                             </ButtonBase>
                         );
                     })}
