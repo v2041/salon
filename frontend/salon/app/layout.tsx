@@ -19,8 +19,8 @@ const display = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-    title: "Салон красоты",
-    description: "Онлайн-запись в салон красоты",
+    title: "Студия красоты",
+    description: "Онлайн-запись в студию красоты",
 };
 
 export const viewport: Viewport = {

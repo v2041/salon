@@ -67,7 +67,7 @@ export default function LoginScreen() {
                         <Typography variant="overline" sx={{color: accentInk, letterSpacing: "0.16em"}}>
                             Онлайн-запись
                         </Typography>
-                        <Typography variant="h5">Салон красоты</Typography>
+                        <Typography variant="h5">Студия красоты</Typography>
                     </Stack>
                     {step === "phone" ? (
                         <>
@@ -88,7 +88,7 @@ export default function LoginScreen() {
                     ) : step === "binding" ? (
                         <>
                             <Typography variant="body2" color="text.secondary">
-                                Откройте бота салона в Telegram и нажмите «Поделиться номером». Затем вернитесь на сайт.
+                                Откройте бота студии в Telegram и нажмите «Поделиться номером». Затем вернитесь на сайт.
                             </Typography>
                             {bindingUrl && (
                                 <Button
