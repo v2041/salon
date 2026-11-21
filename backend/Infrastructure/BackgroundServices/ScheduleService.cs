@@ -27,7 +27,7 @@ public class ScheduleService(IServiceScopeFactory scopeFactory, ILogger<Schedule
                     await runner.GenerateAsync(settings, token);
                 }
 
-                await Task.Delay(100000, token);
+                await Task.Delay(43200000, token);
             }
             catch (Exception exception)
             {
