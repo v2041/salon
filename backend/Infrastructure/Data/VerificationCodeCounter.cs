@@ -1,4 +1,5 @@
 using Domain.Entities;
+using Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data;
@@ -7,7 +8,7 @@ public static class VerificationCodeCounter
 {
     public static async Task<bool> TryCountFailedAttemptAsync(
         DbSet<VerificationCode> codes,
-        string phone,
+        PhoneNumber phone,
         CancellationToken token
     )
     {

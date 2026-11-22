@@ -1,5 +1,6 @@
 using Domain.Entities;
 using Domain.Enums;
+using Domain.ValueObjects;
 
 namespace DomainTests.Entities;
 
@@ -10,7 +11,7 @@ public class UserTests
         [Fact]
         public void Create_Always_SetsDefaultRole()
         {
-            var user = User.Create("Имя", "Фамилия", "+79990000000", new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+            var user = User.Create("Имя", "Фамилия", PhoneNumber.Create("+79990000000"), new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
 
             Assert.Equal(UserRole.Default, user.Role);
         }
@@ -21,7 +22,7 @@ public class UserTests
         private readonly User _user = User.Create(
             "Имя",
             "Фамилия",
-            "+79990000000",
+            PhoneNumber.Create("+79990000000"),
             new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
 
         [Fact]

@@ -1,19 +1,21 @@
+using Domain.ValueObjects;
+
 namespace Infrastructure.Entities;
 
 public class TelegramBinding
 {
-    public string Phone { get; private set; }
+    public PhoneNumber Phone { get; private set; }
     public long ChatId { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
-    private TelegramBinding(string phone, long chatId, DateTime updatedAt)
+    private TelegramBinding(PhoneNumber phone, long chatId, DateTime updatedAt)
     {
         Phone = phone;
         ChatId = chatId;
         UpdatedAt = updatedAt;
     }
 
-    public static TelegramBinding Create(string phone, long chatId)
+    public static TelegramBinding Create(PhoneNumber phone, long chatId)
     {
         return new TelegramBinding(phone, chatId, DateTime.UtcNow);
     }

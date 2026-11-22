@@ -1,3 +1,4 @@
+using Domain.ValueObjects;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -13,7 +14,7 @@ public class TelegramBotCodeSender(
     TelegramBotClient client,
     IOptions<TelegramOptions> options) : ICodeSender
 {
-    public async Task<CodeSendResult> SendAsync(string phone, string code, CancellationToken cancellationToken)
+    public async Task<CodeSendResult> SendAsync(PhoneNumber phone, string code, CancellationToken cancellationToken)
     {
         var binding = await db.TelegramBindings
             .FirstOrDefaultAsync(x => x.Phone == phone, cancellationToken);

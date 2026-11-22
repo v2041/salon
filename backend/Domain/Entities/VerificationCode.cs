@@ -1,5 +1,6 @@
 ﻿using System.Security.Cryptography;
 using Domain.Enums;
+using Domain.ValueObjects;
 
 namespace Domain.Entities;
 
@@ -9,7 +10,7 @@ public class VerificationCode
     public const int CODE_TTL_MINUTES = 5;
     public const int RESEND_COOLDOWN_MINUTES = 1;
 
-    public string Phone { get; private set; } = null!;
+    public PhoneNumber Phone { get; private set; } = null!;
     public string Code { get; private set; } = null!;
     public DateTime ExpiresAt { get; private set; }
     public DateTime CreatedAt { get; private set; }
@@ -20,7 +21,7 @@ public class VerificationCode
     {
     }
 
-    private VerificationCode(string phone, string code, DateTime expiresAt, DateTime createdAt, int attemptsCount)
+    private VerificationCode(PhoneNumber phone, string code, DateTime expiresAt, DateTime createdAt, int attemptsCount)
     {
         Phone = phone;
         Code = code;
@@ -29,9 +30,8 @@ public class VerificationCode
         AttemptsCount = attemptsCount;
     }
 
-    public static VerificationCode Create(string phone)
+    public static VerificationCode Create(PhoneNumber phone)
     {
-        phone = NormalizePhone(phone);
         var now = DateTime.UtcNow;
         var expiresAt = now.AddMinutes(CODE_TTL_MINUTES);
         var code = GenerateCode();
@@ -59,9 +59,5 @@ public class VerificationCode
         Code = GenerateCode();
         AttemptsCount = 0;
         return true;
-    }
-    public static string NormalizePhone(string phone)
-    {
-        return phone.StartsWith('8') ? string.Concat("+7", phone.AsSpan(1)) : phone;
     }
 }

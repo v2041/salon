@@ -1,10 +1,11 @@
+using Domain.ValueObjects;
 using Infrastructure.Entities;
 
 namespace DomainTests.Entities;
 
 public class TelegramBindingTests
 {
-    private const string Phone = "+79991234567";
+    private static readonly PhoneNumber Phone = PhoneNumber.Create("+79991234567");
     private const long ChatId = 123456789L;
 
     public class Create

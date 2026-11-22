@@ -39,8 +39,7 @@ public class TelegramUpdateHandler(SalonDbContext db, ITelegramMessageSender sen
         CancellationToken cancellationToken)
     {
         if (message.FromId is null || contact.UserId != message.FromId) return;
-        if (NormalizePhone(contact.PhoneNumber) is not { } phone) return;
-
+        var phone = contact.PhoneNumber;
         var binding = await db.TelegramBindings
             .FirstOrDefaultAsync(x => x.Phone == phone, cancellationToken);
         if (binding is null)
@@ -55,14 +54,6 @@ public class TelegramUpdateHandler(SalonDbContext db, ITelegramMessageSender sen
 
         await sender.SendMessageAsync(message.ChatId, BoundText, null, cancellationToken);
     }
-
-    private static string? NormalizePhone(string phoneNumber)
-    {
-        var digits = new string(phoneNumber.Where(char.IsDigit).ToArray());
-        if (digits.Length == 11 && digits[0] == '8') digits = "7" + digits[1..];
-        return digits.Length == 11 && digits[0] == '7' ? "+" + digits : null;
-    }
-
     private static object ContactKeyboard() => new
     {
         keyboard = new[]

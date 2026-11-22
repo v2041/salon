@@ -18,7 +18,7 @@ public static class Endpoint
             .Select(u => new
             {
                 Name = u.FirstName,
-                PhoneNumber = u.Phone,
+                PhoneNumber = u.Phone.Value,
                 Spent = db.Appointments
                     .Where(a => a.UserId == u.Id && a.Status == AppointmentStatus.Completed)
                     .SelectMany(a => a.Offerings)

@@ -24,7 +24,7 @@ public static class Endpoint
             user.Id,
             user.FirstName,
             user.LastName,
-            user.Phone,
+            user.Phone.Value,
             user.Role
         ));
     }

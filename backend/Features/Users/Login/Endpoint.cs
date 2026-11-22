@@ -1,5 +1,5 @@
-﻿using Domain.Entities;
-using Domain.Enums;
+﻿using Domain.Enums;
+using Domain.ValueObjects;
 using Infrastructure.Authentication;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
@@ -17,7 +17,7 @@ public static class Endpoint
         CancellationToken token
     )
     {
-        var phone = VerificationCode.NormalizePhone(request.Phone);
+        var phone = PhoneNumber.Create(request.Phone);
         var code = await db.VerificationCodes.FirstOrDefaultAsync(x =>
             x.Phone == phone, token);
         if (code == null)

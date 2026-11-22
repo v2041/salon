@@ -8,8 +8,8 @@ namespace Seeder;
 
 public static class DemoSeeder
 {
-    private const string AdminPhone = "+79991234567";
-    private const string ClientPhone = "+79341234567";
+    private static readonly PhoneNumber AdminPhone = PhoneNumber.Create("+79991234567");
+    private static readonly PhoneNumber ClientPhone = PhoneNumber.Create("+79341234567");
     private const int ClientCount = 60;
     private const int DaysBack = 120;
     private const int DaysAhead = 21;
@@ -110,7 +110,7 @@ public static class DemoSeeder
             var firstName = FirstNames[i % FirstNames.Length];
             var lastName = LastNames[(i * 7 + 3) % LastNames.Length];
             string? optionalLastName = i % 11 == 0 ? null : lastName;
-            var phone = $"+7916{1000000 + i:D7}";
+            var phone = PhoneNumber.Create($"+7916{1000000 + i:D7}");
             var createdAt = DateTime.UtcNow.AddDays(-(14 + i * 4 % 240)).AddHours(-(i % 9));
             result.Add(User.Create(firstName, optionalLastName, phone, createdAt));
         }

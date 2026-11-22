@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using Domain.ValueObjects;
 using Infrastructure.Data;
 using Infrastructure.Entities;
 using Infrastructure.Notifications;
@@ -10,7 +11,7 @@ namespace DomainTests.Notifications;
 
 public class TelegramBotCodeSenderTests
 {
-    private const string Phone = "+79991234567";
+    private static readonly PhoneNumber Phone = PhoneNumber.Create("+79991234567");
     private const string Code = "1234";
     private const long ChatId = 123456789L;
     private const string Username = "salon_test_bot";

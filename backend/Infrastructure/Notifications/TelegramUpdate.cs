@@ -1,3 +1,5 @@
+using Domain.ValueObjects;
+
 namespace Infrastructure.Notifications;
 
 /// <summary>Обновление из Bot API.</summary>
@@ -7,4 +9,4 @@ public sealed record TelegramUpdate(long UpdateId, TelegramMessage? Message);
 public sealed record TelegramMessage(long ChatId, long? FromId, string? Text, TelegramContact? Contact);
 
 /// <summary>Контакт из кнопки «Поделиться номером».</summary>
-public sealed record TelegramContact(string PhoneNumber, long? UserId);
+public sealed record TelegramContact(PhoneNumber PhoneNumber, long? UserId);

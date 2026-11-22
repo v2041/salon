@@ -58,7 +58,7 @@ public static class Endpoint
         var users = await db.Users
             .AsNoTracking()
             .Where(u => userIds.Contains(u.Id))
-            .Select(u => new UserShort(u.Id, u.FirstName, u.LastName, u.Phone))
+            .Select(u => new UserShort(u.Id, u.FirstName, u.LastName, u.Phone.Value))
             .ToDictionaryAsync(u => u.Id, token);
 
         var offeringIds = appointments

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Domain.ValueObjects;
 using Infrastructure.Data;
 using Infrastructure.Entities;
 using Infrastructure.Notifications;
@@ -8,7 +9,7 @@ namespace DomainTests.Notifications;
 
 public class TelegramUpdateHandlerTests
 {
-    private const string Phone = "+79991234567";
+    private static readonly PhoneNumber Phone = PhoneNumber.Create("+79991234567");
     private const long ChatId = 555L;
     private const long OtherId = 777L;
 
@@ -149,7 +150,7 @@ public class TelegramUpdateHandlerTests
             var sender = new RecordingSender();
             using var db = CreateDb();
             var handler = CreateHandler(db, sender);
-            var contact = new TelegramContact("8 (999) 123-45-67", ChatId);
+            var contact = new TelegramContact(PhoneNumber.Create("8 (999) 123-45-67"), ChatId);
 
             await handler.HandleAsync(
                 new TelegramUpdate(6, new TelegramMessage(ChatId, ChatId, null, contact)),

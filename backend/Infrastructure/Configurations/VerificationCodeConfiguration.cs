@@ -1,4 +1,5 @@
 ﻿using Domain.Entities;
+using Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -9,5 +10,10 @@ public class VerificationCodeConfiguration : IEntityTypeConfiguration<Verificati
     public void Configure(EntityTypeBuilder<VerificationCode> builder)
     {
         builder.HasKey(x => x.Phone);
+        builder.Property(x => x.Phone)
+            .HasConversion(
+                phone => phone.Value,
+                value => PhoneNumber.Create(value)
+            );
     }
 }

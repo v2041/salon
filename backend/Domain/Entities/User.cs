@@ -1,4 +1,5 @@
 ﻿using Domain.Enums;
+using Domain.ValueObjects;
 
 namespace Domain.Entities;
 
@@ -12,7 +13,7 @@ public class User
         Guid id,
         string firstName,
         string? lastName,
-        string phone,
+        PhoneNumber phone,
         DateTime dateTime,
         UserRole role
     )
@@ -29,7 +30,7 @@ public class User
     public Guid Id { get; }
     public string FirstName { get; private set; } = null!;
     public string? LastName { get; private set; }
-    public string Phone { get; private set; } = null!;
+    public PhoneNumber Phone { get; private set; } = null!;
     public DateTime CreatedAt { get; private set; }
     public DateTime LastLoginAt { get; private set; }
     public UserRole Role { get; private set; }
@@ -37,7 +38,7 @@ public class User
     public static User Create(
         string firstName,
         string? lastName,
-        string phone,
+        PhoneNumber phone,
         DateTime dateTime
     )
     {
@@ -47,7 +48,7 @@ public class User
     public static User Create(
         string firstName,
         string? lastName,
-        string phone,
+        PhoneNumber phone,
         DateTime dateTime,
         Guid id
     )

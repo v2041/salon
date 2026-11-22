@@ -143,7 +143,7 @@ public class TelegramBotClientTests
             var updates = await client.GetUpdatesAsync();
 
             var contact = Assert.Single(updates).Message!.Contact;
-            Assert.Equal("+79991234567", contact!.PhoneNumber);
+            Assert.Equal("+79991234567", contact!.PhoneNumber.Value);
             Assert.Equal(555, contact.UserId);
         }
 

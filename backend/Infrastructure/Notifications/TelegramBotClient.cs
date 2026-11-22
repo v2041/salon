@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using Domain.ValueObjects;
 
 namespace Infrastructure.Notifications;
 
@@ -147,7 +148,7 @@ public class TelegramBotClient(HttpClient httpClient, string token) : ITelegramM
             {
                 userId = userIdValue.GetInt64();
             }
-            contact = new TelegramContact(contactValue.GetProperty("phone_number").GetString()!, userId);
+            contact = new TelegramContact(PhoneNumber.Create(contactValue.GetProperty("phone_number").GetString()!), userId);
         }
 
         return new TelegramMessage(chatId, fromId, text, contact);

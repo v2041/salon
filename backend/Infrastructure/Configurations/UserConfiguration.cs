@@ -1,5 +1,6 @@
 ﻿using Domain.Entities;
 using Domain.Enums;
+using Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -18,12 +19,17 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
     public void Configure(EntityTypeBuilder<User> builder)
     {
         builder.HasKey(x => x.Id);
+        builder.Property(x => x.Phone)
+            .HasConversion(
+                phone => phone.Value,
+                value => PhoneNumber.Create(value)
+            )
+            .HasColumnName("PhoneNumber");
         builder.HasIndex(x => x.Phone).IsUnique();
-
         var admin = User.Create(
             "Admin",
             "Test",
-            "+79991234567",
+            PhoneNumber.Create("+79991234567"),
             SeedDate,
             AdminSeedId
         );
@@ -34,7 +40,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             User.Create(
                 "Client",
                 "Test",
-                "+79341234567",
+                PhoneNumber.Create("+79341234567"),
                 SeedDate,
                 ClientSeedId
             )

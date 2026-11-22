@@ -1,11 +1,12 @@
 using Domain.Entities;
 using Domain.Enums;
+using Domain.ValueObjects;
 
 namespace DomainTests.Entities;
 
 public class VerificationCodeTests
 {
-    private const string Phone = "+79991234567";
+    private static readonly PhoneNumber Phone = PhoneNumber.Create("+79991234567");
 
     public class Create
     {
@@ -18,22 +19,7 @@ public class VerificationCodeTests
             Assert.False(code.IsBlocked);
         }
     }
-
-    public class NormalizePhone
-    {
-        [Fact]
-        public void NormalizePhone_WithLeadingEight_ReturnsPlusSeven()
-        {
-            Assert.Equal(Phone, VerificationCode.NormalizePhone("89991234567"));
-        }
-
-        [Fact]
-        public void NormalizePhone_WithPlusSeven_KeepsValue()
-        {
-            Assert.Equal(Phone, VerificationCode.NormalizePhone(Phone));
-        }
-    }
-
+    
     public class Verify
     {
         [Fact]
