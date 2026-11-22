@@ -6,7 +6,7 @@ import Calendar from "@/components/booking/Calendar";
 import ServicePicker from "@/components/booking/ServicePicker";
 import TimeGrid from "@/components/booking/TimeGrid";
 import {ApiError, appointmentsApi, offeringsApi, schedulesApi} from "@/lib/api";
-import {durationToMinutes, formatDayLabel, formatPhone, formatPrice, formatTimeOnly} from "@/lib/format";
+import {durationToMinutes, formatDayLabel, formatPhone, formatPrice, formatTimeOnly, normalizePhone} from "@/lib/format";
 import {buildSlots} from "@/lib/slots";
 import {cardSx, serviceZoneBorder} from "@/lib/theme";
 import type {OfferingResponse, TimeInterval} from "@/lib/types";
@@ -77,7 +77,7 @@ export default function CreateAppointmentSection() {
     const selected = offerings.filter(o => selectedIds.includes(o.id));
     const totalDuration = selected.reduce((sum, o) => sum + durationToMinutes(o.duration), 0);
     const slots = date ? buildSlots(intervals, totalDuration) : [];
-    const phoneValid = /^(?:\+7|8)\d{10}$/.test(phone.trim());
+    const phoneValid = normalizePhone(phone) !== null;
 
     function toggle(id: string) {
         const next = selectedIds.includes(id)

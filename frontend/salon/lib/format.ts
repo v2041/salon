@@ -43,6 +43,15 @@ export function formatPhone(phone: string) {
     return match ? `+7 (${match[1]}) ${match[2]}-${match[3]}-${match[4]}` : phone;
 }
 
+// Логика дублирует Domain/ValueObjects/PhoneNumber.NormalizePhone.
+// Возвращает нормализованный номер или null, если номер неверный.
+export function normalizePhone(phone: string): string | null {
+    const digits = phone.replace(/[^0-9]/g, "");
+    if (digits.length === 11 && (digits[0] === "7" || digits[0] === "8")) return `+7${digits.slice(1)}`;
+    if (digits.length === 10) return `+7${digits}`;
+    return null;
+}
+
 export function formatCategory(category: Category) {
     switch (category) {
         case Category.Hair:
