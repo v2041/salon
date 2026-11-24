@@ -3,18 +3,18 @@
 import {Logout as LogoutIcon} from "@mui/icons-material";
 import {
     AppBar,
-    Avatar,
     Box,
+    Button,
     ButtonBase,
     CircularProgress,
     IconButton,
     Stack,
     Toolbar,
     Tooltip,
-    Typography,
 } from "@mui/material";
 import Link from "next/link";
 import {usePathname} from "next/navigation";
+import {useState} from "react";
 import LoginScreen from "@/components/LoginScreen";
 import {useAuth} from "@/lib/auth";
 import {UserRole} from "@/lib/types";
@@ -26,9 +26,13 @@ const TABS = [
 
 const ADMIN_TAB = {path: "/admin", label: "Панель"};
 
+// Гость видит эту страницу без входа — требование модерации VK ID.
+const GUEST_PATH = "/booking";
+
 export default function AppLayout({children}: {children: React.ReactNode}) {
     const {user, loading, signOut} = useAuth();
     const pathname = usePathname();
+    const [showLogin, setShowLogin] = useState(false);
 
     if (loading) {
         return (
@@ -38,9 +42,12 @@ export default function AppLayout({children}: {children: React.ReactNode}) {
         );
     }
 
-    if (!user) return <LoginScreen/>;
+    if (!user && showLogin) return <LoginScreen onBack={() => setShowLogin(false)}/>;
+    if (!user && pathname !== GUEST_PATH) return <LoginScreen/>;
 
-    const tabs = user.role === UserRole.Admin ? [...TABS, ADMIN_TAB] : TABS;
+    const tabs = !user
+        ? TABS.filter(t => t.path === GUEST_PATH)
+        : user.role === UserRole.Admin ? [...TABS, ADMIN_TAB] : TABS;
 
     return (
         <>
@@ -75,11 +82,30 @@ export default function AppLayout({children}: {children: React.ReactNode}) {
                             );
                         })}
                     </Stack>
-                    <Tooltip title="Выход">
-                        <IconButton onClick={signOut} sx={{color: "rgba(255,255,255,0.65)"}}>
-                            <LogoutIcon fontSize="small"/>
-                        </IconButton>
-                    </Tooltip>
+                    {user ? (
+                        <Tooltip title="Выход">
+                            <IconButton onClick={signOut} sx={{color: "rgba(255,255,255,0.65)"}}>
+                                <LogoutIcon fontSize="small"/>
+                            </IconButton>
+                        </Tooltip>
+                    ) : (
+                        <Button
+                            size="small"
+                            onClick={() => setShowLogin(true)}
+                            sx={{
+                                borderRadius: 999,
+                                px: 1.5,
+                                py: 0.75,
+                                fontSize: 13.5,
+                                fontWeight: 700,
+                                color: "#FFFFFF",
+                                bgcolor: "rgba(255,255,255,0.16)",
+                                "&:hover": {bgcolor: "rgba(255,255,255,0.24)"},
+                            }}
+                        >
+                            Войти
+                        </Button>
+                    )}
                 </Toolbar>
             </AppBar>
             <Box sx={{maxWidth: 560, mx: "auto", px: 2, pt: 3, pb: 6}}>{children}</Box>

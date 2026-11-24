@@ -7,6 +7,7 @@ import Calendar from "@/components/booking/Calendar";
 import ServicePicker from "@/components/booking/ServicePicker";
 import TimeGrid from "@/components/booking/TimeGrid";
 import {appointmentsApi, offeringsApi, schedulesApi, settingsApi} from "@/lib/api";
+import {useAuth} from "@/lib/auth";
 import {durationToMinutes, formatDayLabel, formatDurationValue, formatPhone, formatPrice, formatTimeOnly, timeToMinutes} from "@/lib/format";
 import {accentInk, cardSx, darkSurface, serviceZoneBorder} from "@/lib/theme";
 import {buildSlots} from "@/lib/slots";
@@ -50,6 +51,7 @@ function StepDots({step}: {step: "services" | "time"}) {
 type Booked = {date: string; start: string; end: string; price: Money};
 
 export default function BookingPage() {
+    const {user} = useAuth();
     const [offerings, setOfferings] = useState<OfferingResponse[]>([]);
     const [offeringsLoading, setOfferingsLoading] = useState(true);
     const [step, setStep] = useState<"services" | "time">("services");
@@ -251,15 +253,21 @@ export default function BookingPage() {
                         </Paper>
                     )}
 
-                    <Button
-                        variant="contained"
-                        size="large"
-                        disabled={!date || !time || submitting}
-                        onClick={submit}
-                        sx={{py: 1.5}}
-                    >
-                        Записаться
-                    </Button>
+                    {user ? (
+                        <Button
+                            variant="contained"
+                            size="large"
+                            disabled={!date || !time || submitting}
+                            onClick={submit}
+                            sx={{py: 1.5}}
+                        >
+                            Записаться
+                        </Button>
+                    ) : (
+                        <Alert severity="info">
+                            Чтобы записаться, войдите через VK ID — кнопка «Войти» вверху страницы.
+                        </Alert>
+                    )}
                 </>
             )}
 

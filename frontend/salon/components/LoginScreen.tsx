@@ -8,7 +8,11 @@ import {useAuth} from "@/lib/auth";
 import {accentInk} from "@/lib/theme";
 import {VkIdWidget} from "./VkIdWidget";
 
-export default function LoginScreen() {
+type Props = {
+    onBack?: () => void;
+};
+
+export default function LoginScreen({onBack}: Props) {
     const {refresh} = useAuth();
     const [consent, setConsent] = useState(false);
     const [checkingName, setCheckingName] = useState(false);
@@ -96,6 +100,11 @@ export default function LoginScreen() {
                         </>
                     )}
                     {error && <Alert severity="error">{error}</Alert>}
+                    {onBack && !checkingName && (
+                        <Button variant="text" onClick={onBack}>
+                            Продолжить без входа
+                        </Button>
+                    )}
                 </Stack>
             </Paper>
         </Box>
