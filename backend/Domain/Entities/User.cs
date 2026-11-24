@@ -1,4 +1,5 @@
 ﻿using Domain.Enums;
+using Domain.Exceptions;
 using Domain.ValueObjects;
 
 namespace Domain.Entities;
@@ -34,6 +35,9 @@ public class User
     public DateTime CreatedAt { get; private set; }
     public DateTime LastLoginAt { get; private set; }
     public UserRole Role { get; private set; }
+    public string? VkId { get; private set; }
+    public DateTime? ConsentedAt { get; private set; }
+    public string? ConsentPolicyVersion { get; private set; }
 
     public static User Create(
         string firstName,
@@ -74,5 +78,31 @@ public class User
     public void MarkLoggedIn()
     {
         LastLoginAt = DateTime.UtcNow;
+    }
+
+    public void LinkVkId(string vkId)
+    {
+        if (string.IsNullOrWhiteSpace(vkId))
+            throw new BusinessException("Пустой идентификатор VK");
+
+        VkId = vkId.Trim();
+    }
+
+    public void RecordConsent(string policyVersion, DateTime at)
+    {
+        if (string.IsNullOrWhiteSpace(policyVersion))
+            throw new BusinessException("Пустая версия политики конфиденциальности");
+
+        ConsentPolicyVersion = policyVersion.Trim();
+        ConsentedAt = at;
+    }
+
+    public void UpdateName(string firstName, string? lastName)
+    {
+        if (string.IsNullOrWhiteSpace(firstName))
+            throw new BusinessException("Имя не может быть пустым");
+
+        FirstName = firstName.Trim();
+        LastName = string.IsNullOrWhiteSpace(lastName) ? null : lastName.Trim();
     }
 }

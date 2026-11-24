@@ -26,6 +26,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             )
             .HasColumnName("PhoneNumber");
         builder.HasIndex(x => x.Phone).IsUnique();
+        builder.HasIndex(x => x.VkId).IsUnique();
         var admin = User.Create(
             "Admin",
             "Test",
