@@ -6,10 +6,6 @@ public static class UsersModule
     {
         var group = app.MapGroup("api/auth/")
             .WithTags("Users");
-        group.MapPost("/register",Register.Endpoint.RegisterAsync);
-        group.MapPost("/login",Login.Endpoint.LoginAsync);
-        group.MapPost("/send-code",SendVerificationCode.Endpoint.SendVerificationCodeAsync)
-            .Produces<SendVerificationCode.SendVerificationCodeResponse>();
         group.MapPost("/vk",VkLogin.Endpoint.VkLoginAsync)
             .Produces<VkLogin.VkLoginResponse>();
         group.MapPost("/logout",Logout.Endpoint.Logout);

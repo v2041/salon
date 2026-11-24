@@ -1,6 +1,5 @@
 ﻿using Domain.Entities;
 using Infrastructure.Configurations;
-using Infrastructure.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data;
@@ -13,9 +12,6 @@ public class SalonDbContext(DbContextOptions<SalonDbContext> options)
     public DbSet<SalonSettings> SalonSettings { get; set; }
     public DbSet<Schedule> Schedules { get; set; }
     public DbSet<User> Users { get; set; }
-    
-    public DbSet<VerificationCode> VerificationCodes { get; set; }
-    public DbSet<TelegramBinding> TelegramBindings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -25,8 +21,6 @@ public class SalonDbContext(DbContextOptions<SalonDbContext> options)
         modelBuilder.ApplyConfiguration(new SalonSettingsConfiguration());
         modelBuilder.ApplyConfiguration(new ScheduleConfiguration());
         modelBuilder.ApplyConfiguration(new UserConfiguration());
-        modelBuilder.ApplyConfiguration(new VerificationCodeConfiguration());
-        modelBuilder.ApplyConfiguration(new TelegramBindingConfiguration());
     }
 
     public override Task<int> SaveChangesAsync(CancellationToken token = default)

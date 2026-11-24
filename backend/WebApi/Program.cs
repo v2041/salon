@@ -11,7 +11,6 @@ using FluentValidation;
 using Infrastructure.Authentication;
 using Infrastructure.BackgroundServices;
 using Infrastructure.Data;
-using Infrastructure.Notifications;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -43,30 +42,6 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<SalonDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString(nameof(SalonDbContext)))
 );
-var telegram = builder.Configuration.GetSection(TelegramOptions.SectionName);
-builder.Services.Configure<TelegramOptions>(telegram);
-var telegramToken = telegram["Token"];
-var hasTelegramToken = !string.IsNullOrWhiteSpace(telegramToken);
-if (builder.Environment.IsDevelopment() && !hasTelegramToken)
-{
-    builder.Services.AddScoped<ICodeSender, FakeCodeSender>();
-}
-else
-{
-    builder.Services.AddHttpClient(TelegramBotClient.HttpClientName, client =>
-        client.Timeout = TimeSpan.FromSeconds(TelegramBotClient.HttpClientTimeoutSeconds));
-    builder.Services.AddTransient(sp => new TelegramBotClient(
-        sp.GetRequiredService<IHttpClientFactory>().CreateClient(TelegramBotClient.HttpClientName),
-        telegramToken!));
-    builder.Services.AddScoped<ICodeSender, TelegramBotCodeSender>();
-    if (hasTelegramToken)
-    {
-        builder.Services.AddTransient<ITelegramMessageSender>(sp =>
-            sp.GetRequiredService<TelegramBotClient>());
-        builder.Services.AddScoped<TelegramUpdateHandler>();
-        builder.Services.AddHostedService<TelegramUpdatesService>();
-    }
-}
 var vkId = builder.Configuration.GetSection(VkIdOptions.SectionName);
 var vkAppId = vkId["AppId"];
 var vkServiceToken = vkId["ServiceToken"];
@@ -124,8 +99,6 @@ if (!app.Environment.IsDevelopment() && !isOpenApiGeneration)
         throw new InvalidOperationException("VkId:AppId или VkId:ServiceToken не заданы. Задайте VK_APP_ID и VK_SERVICE_TOKEN.");
     if (string.IsNullOrWhiteSpace(adminPhone))
         throw new InvalidOperationException("Admin:Phone не задан. Задайте ADMIN_PHONE.");
-    if (!hasTelegramToken)
-        throw new InvalidOperationException("Telegram:Bot:Token не задан. Задайте TELEGRAM_BOT_TOKEN.");
 }
 app.UseCors();
 app.UseMiddleware<ExceptionHandlingMiddleware>();

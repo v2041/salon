@@ -1,6 +1,6 @@
 using System.Net;
 
-namespace DomainTests.Notifications;
+namespace DomainTests.Authentication;
 
 internal sealed class FakeHttpMessageHandler(Func<HttpRequestMessage, HttpResponseMessage> responder)
     : HttpMessageHandler

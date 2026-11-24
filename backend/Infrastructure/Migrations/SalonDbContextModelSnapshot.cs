@@ -236,7 +236,7 @@ namespace Infrastructure.Migrations
                             LastLoginAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             LastName = "Test",
                             Phone = "+79991234567",
-                            Role = 1
+                            Role = 0
                         },
                         new
                         {
@@ -248,45 +248,6 @@ namespace Infrastructure.Migrations
                             Phone = "+79341234567",
                             Role = 0
                         });
-                });
-
-            modelBuilder.Entity("Domain.Entities.VerificationCode", b =>
-                {
-                    b.Property<string>("Phone")
-                        .HasColumnType("text");
-
-                    b.Property<int>("AttemptsCount")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Phone");
-
-                    b.ToTable("VerificationCodes");
-                });
-
-            modelBuilder.Entity("Infrastructure.Entities.TelegramBinding", b =>
-                {
-                    b.Property<string>("Phone")
-                        .HasColumnType("text");
-
-                    b.Property<long>("ChatId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Phone");
-
-                    b.ToTable("TelegramBindings");
                 });
 
             modelBuilder.Entity("Domain.Entities.Appointment", b =>

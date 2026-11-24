@@ -1,5 +1,4 @@
 using System.Net;
-using DomainTests.Notifications;
 using Infrastructure.Authentication;
 
 namespace DomainTests.Authentication;

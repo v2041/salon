@@ -622,79 +622,6 @@
         }
       }
     },
-    "/api/auth/register": {
-      "post": {
-        "tags": [
-          "Users"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/auth/login": {
-      "post": {
-        "tags": [
-          "Users"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LoginRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/auth/send-code": {
-      "post": {
-        "tags": [
-          "Users"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SendVerificationCodeRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SendVerificationCodeResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/auth/vk": {
       "post": {
         "tags": [
@@ -1293,21 +1220,6 @@
           }
         }
       },
-      "LoginRequest": {
-        "required": [
-          "code",
-          "phone"
-        ],
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "phone": {
-            "type": "string"
-          }
-        }
-      },
       "Money": {
         "required": [
           "value",
@@ -1325,74 +1237,6 @@
           },
           "currency": {
             "type": "string"
-          }
-        }
-      },
-      "RegisterRequest": {
-        "required": [
-          "code",
-          "phone",
-          "firstName",
-          "lastName"
-        ],
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "phone": {
-            "type": "string"
-          },
-          "firstName": {
-            "type": "string"
-          },
-          "lastName": {
-            "type": "string"
-          }
-        }
-      },
-      "SendVerificationCodeRequest": {
-        "required": [
-          "phone"
-        ],
-        "type": "object",
-        "properties": {
-          "phone": {
-            "type": "string"
-          }
-        }
-      },
-      "SendVerificationCodeResponse": {
-        "required": [
-          "expiresAt",
-          "isRegistered",
-          "status",
-          "bindingUrl",
-          "code"
-        ],
-        "type": "object",
-        "properties": {
-          "expiresAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "isRegistered": {
-            "type": "boolean"
-          },
-          "status": {
-            "type": "string"
-          },
-          "bindingUrl": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "code": {
-            "type": [
-              "null",
-              "string"
-            ]
           }
         }
       },

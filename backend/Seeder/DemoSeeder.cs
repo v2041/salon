@@ -99,7 +99,6 @@ public static class DemoSeeder
         await db.Users
             .Where(u => u.Phone != AdminPhone && u.Phone != ClientPhone)
             .ExecuteDeleteAsync(token);
-        await db.VerificationCodes.ExecuteDeleteAsync(token);
     }
 
     private static List<User> BuildClients()

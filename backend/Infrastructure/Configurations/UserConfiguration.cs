@@ -1,5 +1,4 @@
 ﻿using Domain.Entities;
-using Domain.Enums;
 using Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -34,7 +33,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             SeedDate,
             AdminSeedId
         );
-        admin.PromoteToAdmin();
         builder.HasData(admin);
 
         builder.HasData(
