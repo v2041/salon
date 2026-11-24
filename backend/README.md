@@ -26,12 +26,13 @@ Salon.API/
 ├── Infrastructure/            # Внешние зависимости
 │   ├── Data/                  # DbContext
 │   ├── Configurations/        # EF маппинг
+│   ├── Authentication/        # VK ID и JWT
 │   └── BackgroundServices/    # Фоновые сервисы
 ├── Features/                  # Модули
 │   ├── Appointments/          # Записи
 │   ├── Offerings/             # Услуги
 │   ├── Schedules/             # Расписание
-│   └── Auth/                  # Аутентификация
+│   └── Users/                 # Вход через VK ID и профиль
 └── WebApi/                    # HTTP слой
     ├── Middlewares/           # Обработка ошибок
     └── Program.cs             # Точка входа
@@ -122,15 +123,12 @@ GET /api/schedules/available-dates?offeringIds=guid1,guid2
 
 ### Аутентификация
 
-POST /api/auth/send-code - Отправить код входа в Telegram
-  Тело: { "phone": "+79991234567" }
-  Ответ: { "expiresAt": "2026-08-10T10:05:00", "isRegistered": true, "status": "sent", "bindingUrl": null }
-  Номер не привязан: status "binding_required" и ссылка bindingUrl.
-  В Development без токена бота ответ содержит code.
-POST /api/auth/login - Вход по телефону + код
-  Тело: { "phone": "+79991234567", "code": "1234" }
-POST /api/auth/register - Регистрация нового клиента
-  Тело: { "phone": "+79991234567", "code": "1234", "firstName": "Иван", "lastName": "Иванов" }
+POST /api/auth/vk - Вход через VK ID
+  Тело: { "code": "...", "deviceId": "...", "codeVerifier": "...", "redirectUrl": "http://localhost:3000", "consent": true }
+  Ответ: { "isNew": true } — клиент создан впервые; cookie ставится в обоих случаях.
+  Без consent → 400. Без телефона из VK или с не российским номером → 400.
+PATCH /api/auth/me - Сохранить имя и фамилию (требует cookie)
+  Тело: { "firstName": "Иван", "lastName": "Иванов" }. Ответ: 204
 POST /api/auth/logout - Выход, удаляет cookie. Ответ: 204
 GET /api/auth/me - Текущий пользователь (требует cookie)
   Ответ: { "id": "guid", "firstName": "Иван", "lastName": "Иванов", "phone": "+79991234567", "role": 0 }
@@ -197,8 +195,8 @@ ENTRYPOINT ["dotnet", "Salon.API.dll"]
 [x] Валидация через FluentValidation
 [x] Обработка ошибок через Middleware
 [x] Тесты для доменной модели
-[ ] JWT аутентификация
-[x] Интеграция с VK ID — не нужна: вход по phone+code через Telegram-бот (TZ §8.1)
+[x] JWT аутентификация (HttpOnly-cookie)
+[x] Вход через VK ID (docs/adr/0002-vk-id-login-and-consent.md)
 [ ] Rate Limiting
 [ ] Health Checks
 [ ] Docker-compose для прода
