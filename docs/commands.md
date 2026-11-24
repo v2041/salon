@@ -32,9 +32,11 @@ npm run dev
 
 Сайт: `http://localhost:3000`.
 
+Для входа через VK ID создайте `frontend/salon/.env.local` с `NEXT_PUBLIC_VK_APP_ID` — id приложения VK ID. Файл в `.gitignore`.
+
 ## Docker
 
-Создайте `.env` из `.env.example`. Задайте `POSTGRES_PASSWORD` и `JWT_KEY`.
+Создайте `.env` из `.env.example`. Задайте `POSTGRES_PASSWORD`, `JWT_KEY`, `VK_APP_ID`, `VK_SERVICE_TOKEN` и `ADMIN_PHONE`.
 
 ```powershell
 docker compose up --build -d
@@ -46,7 +48,7 @@ docker compose down
 
 ## Демо-данные
 
-Сид удаляет бизнес-данные, клиентов и коды подтверждения. Тестовые Admin `+79991234567` и Client `+79341234567` остаются.
+Сид удаляет бизнес-данные и клиентов. Тестовые Admin `+79991234567` и Client `+79341234567` остаются.
 
 ```powershell
 docker compose stop api
@@ -56,7 +58,7 @@ docker compose start api
 
 Остановите API перед сидом. Иначе `ScheduleService` изменит расписание.
 
-Сервис `seed` задает `ALLOW_DEMO_SEED=true` и флаг `--reset`. Без `--reset` сид останавливается, если в БД уже есть данные. Код входа приходит в Telegram-бот после привязки номера. В dev-режиме без токена бота код пишется в лог API и приходит в ответе `send-code`.
+Сервис `seed` задает `ALLOW_DEMO_SEED=true` и флаг `--reset`. Без `--reset` сид останавливается, если в БД уже есть данные. Роль Admin выдаётся при входе с телефона из `ADMIN_PHONE`.
 
 ## Проверка после правок
 

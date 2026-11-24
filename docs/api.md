@@ -22,19 +22,21 @@
 
 - `userId` берите из JWT-claims. Не принимайте `userId` из тела запроса (FR-S2).
 - `phone` берите из claims, если маршрут работает с текущим пользователем.
-- `send-code`, `login`, `register` и админ-запись принимают телефон в теле.
+- Админ-запись принимает телефон в теле.
 - JWT хранится в HttpOnly-cookie. Frontend отправляет `credentials: "include"`.
 
-## Код входа
+## Вход через VK ID
 
-`POST /api/auth/send-code` принимает `{ "phone": "+7XXXXXXXXXX" }`.
-Ответ: `expiresAt`, `isRegistered`, `status`, `bindingUrl`.
+`POST /api/auth/vk` принимает `{ code, deviceId, codeVerifier, redirectUrl, consent }`.
+Ответ: `{ "isNew": true }` или `{ "isNew": false }`.
 
-- `status: "sent"` — код отправлен в Telegram-бот, `bindingUrl` = `null`.
-- `status: "binding_required"` — номер не привязан: откройте `bindingUrl` и нажмите «Поделиться номером» в боте.
-- В Development без токена бота ответ содержит `code`.
-- Повтор в течение минуты не отправляет второе сообщение.
-- Сбой отправки → 500; код не сохраняется.
+- `consent` обязателен. Без согласия → 400.
+- `isNew: true` — клиент создан впервые; фронтенд показывает шаг «Проверьте имя».
+- Без телефона из VK или с не российским номером → 400.
+- Сбой VK ID → 400.
+- Успех ставит HttpOnly JWT-cookie. Версия политики и дата согласия сохраняются.
+
+`PATCH /api/auth/me` принимает `{ firstName, lastName? }` и возвращает 204.
 
 ## Ошибки и коды ответов
 
