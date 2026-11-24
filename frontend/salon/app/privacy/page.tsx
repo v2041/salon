@@ -5,10 +5,15 @@ export const metadata = {
     title: "Политика обработки персональных данных",
 };
 
+// Данные оператора из окружения сборки. Без переменных — плейсхолдеры.
+const OPERATOR_NAME = process.env.NEXT_PUBLIC_OPERATOR_NAME || "[ФИО]";
+const OPERATOR_INN = process.env.NEXT_PUBLIC_OPERATOR_INN || "[ИНН]";
+const OPERATOR_EMAIL = process.env.NEXT_PUBLIC_OPERATOR_EMAIL || "[email]";
+
 const SECTIONS: { title: string; paragraphs: string[] }[] = [
     {
         title: "1. Оператор",
-        paragraphs: ["Индивидуальный предприниматель [ФИО], ИНН [ИНН], e-mail: [email]."],
+        paragraphs: [`Индивидуальный предприниматель ${OPERATOR_NAME}, ИНН ${OPERATOR_INN}, e-mail: ${OPERATOR_EMAIL}.`],
     },
     {
         title: "2. Какие данные обрабатываются",
@@ -57,13 +62,13 @@ const SECTIONS: { title: string; paragraphs: string[] }[] = [
     {
         title: "8. Отзыв согласия",
         paragraphs: [
-            "Согласие можно отозвать в любое время письмом на адрес [email].",
+            `Согласие можно отозвать в любое время письмом на адрес ${OPERATOR_EMAIL}.`,
             "После отзыва согласия вход в личный кабинет закрывается. Оператор прекращает обработку данных и удаляет их, если нет других оснований по закону.",
         ],
     },
     {
         title: "9. Контакты",
-        paragraphs: ["Вопросы по обработке персональных данных: [email]."],
+        paragraphs: [`Вопросы по обработке персональных данных: ${OPERATOR_EMAIL}.`],
     },
 ];
 
