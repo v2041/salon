@@ -5,7 +5,7 @@
 ![Next.js](https://img.shields.io/badge/Next.js-16-000000)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green)
 
-Веб-система для студии красоты на одного мастера. Клиент записывается онлайн по номеру телефона. Мастер ведёт услуги, расписание и аналитику дохода.
+Веб-система для студии красоты на одного мастера. Клиент входит через VK ID и записывается онлайн. Мастер ведёт услуги, расписание и аналитику дохода.
 
 - `backend/` — .NET 10, Minimal API, DDD и vertical slices, PostgreSQL + EF Core, FluentValidation, JWT в HttpOnly-cookie.
 - `frontend/salon/` — Next.js 16 (App Router), React 19, TypeScript, MUI 9. Интерфейс mobile-first.
@@ -18,8 +18,9 @@
 
 - Поток записи: услуги (можно несколько) → дата → время → подтверждение. Список услуг встроен в поток записи, отдельной витрины нет.
 - «Мои записи»: статусы и отмена своей записи.
-- Вход по телефону. Код — 4 цифры, срок действия 5 минут. Повторная отправка — не чаще 1 раза в минуту. Пять неверных попыток блокируют код.
-- Код приходит в Telegram-бот студии. Клиент один раз привязывает номер кнопкой «Поделиться номером». В dev-режиме без токена бота код виден на экране входа.
+- Вход через VK ID: имя и телефон приходят из профиля VK. Перед входом клиент отмечает согласие на обработку персональных данных. Версия политики и дата входа сохраняются.
+- После первого входа клиент проверяет имя — оно видно мастеру в записях.
+- Текст политики — страница `/privacy`. Мастер заполняет `[ФИО]`, `[ИНН]`, `[email]` до публикации.
 
 **Мастер**
 
@@ -41,12 +42,13 @@ salon_project/
 ├── backend/
 │   ├── Domain/           # сущности, Value Objects, правила
 │   ├── Features/         # сценарии: Appointments, Offerings, Schedules, Users, Analytics
-│   ├── Infrastructure/   # DbContext, EF-конфигурации, миграции, JWT, Telegram, фоновые сервисы
+│   ├── Infrastructure/   # DbContext, EF-конфигурации, миграции, JWT, клиент VK ID, фоновые сервисы
 │   ├── WebApi/           # Program.cs, middleware, appsettings
 │   ├── Seeder/           # демо-данные для Docker
 │   └── DomainTests/      # xUnit-тесты домена
 ├── frontend/salon/
 │   ├── app/(app)/        # booking, my-appointments, admin
+│   ├── app/privacy/      # политика обработки персональных данных
 │   ├── components/       # booking/*, admin/*
 │   └── lib/              # api.ts, auth.tsx, format.ts, slots.ts, types.ts, theme.ts
 ├── docs/                 # документация для разработки
@@ -78,11 +80,15 @@ psql -U postgres -c "CREATE DATABASE salon;"
 ```json
 {
   "ConnectionStrings": { "SalonDbContext": "User ID=postgres;Password=<пароль>;Host=localhost;Port=5432;Database=salon;" },
-  "Jwt": { "Issuer": "SalonApi", "Audience": "SalonApi", "Key": "<строка не короче 32 символов>", "ExpiryMinutes": 43200 }
+  "Jwt": { "Issuer": "SalonApi", "Audience": "SalonApi", "Key": "<строка не короче 32 символов>", "ExpiryMinutes": 43200 },
+  "VkId": { "AppId": "<id приложения VK ID>", "ServiceToken": "<сервисный ключ>" },
+  "Admin": { "Phone": "+7XXXXXXXXXX" }
 }
 ```
 
-Токен бота не обязателен. Без токена Development использует fake-отправитель: код пишется в лог API и приходит в ответе `send-code`.
+`VkId:AppId` и `VkId:ServiceToken` возьмите в кабинете VK ID (id.vk.ru). Домен разработки `http://localhost:3000` добавьте в список доверенных адресов приложения. Без `ServiceToken` вход через VK ID не работает.
+
+`Admin:Phone` — телефон мастера: вход с этого номера выдаёт роль Admin.
 
 ### 2. Backend
 
@@ -104,9 +110,11 @@ npm install
 npm run dev
 ```
 
-Откройте http://localhost:3000. Главная перенаправляет на `/booking`. Другие экраны: `/my-appointments`, `/admin`.
+Откройте http://localhost:3000. Главная перенаправляет на `/booking`. Другие экраны: `/my-appointments`, `/admin`, `/privacy`.
 
 Frontend берёт адрес API из `NEXT_PUBLIC_API_URL`. По умолчанию — `http://localhost:5164`. Все экраны работают с живым API через `lib/api.ts` (`fetch` с `credentials: "include"`). Мок-данных нет.
+
+Для виджета входа создайте `frontend/salon/.env.local` с `NEXT_PUBLIC_VK_APP_ID=<id приложения VK ID>`. Файл в `.gitignore`.
 
 | Команда | Действие |
 |---|---|
@@ -127,8 +135,9 @@ Frontend берёт адрес API из `NEXT_PUBLIC_API_URL`. По умолча
 | `JWT_KEY` | ключ JWT, не короче 32 символов (`openssl rand -base64 48`) |
 | `PUBLIC_URL` | публичный адрес сайта: `https://salon.example.com` или `http://1.2.3.4` |
 | `DOMAIN` | домен для Caddy: `salon.example.com` (авто-HTTPS) или `:80` (без TLS) |
-| `TELEGRAM_BOT_TOKEN` | токен бота от @BotFather. Production без токена не стартует |
-| `TELEGRAM_BOT_USERNAME` | имя бота без `@` для ссылки привязки |
+| `VK_APP_ID` | id приложения VK ID; он же уходит во фронтенд как `NEXT_PUBLIC_VK_APP_ID` |
+| `VK_SERVICE_TOKEN` | сервисный ключ VK ID. Production без него не стартует |
+| `ADMIN_PHONE` | телефон мастера `+7XXXXXXXXXX`: вход с него выдаёт роль Admin. Production без него не стартует |
 | `TZ` | часовой пояс, по умолчанию `Europe/Moscow` |
 
 2. Соберите и запустите:
@@ -173,7 +182,7 @@ docker compose --profile demo run --rm --build seed
 docker compose start api
 ```
 
-Сид удаляет записи, услуги, расписания, клиентов и коды подтверждения. Тестовые Admin `+79991234567` и Client `+79341234567` остаются. Сервис `seed` задаёт `ALLOW_DEMO_SEED=true` и флаг `--reset`. Без `--reset` сид останавливается, если в БД уже есть данные.
+Сид удаляет записи, услуги, расписания и клиентов. Тестовые Admin `+79991234567` и Client `+79341234567` остаются. Сервис `seed` задаёт `ALLOW_DEMO_SEED=true` и флаг `--reset`. Без `--reset` сид останавливается, если в БД уже есть данные. Роль Admin выдаётся при входе с телефона из `ADMIN_PHONE`.
 
 ## API
 
@@ -188,13 +197,12 @@ docker compose start api
 
 | Метод | Путь | Назначение |
 |---|---|---|
-| POST | `/send-code` | выдать код и отправить в Telegram; в dev-режиме код приходит в ответе |
-| POST | `/login` | вход по телефону и коду → cookie |
-| POST | `/register` | регистрация нового номера → cookie |
+| POST | `/vk` | вход через VK ID: `code`, `deviceId`, `codeVerifier`, `redirectUrl`, `consent` → `{ "isNew": true }` и cookie |
 | POST | `/logout` | выход, удаляет cookie → 204 |
 | GET | `/me` | текущий пользователь; без cookie → 401 |
+| PATCH | `/me` | сохранить имя и фамилию → 204 |
 
-`status: "sent"` — код отправлен. `status: "binding_required"` — номер не привязан: откройте `bindingUrl` и нажмите «Поделиться номером» в боте.
+`consent` обязателен: без него вход отклоняется (400). `isNew: true` — клиент создан впервые; фронтенд показывает шаг «Проверьте имя». Версия политики и дата согласия пишутся при каждом входе. Текст политики — `/privacy`.
 
 ### Offerings — `/api/offerings`
 
@@ -262,7 +270,7 @@ docker compose start api
 
 ## Домен и правила
 
-- `User`: `Phone` уникален, `Role: Default | Admin`. Тестовые доступы: Admin `+79991234567`, Client `+79341234567`.
+- `User`: `Phone` уникален, `VkId` уникален, `Role: Default | Admin`; согласие хранится как версия политики и дата. Тестовые доступы: Admin `+79991234567`, Client `+79341234567`.
 - `Offering`: `Price: Money`, `Title` ≤ 50 символов, `Duration` > 10 минут, `IsActive`, `Category`.
 - `Schedule`: `Date` уникальна, `WorkInterval` ≥ 2 часов, `BreakInterval` строго внутри рабочего времени и не граничит с ним.
 - `Appointment`: `Interval`, `Status`, список услуг. Цена и длительность фиксируются в `AppointmentOffering` на момент записи.
@@ -279,7 +287,7 @@ npm --prefix frontend/salon run lint
 npm --prefix frontend/salon run build
 ```
 
-`DomainTests` покрывают сущности (`Offering`, `Schedule`, `Appointment`, `User`, `VerificationCode`, `TelegramBinding`), Value Objects (`Money`, `TimeInterval`), `TimelineBuilder` и Telegram-уведомления.
+`DomainTests` покрывают сущности (`Offering`, `Schedule`, `Appointment`, `User`, `SalonSettings`), Value Objects (`Money`, `TimeInterval`, `PhoneNumber`), сервисы (`TimelineBuilder`, `SchedulePlanner`, `AdminPolicy`) и клиент VK ID (fake HTTP).
 
 CI (`.github/workflows/ci.yml`) запускает backend build/test и frontend lint/build на push и pull request в `main`.
 
@@ -289,9 +297,11 @@ CI (`.github/workflows/ci.yml`) запускает backend build/test и fronten
 |---|---|---|
 | `appsettings.Development.json` | `ConnectionStrings:SalonDbContext` | строка подключения PostgreSQL |
 | `appsettings.Development.json` | `Jwt:Issuer`, `Jwt:Audience`, `Jwt:Key`, `Jwt:ExpiryMinutes` | параметры токена; срок — 30 дней |
-| `appsettings.Development.json` | `Telegram:Bot:Token`, `Telegram:Bot:Username` | бот для кодов входа; не обязателен в dev |
+| `appsettings.Development.json` | `VkId:AppId`, `VkId:ServiceToken` | приложение VK ID для входа |
+| `appsettings.Development.json` | `Admin:Phone` | телефон мастера: вход с него выдаёт роль Admin |
 | `appsettings.json` | `Cors:AllowedOrigins` | origins фронтенда, по умолчанию `localhost:3000` и `localhost:5173` |
-| `.env` (Docker) | `POSTGRES_PASSWORD`, `JWT_KEY`, `TELEGRAM_BOT_TOKEN`, `PUBLIC_URL`, `DOMAIN` | секреты и адреса |
+| `frontend/salon/.env.local` | `NEXT_PUBLIC_VK_APP_ID` | id приложения VK ID для виджета входа |
+| `.env` (Docker) | `POSTGRES_PASSWORD`, `JWT_KEY`, `VK_APP_ID`, `VK_SERVICE_TOKEN`, `ADMIN_PHONE`, `PUBLIC_URL`, `DOMAIN` | секреты и адреса |
 
 Секреты не коммитьте. Файлы `appsettings.Development.json` и `.env` в `.gitignore`. Правила — в [docs/security.md](./docs/security.md).
 
@@ -299,7 +309,6 @@ CI (`.github/workflows/ci.yml`) запускает backend build/test и fronten
 
 - [docs/README.md](./docs/README.md) — карта документации.
 - [docs/api.md](./docs/api.md) — форматы, статусы, коды ошибок.
-- [docs/telegram-bot.md](./docs/telegram-bot.md) — настройка Telegram-бота.
 - [TZ.md](./TZ.md) — требования и известные проблемы.
 - [GitHub Issues](https://github.com/v2041/salon/issues) — вопросы и баги.
 
