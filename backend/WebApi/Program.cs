@@ -1,4 +1,6 @@
 using System.Text;
+using Domain.Exceptions;
+using Domain.ValueObjects;
 using Features.Analytics;
 using Features.Appointments;
 using Features.Offerings;
@@ -6,6 +8,7 @@ using Features.Schedules;
 using Features.Settings;
 using Features.Users;
 using FluentValidation;
+using Infrastructure.Authentication;
 using Infrastructure.BackgroundServices;
 using Infrastructure.Data;
 using Infrastructure.Notifications;
@@ -64,6 +67,26 @@ else
         builder.Services.AddHostedService<TelegramUpdatesService>();
     }
 }
+var vkId = builder.Configuration.GetSection(VkIdOptions.SectionName);
+var vkAppId = vkId["AppId"];
+var vkServiceToken = vkId["ServiceToken"];
+var adminPhone = builder.Configuration["Admin:Phone"];
+if (!string.IsNullOrWhiteSpace(adminPhone))
+{
+    try
+    {
+        PhoneNumber.Create(adminPhone);
+    }
+    catch (BusinessException)
+    {
+        throw new InvalidOperationException("Admin:Phone имеет неверный формат. Задайте ADMIN_PHONE в формате +7XXXXXXXXXX.");
+    }
+}
+builder.Services.AddHttpClient(VkIdClient.HttpClientName, client =>
+    client.Timeout = TimeSpan.FromSeconds(VkIdClient.HttpClientTimeoutSeconds));
+builder.Services.AddTransient(sp => new VkIdClient(
+    sp.GetRequiredService<IHttpClientFactory>().CreateClient(VkIdClient.HttpClientName),
+    new VkIdOptions { AppId = vkAppId, ServiceToken = vkServiceToken }));
 var jwt = builder.Configuration.GetSection("Jwt");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -95,9 +118,14 @@ var app = builder.Build();
 // Генерация docs/openapi.json при dotnet build стартует приложение в Production.
 var isOpenApiGeneration = Environment.GetCommandLineArgs()[0]
     .Contains("GetDocument.Insider", StringComparison.OrdinalIgnoreCase);
-if (!app.Environment.IsDevelopment() && !isOpenApiGeneration && !hasTelegramToken)
+if (!app.Environment.IsDevelopment() && !isOpenApiGeneration)
 {
-    throw new InvalidOperationException("Telegram:Bot:Token не задан. Задайте TELEGRAM_BOT_TOKEN.");
+    if (string.IsNullOrWhiteSpace(vkAppId) || string.IsNullOrWhiteSpace(vkServiceToken))
+        throw new InvalidOperationException("VkId:AppId или VkId:ServiceToken не заданы. Задайте VK_APP_ID и VK_SERVICE_TOKEN.");
+    if (string.IsNullOrWhiteSpace(adminPhone))
+        throw new InvalidOperationException("Admin:Phone не задан. Задайте ADMIN_PHONE.");
+    if (!hasTelegramToken)
+        throw new InvalidOperationException("Telegram:Bot:Token не задан. Задайте TELEGRAM_BOT_TOKEN.");
 }
 app.UseCors();
 app.UseMiddleware<ExceptionHandlingMiddleware>();

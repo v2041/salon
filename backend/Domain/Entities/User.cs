@@ -6,6 +6,9 @@ namespace Domain.Entities;
 
 public class User
 {
+    /// <summary>Имя клиента по умолчанию.</summary>
+    public const string DEFAULT_FIRST_NAME = "Клиент";
+
     private User()
     {
     }

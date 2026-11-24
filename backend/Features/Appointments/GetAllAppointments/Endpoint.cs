@@ -89,7 +89,7 @@ public static class Endpoint
                             o.Duration))
                         .ToList(),
                     a.UserId,
-                    user is null ? "Клиент" : $"{user.FirstName} {user.LastName}".Trim(),
+                    user is null ? User.DEFAULT_FIRST_NAME : $"{user.FirstName} {user.LastName}".Trim(),
                     user?.Phone ?? "",
                     a.Status
                 );

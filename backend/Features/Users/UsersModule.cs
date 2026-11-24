@@ -10,7 +10,10 @@ public static class UsersModule
         group.MapPost("/login",Login.Endpoint.LoginAsync);
         group.MapPost("/send-code",SendVerificationCode.Endpoint.SendVerificationCodeAsync)
             .Produces<SendVerificationCode.SendVerificationCodeResponse>();
+        group.MapPost("/vk",VkLogin.Endpoint.VkLoginAsync)
+            .Produces<VkLogin.VkLoginResponse>();
         group.MapPost("/logout",Logout.Endpoint.Logout);
         group.MapGet("/me",GetCurrentUser.Endpoint.GetCurrentUserAsync).RequireAuthorization();
+        group.MapPatch("/me",UpdateName.Endpoint.UpdateNameAsync).RequireAuthorization().Produces(204);
     }
 }
