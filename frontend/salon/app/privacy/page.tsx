@@ -1,3 +1,5 @@
+import {existsSync, readFileSync} from "node:fs";
+import path from "node:path";
 import {Box, Paper, Stack, Typography} from "@mui/material";
 import {accentInk} from "@/lib/theme";
 
@@ -5,74 +7,43 @@ export const metadata = {
     title: "Политика обработки персональных данных",
 };
 
-// Данные оператора из окружения сборки. Без переменных — плейсхолдеры.
-const OPERATOR_NAME = process.env.NEXT_PUBLIC_OPERATOR_NAME || "[ФИО]";
-const OPERATOR_INN = process.env.NEXT_PUBLIC_OPERATOR_INN || "[ИНН]";
-const OPERATOR_EMAIL = process.env.NEXT_PUBLIC_OPERATOR_EMAIL || "[email]";
+type PolicySection = {title: string; paragraphs: string[]};
 
-const SECTIONS: { title: string; paragraphs: string[] }[] = [
-    {
-        title: "1. Оператор",
-        paragraphs: [`Индивидуальный предприниматель ${OPERATOR_NAME}, ИНН ${OPERATOR_INN}, e-mail: ${OPERATOR_EMAIL}.`],
-    },
-    {
-        title: "2. Какие данные обрабатываются",
-        paragraphs: [
-            "Фамилия и имя, номер телефона, идентификатор пользователя VK ID.",
-            "Дата и время входа, версия и дата согласия.",
-            "Сведения о записях: услуга, дата, время, цена.",
-        ],
-    },
-    {
-        title: "3. Цели обработки",
-        paragraphs: [
-            "Оформление и учёт онлайн-записей.",
-            "Связь с клиентом по вопросам записи.",
-            "Учёт оказанных услуг.",
-        ],
-    },
-    {
-        title: "4. Правовые основания",
-        paragraphs: [
-            "Согласие на обработку персональных данных (пункт 1 части 1 статьи 6 Федерального закона № 152-ФЗ).",
-            "Исполнение договора об оказании услуг.",
-        ],
-    },
-    {
-        title: "5. Как обрабатываются данные",
-        paragraphs: [
-            "Данные собираются, записываются, хранятся и используются только для целей выше.",
-            "Персональные данные не передаются третьим лицам, кроме случаев, установленных законом.",
-        ],
-    },
-    {
-        title: "6. Вход через VK ID",
-        paragraphs: [
-            "Вход выполняется через сервис VK ID. Оператор получает имя и номер телефона из профиля VK.",
-            "Пароль от VK и токены доступа не хранятся.",
-        ],
-    },
-    {
-        title: "7. Cookie",
-        paragraphs: [
-            "Сайт использует технические cookie для входа в личный кабинет.",
-            "Cookie не используются для рекламы и не передаются третьим лицам.",
-        ],
-    },
-    {
-        title: "8. Отзыв согласия",
-        paragraphs: [
-            `Согласие можно отозвать в любое время письмом на адрес ${OPERATOR_EMAIL}.`,
-            "После отзыва согласия вход в личный кабинет закрывается. Оператор прекращает обработку данных и удаляет их, если нет других оснований по закону.",
-        ],
-    },
-    {
-        title: "9. Контакты",
-        paragraphs: [`Вопросы по обработке персональных данных: ${OPERATOR_EMAIL}.`],
-    },
-];
+// Текст политики: content/privacy.local.md (локальный, в .gitignore), иначе шаблон content/privacy.md.
+function readPolicyText(): string {
+    const contentDir = path.join(process.cwd(), "content");
+    const local = path.join(contentDir, "privacy.local.md");
+    const template = path.join(contentDir, "privacy.md");
+    return readFileSync(existsSync(local) ? local : template, "utf8");
+}
+
+// "## Заголовок" — заголовок раздела. Строка "<!-- ... -->" — комментарий, не выводится.
+// Каждая другая непустая строка — отдельный абзац.
+function parsePolicy(text: string): PolicySection[] {
+    const sections: PolicySection[] = [];
+    let current: PolicySection | null = null;
+    for (const rawLine of text.split(/\r?\n/)) {
+        const line = rawLine.trim();
+        if (line === "" || line.startsWith("<!--")) {
+            continue;
+        }
+        const heading = /^#{1,4}\s+(.+)$/.exec(line);
+        if (heading) {
+            current = {title: heading[1], paragraphs: []};
+            sections.push(current);
+            continue;
+        }
+        if (current === null) {
+            current = {title: "", paragraphs: []};
+            sections.push(current);
+        }
+        current.paragraphs.push(line);
+    }
+    return sections;
+}
 
 export default function PrivacyPage() {
+    const sections = parsePolicy(readPolicyText());
     return (
         <Box sx={{maxWidth: 560, mx: "auto", px: 2, pt: 3, pb: 6}}>
             <Paper sx={{p: 3.5, borderRadius: "24px", border: 1, borderColor: "divider", boxShadow: "0 30px 70px -40px rgba(26,26,26,0.55)"}}>
@@ -83,11 +54,11 @@ export default function PrivacyPage() {
                         </Typography>
                         <Typography variant="h5">Политика обработки персональных данных</Typography>
                     </Stack>
-                    {SECTIONS.map(section => (
-                        <Stack key={section.title} spacing={0.75}>
-                            <Typography variant="subtitle1">{section.title}</Typography>
-                            {section.paragraphs.map(paragraph => (
-                                <Typography key={paragraph} variant="body2" color="text.secondary">
+                    {sections.map((section, sectionIndex) => (
+                        <Stack key={sectionIndex} spacing={0.75}>
+                            {section.title !== "" && <Typography variant="subtitle1">{section.title}</Typography>}
+                            {section.paragraphs.map((paragraph, paragraphIndex) => (
+                                <Typography key={paragraphIndex} variant="body2" color="text.secondary">
                                     {paragraph}
                                 </Typography>
                             ))}

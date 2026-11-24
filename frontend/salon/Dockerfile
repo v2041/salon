@@ -11,12 +11,6 @@ ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_VK_APP_ID
 ENV NEXT_PUBLIC_VK_APP_ID=$NEXT_PUBLIC_VK_APP_ID
-ARG NEXT_PUBLIC_OPERATOR_NAME
-ENV NEXT_PUBLIC_OPERATOR_NAME=$NEXT_PUBLIC_OPERATOR_NAME
-ARG NEXT_PUBLIC_OPERATOR_INN
-ENV NEXT_PUBLIC_OPERATOR_INN=$NEXT_PUBLIC_OPERATOR_INN
-ARG NEXT_PUBLIC_OPERATOR_EMAIL
-ENV NEXT_PUBLIC_OPERATOR_EMAIL=$NEXT_PUBLIC_OPERATOR_EMAIL
 RUN mkdir -p public
 RUN npm run build
 
@@ -28,6 +22,7 @@ ENV PORT=3000
 COPY --from=build /app/public ./public
 COPY --from=build --chown=node:node /app/.next/standalone ./
 COPY --from=build --chown=node:node /app/.next/static ./.next/static
+COPY --from=build --chown=node:node /app/content ./content
 USER node
 EXPOSE 3000
 CMD ["node", "server.js"]

@@ -77,9 +77,6 @@ services:
       args:
         NEXT_PUBLIC_API_URL: ${PUBLIC_URL:-http://localhost}
         NEXT_PUBLIC_VK_APP_ID: ${VK_APP_ID}
-        NEXT_PUBLIC_OPERATOR_NAME: ${OPERATOR_NAME:-}
-        NEXT_PUBLIC_OPERATOR_INN: ${OPERATOR_INN:-}
-        NEXT_PUBLIC_OPERATOR_EMAIL: ${OPERATOR_EMAIL:-}
     restart: unless-stopped
     depends_on:
       - api

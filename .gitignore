@@ -11,6 +11,9 @@
 
 backend/WebApi/appsettings.Development.json
 
+# Локальный текст политики /privacy — не коммитить
+frontend/salon/content/privacy.local.md
+
 .env
 .env.*
 !.env.example
