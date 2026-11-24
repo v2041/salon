@@ -25,7 +25,7 @@ Value Objects маппятся через `OwnsOne`:
 
 Явные FK и `DeleteBehavior.Restrict` сохраняйте.
 
-Сущности Domain лежат в `Domain/Entities`. Инфраструктурные сущности (например `TelegramBinding`) — в `Infrastructure/Entities`.
+Сущности Domain лежат в `Domain/Entities`.
 
 ## Миграции
 
@@ -43,16 +43,15 @@ dotnet ef database update --project Infrastructure --startup-project WebApi
 
 `Authentication/JwtTokenGenerator.cs` выпускает JWT. Cookie — `some-cookies`, HttpOnly.
 
-## Уведомления
+## VK ID
 
-`Notifications/` доставляет код входа в Telegram.
+`Authentication/VkIdClient.cs` меняет код подтверждения на данные пользователя VK ID.
 
-- Шов — `ICodeSender.SendAsync`. `FakeCodeSender` работает в Development без токена бота и пишет код в лог. `TelegramBotCodeSender` ищет чат по `TelegramBinding` и шлёт «Код для входа: 1234. Никому не сообщайте.». Без привязки возвращает `BindingUrl` — ссылку `https://t.me/<username>`.
-- `TelegramBotClient` — обёртка над Bot API: `sendMessage` и `getUpdates`. `sendMessage` завершается через 5 секунд. Ответ с `ok != true` или не в формате JSON — исключение.
-- `TelegramUpdateHandler` обрабатывает `/start` (кнопка «Поделиться номером») и контакт. Бот принимает контакт, только если его отправил владелец. Повторный контакт обновляет `chat_id`.
-- `TelegramUpdatesService` — hosted service: long polling (`getUpdates`, timeout 50 секунд). Ошибка не останавливает сервис: пауза 5 секунд.
-
-Сбой провайдера — исключение. Код сохраняется только после успешной отправки.
+- Шаг 1 — `POST https://id.vk.ru/oauth2/auth`: `grant_type=authorization_code`, `code`, `code_verifier`, `client_id`, `device_id`, `redirect_uri`. `service_token` уходит, только если задан (`VkId:ServiceToken`).
+- Шаг 2 — `POST https://id.vk.ru/oauth2/user_info`: `client_id`, `access_token`. Возвращает `user_id`, имя, фамилию и телефон.
+- Таймаут HTTP-клиента — 15 секунд (`HttpClientName = "VkId"`).
+- Ошибка API или ответ не в формате JSON — `VkIdException`.
+- Токены VK не храним: access token нужен только для чтения профиля.
 
 ## Фоновый сервис
 

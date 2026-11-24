@@ -7,7 +7,8 @@ Next.js 16 App Router, React 19, TypeScript strict, MUI 9. UI mobile-first. Node
 - `app/(app)/booking` — запись.
 - `app/(app)/my-appointments` — записи клиента.
 - `app/(app)/admin` — админка.
-- `app/page.tsx` — вход.
+- `app/privacy` — политика обработки персональных данных.
+- `app/page.tsx` — вход через VK ID.
 
 Витрины `/offerings` нет. Не добавляйте статические мок-данные.
 
@@ -29,6 +30,7 @@ Next.js 16 App Router, React 19, TypeScript strict, MUI 9. UI mobile-first. Node
 - Базовый URL — `NEXT_PUBLIC_API_URL`. Fallback — `http://localhost:5164`.
 - В Docker `NEXT_PUBLIC_API_URL` равен `PUBLIC_URL`.
 - Запросы идут с `credentials: "include"` из `apiFetch`.
+- Виджет входа VK ID читает `NEXT_PUBLIC_VK_APP_ID` из `frontend/salon/.env.local` (файл в `.gitignore`). Перед входом клиент отмечает согласие на обработку персональных данных.
 - Типы API — `lib/types.ts`.
 - Форматы бекенда: дата `yyyy-MM-dd`, время `HH:mm:ss`, деньги `{ value, currency }`.
 - Запись создается только с cookie роли `User`. Без cookie `create` вернет 401.
