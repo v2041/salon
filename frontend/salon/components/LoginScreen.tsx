@@ -1,59 +1,55 @@
 "use client";
 
-import {Alert, Box, Button, Paper, Stack, TextField, Typography} from "@mui/material";
+import {Alert, Box, Button, Checkbox, FormControlLabel, Link, Paper, Stack, TextField, Typography} from "@mui/material";
+import NextLink from "next/link";
 import {useState} from "react";
 import {authApi} from "@/lib/api";
 import {useAuth} from "@/lib/auth";
 import {accentInk} from "@/lib/theme";
+import {VkIdWidget} from "./VkIdWidget";
 
 export default function LoginScreen() {
     const {refresh} = useAuth();
-    const [step, setStep] = useState<"phone" | "binding" | "code">("phone");
-    const [phone, setPhone] = useState("");
-    const [code, setCode] = useState("");
+    const [consent, setConsent] = useState(false);
+    const [checkingName, setCheckingName] = useState(false);
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
-    const [isRegistered, setIsRegistered] = useState(true);
-    const [bindingUrl, setBindingUrl] = useState<string | null>(null);
-    const [devCode, setDevCode] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    async function sendCode() {
+    async function handleVkSuccess(payload: {
+        code: string;
+        deviceId: string;
+        codeVerifier: string;
+        redirectUrl: string;
+    }) {
         setLoading(true);
         setError(null);
         try {
-            const res = await authApi.sendCode({phone});
-            setIsRegistered(res.isRegistered);
-            if (res.status === "binding_required") {
-                setBindingUrl(res.bindingUrl);
-                setStep("binding");
+            const {isNew} = await authApi.vkLogin({...payload, consent: true});
+            if (isNew) {
+                const me = await authApi.me();
+                setFirstName(me.firstName);
+                setLastName(me.lastName ?? "");
+                setCheckingName(true);
                 return;
             }
-            setDevCode(res.code ?? null);
-            setStep("code");
+            await refresh();
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Не удалось отправить код");
+            setError(err instanceof Error ? err.message : "Не удалось войти через VK ID");
         } finally {
             setLoading(false);
         }
     }
 
-    function changePhone() {
-        setStep("phone");
-        setError(null);
-        setDevCode(null);
-    }
-
-    async function submit() {
+    async function submitName() {
         setLoading(true);
         setError(null);
         try {
-            if (isRegistered) await authApi.login({phone, code});
-            else await authApi.register({phone, code, firstName, lastName});
+            await authApi.updateName({firstName: firstName.trim(), lastName: lastName.trim() || null});
             await refresh();
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Неверный номер телефона или код");
+            setError(err instanceof Error ? err.message : "Не удалось сохранить имя");
         } finally {
             setLoading(false);
         }
@@ -69,68 +65,34 @@ export default function LoginScreen() {
                         </Typography>
                         <Typography variant="h5">Студия красоты</Typography>
                     </Stack>
-                    {step === "phone" ? (
+                    {checkingName ? (
                         <>
                             <Typography variant="body2" color="text.secondary">
-                                Введите номер телефона. Код для входа придёт в Telegram.
+                                Проверьте имя — так мастер увидит вас в записях.
                             </Typography>
-                            <TextField
-                                label="Телефон"
-                                value={phone}
-                                onChange={e => setPhone(e.target.value)}
-                                placeholder="+79991234567"
-                                fullWidth
-                            />
-                            <Button variant="contained" disabled={!phone || loading} onClick={sendCode}>
-                                Получить код
-                            </Button>
-                        </>
-                    ) : step === "binding" ? (
-                        <>
-                            <Typography variant="body2" color="text.secondary">
-                                Откройте бота студии в Telegram и нажмите «Поделиться номером». Затем вернитесь на сайт.
-                            </Typography>
-                            {bindingUrl && (
-                                <Button
-                                    variant="contained"
-                                    component="a"
-                                    href={bindingUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                >
-                                    Открыть бота
-                                </Button>
-                            )}
-                            <Button variant="outlined" disabled={loading} onClick={sendCode}>
-                                Получить код
-                            </Button>
-                            <Button variant="text" onClick={changePhone}>
-                                Изменить номер
+                            <TextField label="Имя" value={firstName} onChange={e => setFirstName(e.target.value)} fullWidth/>
+                            <TextField label="Фамилия" value={lastName} onChange={e => setLastName(e.target.value)} fullWidth/>
+                            <Button variant="contained" disabled={!firstName.trim() || loading} onClick={submitName}>
+                                Продолжить
                             </Button>
                         </>
                     ) : (
                         <>
                             <Typography variant="body2" color="text.secondary">
-                                Введите код из Telegram.
+                                Войдите через VK ID. Имя и телефон придут из вашего профиля VK.
                             </Typography>
-                            <TextField label="Код" value={code} onChange={e => setCode(e.target.value)} fullWidth/>
-                            {devCode && <Alert severity="info">Код для входа (dev): {devCode}</Alert>}
-                            {!isRegistered && (
-                                <>
-                                    <TextField label="Имя" value={firstName} onChange={e => setFirstName(e.target.value)} fullWidth/>
-                                    <TextField label="Фамилия" value={lastName} onChange={e => setLastName(e.target.value)} fullWidth/>
-                                </>
-                            )}
-                            <Button
-                                variant="contained"
-                                disabled={!code || loading || (!isRegistered && (!firstName || !lastName))}
-                                onClick={submit}
-                            >
-                                {isRegistered ? "Войти" : "Зарегистрироваться"}
-                            </Button>
-                            <Button variant="text" onClick={changePhone}>
-                                Изменить номер
-                            </Button>
+                            <FormControlLabel
+                                control={<Checkbox checked={consent} onChange={e => setConsent(e.target.checked)}/>}
+                                label={
+                                    <Typography variant="body2">
+                                        Я согласен с{" "}
+                                        <Link component={NextLink} href="/privacy" target="_blank" rel="noopener noreferrer">
+                                            политикой обработки персональных данных
+                                        </Link>
+                                    </Typography>
+                                }
+                            />
+                            {consent && <VkIdWidget onSuccess={handleVkSuccess} onError={setError}/>}
                         </>
                     )}
                     {error && <Alert severity="error">{error}</Alert>}

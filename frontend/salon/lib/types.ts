@@ -210,36 +210,29 @@ export type ChangeAppointmentStatusRequest = {
     status: AppointmentStatus;
 };
 
-export type SendVerificationCodeRequest = {
-    phone: string;
-};
-
-export type SendVerificationCodeResponse = {
-    expiresAt: string;
-    isRegistered: boolean;
-    status: "sent" | "binding_required";
-    bindingUrl: string | null;
-    code?: string | null;
-};
-
 export type CurrentUser = {
     id: string;
     firstName: string;
-    lastName: string;
+    lastName: string | null;
     phone: string;
     role: UserRole;
 };
 
-export type LoginRequest = {
+export type VkLoginRequest = {
     code: string;
-    phone: string;
+    deviceId: string;
+    codeVerifier: string;
+    redirectUrl: string;
+    consent: boolean;
 };
 
-export type RegisterRequest = {
-    code: string;
-    phone: string;
+export type VkLoginResponse = {
+    isNew: boolean;
+};
+
+export type UpdateNameRequest = {
     firstName: string;
-    lastName: string;
+    lastName: string | null;
 };
 
 export type GainResponse = {

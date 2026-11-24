@@ -22,18 +22,17 @@
     type CurrentUser,
     type FreeTimeResponse,
     type GainResponse,
-    type LoginRequest,
     type Money,
     type OfferingResponse,
     type OfferingsStatResponse,
     type PagedResponse,
     type RateResponse,
-    type RegisterRequest,
     type ScheduleResponse,
-    type SendVerificationCodeRequest,
-    type SendVerificationCodeResponse,
     type SettingsResponse,
+    type UpdateNameRequest,
     type UserAppointmentResponse,
+    type VkLoginRequest,
+    type VkLoginResponse,
 } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5164";
@@ -153,12 +152,10 @@ export const appointmentsApi = {
 };
 
 export const authApi = {
-    sendCode: (request: SendVerificationCodeRequest) =>
-        apiFetch<SendVerificationCodeResponse>("/api/auth/send-code", { method: "POST", ...json(request) }),
-    login: (request: LoginRequest) =>
-        apiFetch<void>("/api/auth/login", { method: "POST", ...json(request) }),
-    register: (request: RegisterRequest) =>
-        apiFetch<void>("/api/auth/register", { method: "POST", ...json(request) }),
+    vkLogin: (request: VkLoginRequest) =>
+        apiFetch<VkLoginResponse>("/api/auth/vk", { method: "POST", ...json(request) }),
+    updateName: (request: UpdateNameRequest) =>
+        apiFetch<void>("/api/auth/me", { method: "PATCH", ...json(request) }),
     logout: () => apiFetch<void>("/api/auth/logout", { method: "POST" }),
     me: () => apiFetch<CurrentUser>("/api/auth/me"),
 };
