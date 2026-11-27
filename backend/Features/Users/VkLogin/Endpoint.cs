@@ -38,16 +38,8 @@ public static class Endpoint
 
         if (string.IsNullOrWhiteSpace(vkUser.Phone))
             return Results.BadRequest("VK не передал номер телефона. Разрешите доступ к номеру и попробуйте снова");
-
-        PhoneNumber phone;
-        try
-        {
-            phone = PhoneNumber.Create(vkUser.Phone);
-        }
-        catch (BusinessException)
-        {
-            return Results.BadRequest("Вход доступен только с российским номером телефона");
-        }
+        
+        var phone = PhoneNumber.Create(vkUser.Phone);
 
         var user = await db.Users.FirstOrDefaultAsync(u => u.VkId == vkUser.Id, token);
         var isNew = false;

@@ -1,5 +1,4 @@
-﻿using System.Text.RegularExpressions;
-using Domain.Exceptions;
+﻿using Domain.Exceptions;
 
 namespace Domain.ValueObjects;
 
@@ -17,6 +16,7 @@ public record PhoneNumber
         var normalized = NormalizePhone(value);
         return new PhoneNumber(normalized);
     }
+    
     public static string NormalizePhone(string? rawPhone)
     {
         if (string.IsNullOrWhiteSpace(rawPhone))
