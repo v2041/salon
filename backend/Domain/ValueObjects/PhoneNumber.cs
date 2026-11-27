@@ -38,8 +38,12 @@ public record PhoneNumber
 
         return count switch
         {
-            11 when digits[0] is '7' or '8' => $"+7{digits[1..]}",
+            11 when digits[0] == '8' => $"+7{digits[1..]}",
+            11 when digits[0] == '7' => $"+{digits[..11]}",
+            
+            10 when digits[0] == '7' => $"+{digits[..10]}",
             10 => $"+7{digits[..10]}",
+            
             _ => throw new BusinessException("Неверный формат номера телефона")
         };
     }
