@@ -57,7 +57,6 @@ export function VkIdWidget({onSuccess, onError}: VkIdWidgetProps) {
             .render({
                 container,
                 showAlternativeLogin: true,
-                oauthList: [VKID.OAuthName.OK, VKID.OAuthName.MAIL],
             })
             .on(VKID.WidgetEvents.ERROR, () => {
                 callbacksRef.current.onError("Ошибка авторизации через VK ID");
