@@ -61,7 +61,8 @@ builder.Services.AddHttpClient(VkIdClient.HttpClientName, client =>
     client.Timeout = TimeSpan.FromSeconds(VkIdClient.HttpClientTimeoutSeconds));
 builder.Services.AddTransient(sp => new VkIdClient(
     sp.GetRequiredService<IHttpClientFactory>().CreateClient(VkIdClient.HttpClientName),
-    new VkIdOptions { AppId = vkAppId, ServiceToken = vkServiceToken }));
+    new VkIdOptions { AppId = vkAppId, ServiceToken = vkServiceToken },
+    sp.GetRequiredService<ILogger<VkIdClient>>()));
 var jwt = builder.Configuration.GetSection("Jwt");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

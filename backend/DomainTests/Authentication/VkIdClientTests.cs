@@ -1,5 +1,7 @@
 using System.Net;
 using Infrastructure.Authentication;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace DomainTests.Authentication;
 
@@ -30,7 +32,10 @@ public class VkIdClientTests
     """;
 
     private static VkIdClient CreateClient(HttpMessageHandler handler, string? serviceToken = ServiceToken)
-        => new(new HttpClient(handler), new VkIdOptions { AppId = AppId, ServiceToken = serviceToken });
+        => new(
+            new HttpClient(handler),
+            new VkIdOptions { AppId = AppId, ServiceToken = serviceToken },
+            NullLogger<VkIdClient>.Instance);
 
     private static HttpResponseMessage Json(string content) =>
         new(HttpStatusCode.OK) { Content = new StringContent(content) };

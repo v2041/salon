@@ -6,7 +6,7 @@ namespace Infrastructure.Authentication;
 /// Клиент VK ID: обмен кода подтверждения на данные пользователя.
 /// Сбой VK ID — <see cref="VkIdException"/>.
 /// </summary>
-public class VkIdClient(HttpClient httpClient, VkIdOptions options)
+public class VkIdClient(HttpClient httpClient, VkIdOptions options, ILogger<VkIdClient> logger)
 {
     public const string HttpClientName = "VkId";
     public const int HttpClientTimeoutSeconds = 15;
@@ -44,6 +44,10 @@ public class VkIdClient(HttpClient httpClient, VkIdOptions options)
         }
 
         var id = user.TryGetProperty("user_id", out var idValue) ? idValue.ToString() : null;
+        var rawPhone = user.TryGetProperty("phone", out var phoneEl)
+            ? $"{phoneEl.ValueKind}: '{phoneEl}'"
+            : "<missing>";
+        logger.LogWarning("VK ID user_info phone => {RawPhone}", rawPhone);
         return new VkUserInfo(
             id ?? throw new VkIdException("VK ID не вернул идентификатор пользователя."),
             GetStringOrNull(user, "first_name"),
